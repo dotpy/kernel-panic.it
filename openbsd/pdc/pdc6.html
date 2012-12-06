@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,primary,domain,controller,file,server,Samba,OpenLDAP,smbldap,samba-vscan,ClamAV,CUPS" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a Primary Domain Controller - Sharing printers with CUPS</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc5.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc7.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc5.html">5. Keeping viruses away with Samba-vscan</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc7.html">7. Appendix</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>6. Sharing printers with CUPS</h2>
+
+<p>The Common UNIX Printing System (<a href="http://www.cups.org/">CUPS</a>) is a software providing a portable printing layer for UNIX-based operating systems. It will allow us to turn the system into a printer server and share printers with Samba; though this is not a particularly difficult task, please be sure to closely follow this procedure to successfully export the printer(s) to Samba through the <tt><a href="http://www.cups.org/documentation.php/man-cupsaddsmb.html">cupsaddsmb(8)</a></tt> command.</p>
+<p>You should already have installed CUPS as a dependency when adding the Samba package. CUPS configuration goes beyond the scope of this document, so please refer to the <a href="http://www.cups.org/documentation.php">documentation</a> for a detailed description of its features and options. The following configuration will refer to my own printer (a Dell 1600n Laser printer), so make sure to correctly configure your own printer(s) before proceeding to Samba configuration. The printers are defined in the <tt><a href="http://www.cups.org/documentation.php/man-printers.conf.html">/etc/cups/printers.conf(5)</a></tt> configuration file:</p>
+
+<div class="code">
+  <div>/etc/cups/printers.conf</div>
+<pre>
+&lt;DefaultPrinter dp1600n&gt;
+    Info         Dell Laser Printer 1600n
+    Location     Room 123
+    DeviceURI    ipp://prn1.lan.kernel-panic.it/
+    State        Idle
+    StateMessage Printer is idle
+    Accepting    Yes
+&lt;/Printer&gt;
+</pre>
+</div>
+
+<h3><a id="pdc-6.1" name="pdc-6.1"></a>6.1 Getting the driver files</h3>
+
+<p>Now we have to retrieve the correct driver files. First, we need the Universal PostScript printer drivers for Windows from the Adobe website. You can download them <a href="http://www.adobe.com/support/downloads/product.jsp?product=44&amp;platform=Windows">here</a>: select the installer for your language and install the drivers on a Windows machine. At the end of the installation, you should find the following files in the <tt>C:\WINDOWS\system32\spool\drivers\w32x86\3</tt> folder:</p>
+
+<ul>
+  <li>PS5UI.DLL</li>
+  <li>PSCRIPT.HLP</li>
+  <li>PSCRIPT.NTF</li>
+  <li>PSCRIPT5.DLL</li>
+</ul>
+
+<p>Now create the <tt>/usr/local/share/cups/drivers</tt> directory on the file server:</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir /usr/local/share/cups/drivers/</kbd>
+</pre>
+</div>
+
+<p>and copy the above files into it (<em>warning</em>: on the file server, driver file names must be lowercase!).</p>
+<p>Next, we need to <a href="http://www.cups.org/windows/software.php?6.0">download</a> the Windows CUPS drivers and extract and copy them to the drivers directory:</p>
+
+<div class="code">
+<pre>
+# <kbd>tar -zxvf cups-windows-6.0-source.tar.gz</kbd>
+[ ... ]
+# <kbd>cd cups-windows-6.0/i386</kbd>
+# <kbd>cp cups6.ini cupsui6.dll cupsps6.dll /usr/local/share/cups/drivers/</kbd>
+</pre>
+</div>
+
+<p>The last file you need to retrieve is the <acronym title="PostScript Printer Description">PPD</acronym> file appropriate to your printer. Fortunately, if you can't find the file on the printer driver CD, <a href="http://www.easysw.com/">Easy Software Products</a> provides a huge collection of PPD files which includes support for the most common printers. <a href="http://ftp.easysw.com/pub/printpro/4.5.12/printpro-4.5.12-linux-intel.tar.gz">Download</a> the Linux file (portable format), extract it, look for the PPD file appopriate to your printer and copy it to <tt>/etc/cups/ppd/</tt>; for example:</p>
+
+<div class="code">
+<pre>
+# <kbd>tar -zxvf printpro-4.5.12-linux-intel.tar.gz</kbd>
+[ ... ]
+# <kbd>tar -zxvf printpro-dell.ss</kbd>
+[ ... ]
+# <kbd>gunzip -o /etc/cups/ppd/dp1600n.ppd usr/share/cups/model/en/dp1600n.ppd.gz</kbd>
+</pre>
+</div>
+
+<p>Please note that the PPD file has exactly the same name (&quot;<tt>dp1600n</tt>&quot;) as the printer defined in <tt><a href="http://www.cups.org/documentation.php/man-printers.conf.html">/etc/cups/printers.conf(5)</a></tt> (plus the &quot;<tt>.ppd</tt>&quot; extension). If the two names differ, you may encounter problems when running the <tt><a href="http://www.cups.org/doc-1.2/man-cupsaddsmb.html">cupsaddsmb(8)</a></tt> command later.</p>
+
+<h3><a id="pdc-6.2" name="pdc-6.2"></a>6.2 Exporting printers to Samba</h3>
+
+<p>Now we can proceed to update Samba configuration by adding a few options to the <tt>[global]</tt> section and by defining a couple of additional sections:</p>
+
+<div class="code">
+  <div>/etc/samba/smb.conf</div>
+<pre>
+[global]
+    [ ... ]
+
+    load printers = yes
+    printing = cups
+    printcap name = cups
+    show add printer wizard = Yes
+    use client driver = No
+
+[dp1600n]
+    comment = Dell Laser MFP 1600n
+<i># Users must have write access to the spool directory</i>
+    valid users = root @DomainUsers
+    path = /var/spool/samba/printing
+    printer = dp1600n
+    public = no
+    writable = no
+    printable = yes
+
+[print$]
+    comment = Printer Drivers
+    path = /etc/samba/drivers
+    browseable = no
+    guest ok = no
+    read only = yes
+    write list = root
+</pre>
+</div>
+
+<p>The spool directory must be writeable by the users authorized to print and have the sticky-bit set; for example:</p>
+
+<div class="code">
+<pre>
+# <kbd>chgrp 513 /var/spool/samba/printing</kbd>
+# <kbd>chmod 1770 /var/spool/samba/printing</kbd>
+</pre>
+</div>
+
+<p>Now we can start the <tt><a href="http://www.cups.org/documentation.php/man-cupsd.html">cupsd(8)</a></tt> daemon and reload Samba configuration:</p>
+
+<div class="code">
+<pre>
+# <kbd>/usr/local/sbin/cupsd</kbd>
+# <kbd>pkill -HUP smbd</kbd>
+</pre>
+</div>
+
+<p>Well, so we're finally ready to issue the <tt><a href="http://www.cups.org/doc-1.2/man-cupsaddsmb.html">cupsaddsmb(8)</a></tt> command, which will actually export printers to samba:</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir /etc/samba/drivers</kbd>
+# <kbd>cupsaddsmb -H localhost -U root -v -a</kbd>
+[ ... ]
+Printer Driver dp1600n successfully installed.
+[ ... ]
+Succesfully set dp1600n to driver dp1600n.
+
+#
+</pre>
+</div>
+
+<p>If everything went fine, now you should find the PostScript drivers and the PPD file(s) in the fresh new <tt>/etc/samba/drivers/W32X86/3</tt> directory:</p>
+
+<div class="code">
+<pre>
+# <kbd>ls -l /etc/samba/drivers/W32X86/3/</kbd>
+total 2884
+-rwxr--r--  1 root  wheel   25729 Feb 28 01:55 dp1600n.ppd
+-rwxr--r--  1 root  wheel  129024 Feb 28 01:49 ps5ui.dll
+-rwxr--r--  1 root  wheel   26038 Feb 28 01:55 pscript.hlp
+-rwxr--r--  1 root  wheel  792644 Feb 28 01:55 pscript.ntf
+-rwxr--r--  1 root  wheel  455168 Feb 28 01:49 pscript5.dll
+#
+</pre>
+</div>
+
+<p>The last step is configuring the system to run <tt><a href="http://www.cups.org/documentation.php/man-cupsd.html">cupsd(8)</a></tt> on boot, by adding the following lines to the <tt>/etc/rc.local</tt> file, <em>before</em> the start of Samba:</p>
+
+<div class="code">
+  <div>/etc/rc.local</div>
+<pre>
+if [ -x /usr/local/sbin/cupsd ]; then
+    echo -n ' cupsd'
+    /usr/local/sbin/cupsd
+fi
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc5.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc7.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc5.html">5. Keeping viruses away with Samba-vscan</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc7.html">7. Appendix</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

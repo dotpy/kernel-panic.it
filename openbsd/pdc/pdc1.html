@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,primary,domain,controller,file,server,Samba,OpenLDAP,smbldap,samba-vscan,ClamAV,CUPS" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a Primary Domain Controller - Introduction</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="pdc2.html">2. OpenLDAP</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>1. Introduction</h2>
+
+<p>Once a Windows-based network grows beyond around a dozen computers, setting up a Primary Domain Controller to simplify and centralize the management of users, computers and network resources becomes a must. But does the Domain Controller necessarily have to be a Windows machine, thus meaning the end of our project of a <a href="http://www.kernel-panic.it/openbsd.html#world">completly OpenBSD-based server network</a>?</p>
+<p>Of course not! Once again, <a href="http://www.openbsd.org">OpenBSD</a> comes to our rescue and, with the help of a few additional pieces of software, it will turn into a full-blown, secure and reliable Domain Controller. In particular, the pieces of software we will use are the following:</p>
+
+<dl>
+  <dt><a href="http://www.openldap.org/">OpenLDAP</a></dt>
+  <dd>an <q>open source implementation of the Lightweight Directory Access Protocol (LDAP)</q>;</dd>
+  <dt><a href="http://us3.samba.org/samba/">Samba</a></dt>
+  <dd>an <q>Open Source/Free Software suite</q> that provides <q>secure, stable and fast file and print services for all clients using the SMB/CIFS protocol, such as all versions of DOS and Windows, OS/2, Linux and many others</q>;</dd>
+  <dt><a href="https://gna.org/projects/smbldap-tools/">IDX-smbldap-tools</a></dt>
+  <dd>a <q>set of perl scripts designed to manage user and group accounts stored in an LDAP directory</q>;</dd>
+  <dt><a href="https://www.isc.org/software/bind">Bind</a> (Berkeley Internet Name Domain)</dt>
+  <dd>an <q>open-source software that implements the Domain Name System (DNS) protocols for the Internet</q>;</dd>
+  <dt><a href="http://www.clamav.net/">Clam AntiVirus</a></dt>
+  <dd>a <q>open source (GPL) anti-virus toolkit for UNIX</q>;</dd>
+  <dt><a href="http://www.openantivirus.org/projects.php">Samba-vscan</a></dt>
+  <dd>a <q>proof-of-concept module for Samba, which uses the VFS (virtual file system) features of Samba 2.2.x/3.0 to provide an on-access Samba anti-virus</q>;</dd>
+  <dt><a href="http://www.cups.org/">CUPS</a> (Common UNIX Printing System)</dt>
+  <dd>a <q>standards-based, open source printing system</q>.</dd>
+</dl>
+
+<p>We have already discussed Bind configuration in a <a href="../dns/">previous document</a> entirely dedicated to OpenBSD and <acronym title="Domain Name Service">DNS</acronym>, so we won't come back to this topic now. Therefore, throughout this document, I will assume that you have already set up a fully functional Domain Name Server and that it correctly resolves the domain names of the client machines that will connect to the Domain Controller. Please note that this is a fundamental prerequisite for successfully building the Primary Domain Controller, since <tt><a href="http://samba.org/samba/docs/man/manpages-3/nmbd.8.html">nmbd(8)</a></tt> will rely on DNS to resolve unregistered <acronym title="Network Basic Input/Output System">NetBIOS</acronym> names.</p>
+<p>Also a working knowledge of OpenBSD is assumed, since we won't delve into system management topics such as base configuration or <a href="http://www.openbsd.org/faq/faq15.html">packages/ports</a> installation.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="pdc2.html">2. OpenLDAP</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

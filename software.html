@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,open,source,programming,software,stdiff,bowlfish,sudokiller" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>.: Kernel Panic - Software :.</title>
+
+  <link rel="stylesheet" type="text/css" href="css/menu.css" />
+  <link rel="stylesheet" type="text/css" href="css/kp.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <table id="container">
+
+    <tr>
+      <td id="header" colspan="2">
+        <h1>Kernel Panic</h1>
+      </td>
+      <td id="flags">
+      </td>
+    </tr>
+
+    <tr>
+      <td class="top" colspan="2"></td>
+      <td class="right-col"></td>
+    </tr>
+
+    <tr>
+      <td class="left-col" rowspan="2">
+        <ul>
+          <li id="home"><a class="menu" href="index.html"><span>Home</span></a></li>
+          <li id="openbsd"><a class="menu" href="openbsd.html"><span>OpenBSD</span></a></li>
+          <li id="linux"><a class="menu" href="linux.html"><span>Linux</span></a></li>
+          <li id="programming"><a class="menu" href="programming.html"><span>Programming</span></a></li>
+          <li id="security"><a class="menu" href="security.html"><span>Security</span></a></li>
+          <li id="software"><a class="menu" href="software.html"><span>Software</span></a>
+            <ul id="submenu">
+              <li><a href="#python">Python</a></li>
+              <li><a href="#shell">Shell</a></li>
+              <li><a href="#funproj">Fun</a></li>
+            </ul>
+          </li>
+          <li id="fun"><a class="menu" href="fun.html"><span>Fun</span></a></li>
+        </ul>
+      </td>
+
+      <td class="main" rowspan="2">
+        <p>Most Unix system administrators share the <q>if it doesn't already exist, I'll write it myself</q> philosophy, and thus have many tools for solving everyday problems. So, if this is your case, why not sharing with others your hard work?</p>
+        <p>As usual, all <a href="mailto:info@kernel-panic.it">feedback</a> is greatly appreciated!</p>
+
+        <a id="python" name="python"></a>
+        <fieldset>
+          <legend>Python projects</legend>  
+          <div>Some small Python libraries and utilities I'm using in my day-to-day development.</div>
+          <dl>
+            <dt><a id="py-pf" name="py-pf" href="software/py-pf/">py-pf</a></dt>
+            <dd>A pure-Python module for managing OpenBSD's Packet Filter. py-pf adds powerful and flexible scripting capabilities to PF, making integration with third-party software (like IDS, web-based configuration interfaces or custom management scripts) much easier.</dd>
+            <dt><a id="offtheshelf" name="offtheshelf" href="https://github.com/dotpy/offtheshelf">offtheshelf</a></dt>
+            <dd>A Python module providing a very simple and minimalist embedded NoSQL database. It uses the shelve module as backend for persistent storage and relies on file-locking as a simple mutual exclusion mechanism.</dd>
+            <dt><a id="step" name="step" href="https://github.com/dotpy/step">step</a></dt>
+            <dd>A Python module providing a very simple template engine with minimum syntax. It supports variable expansion, flow control and embedding of Python code.</dd>
+            <dt><a id="stdiff" name="stdiff" href="software/stdiff/">stdiff</a></dt>
+            <dd>An (old and <em>unmaintained</em>) file integrity checker, detecting signs of intrusions on a host by tracking changes to the filesystem. It is fully developed in python and it is designed to be easy to use, fast and powerful. It supports <a href="http://www.mysql.com">MySQL</a>, <a href="http://www.postgresql.org">PostgreSQL</a>, <a href="http://www.sqlite.org">SQLite</a> databases and <tt>dbm</tt> files.</dd>
+          </dl>
+        </fieldset>
+
+        <a id="shell" name="shell"></a>
+        <fieldset>
+          <legend>Shell projects</legend>  
+          <div>Shell-based utilities to make system administrators' life easier.</div>
+          <dl>
+            <dt><a id="bowlfish" name="bowlfish" href="software/bowlfish/">BowlFish</a></dt>
+            <dd>An OpenBSD installation script for embedded systems. Highly customizable, it will install a stripped-down version of OpenBSD onto a Compact Flash card, attached through a USB or IDE adapter.</dd>
+          </dl>
+        </fieldset>
+
+        <a id="funproj" name="funproj"></a>
+        <fieldset>
+          <legend>Fun projects</legend>  
+          <div>Some rather useless but fun stuff.</div>
+          <dl>
+            <dt><a id="sudokiller" name="sudokiller" href="software/sudokiller/sudokiller.tar.gz">SudoKiller</a></dt>
+            <dd>A <a href="http://www.sudoku.com">SuDoku</a> solver. I know, it's a bit frivolous, but programmers love solving problems, and they do it once and for all. Looking at the empty SuDoku board, they number the languages in which to implement a routine to do the work for them and leave them free to tackle ever new problems (it's true: programmers have strange ways to have fun):
+          <div style="padding: 10px;">
+            <a href="software/sudokiller/sudokiller.s.html">Assembler&nbsp;(MIPS)</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.asm.html">Assembler&nbsp;(x86)</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.sh.html">Bash</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.c.html">C</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.gf.html">Forth</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.java.html">Java</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.js.html">Javascript</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.lisp.html">Lisp</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.py.html">Python</a>&nbsp;
+            <a href="software/sudokiller/sudokiller.tcl.html">Tcl/Tk</a>&nbsp;
+            ...and&nbsp;more&nbsp;to&nbsp;come!</dd>
+          </dl>
+        </fieldset>
+
+      <td class="right-col">
+        <h2 id="links"><span>Links</span></h2>
+        <ul>
+          <li><a href="http://www.openbsd.org/">OpenBSD</a></li>
+          <li><a href="http://www.openbsd.org/faq/">OpenBSD FAQ</a></li>
+          <li><a href="http://undeadly.org/">OpenBSD Journal</a></li>
+          <li><a href="http://www.openbsdsupport.org/">OpenBSDsupport</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://www.kernel.org/">Kernel.org</a></li>
+          <li><a href="http://www.debian.org/">Debian</a></li>
+          <li><a href="http://www.slackware.com/">Slackware</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://www.python.org/">Python</a></li>
+          <li><a href="http://www.php.net/">PHP</a></li>
+          <li><a href="http://www.w3c.org/">W3C</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://www.securityfocus.com/">Security Focus</a></li>
+          <li><a href="http://www.cve.mitre.org/">CVE</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://github.com/">GitHub</a></li>
+          <li><a href="http://sourceforge.net/">SourceForge</a></li>
+          <li><a href="http://freecode.com/">Freecode</a></li>
+        </ul>
+
+        <h2 id="search"><span>Search</span></h2>
+        <form action="http://www.google.com/search" method="get">
+        <div>
+          <input type="text" name="q" maxlength="255" size="10" value="" />
+          <input type="hidden" name="domains" value="kernel-panic.it" />
+          <input type="hidden" name="sitesearch" value="kernel-panic.it" />
+          <input type="image" src="images/go.png" alt="go" class="submit" />
+        </div>
+        </form>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="validators">
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post">  
+          <div>
+            <input type="hidden" name="cmd" value="_s-xclick" />                 
+            <input type="image" src="images/donate.gif" name="submit" alt="Donate" />
+            <img src="https://www.paypal.com/it_IT/i/scr/pixel.gif" alt="" width="1" height="1" />  
+            <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----" />  
+          </div>
+        </form>
+        <p><a href="http://validator.w3.org/check?uri=referer"><img src="images/xhtml10.png" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+        <p><a href="http://jigsaw.w3.org/css-validator/"><img src="images/vcss.png" alt="Valid CSS!" height="31" width="88" /></a></p>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="bottom" colspan="2"><address>Designed by kernel-panic.it</address></td>
+      <td class="right-col"></td>
+    </tr>
+
+  </table>
+
+</body>
+
+</html>
+

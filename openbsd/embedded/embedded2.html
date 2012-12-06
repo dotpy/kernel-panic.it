@@ -1,0 +1,501 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,firewall,embedded,soekris,wrap,alix,install,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+
+  <title>Embedded OpenBSD - Installing directly to disk</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="embedded1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="embedded3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Embedded OpenBSD</h3>
+    <div>Previous: <a href="embedded1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="embedded3.html">3. Diskless installation</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. Installing directly to disk</h2>
+
+<p>Before delving into the inners of the installation, we need to retrieve the disk geometry values, which, as we will see, will come in handy more than once. To get this information, insert the Compact Flash card into its socket, attach to the device's serial console with a <a href="nullmodemcable.jpg">null-modem cable</a>, connect with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=cu&amp;sektion=1">cu(1)</a></tt> and power the system up. You should get something like:</p>
+
+<div class="code">
+<pre>
+# <kbd>cu -s 19200 -l cua00</kbd>
+
+comBIOS ver. 1.26a  20040819  Copyright (C) 2000-2004 Soekris Engineering.
+
+net45xx
+
+0064 Mbyte Memory                        CPU 80486 133 Mhz 
+
+Pri Mas  SanDisk SDCFB-64                LBA 490-8-32  62 Mbyte
+[...]
+</pre>
+</div>
+
+<p>The numbers 490, 8 and 32 are, respectively, the number of cylinders, heads (i.e. tracks per cylinder) and sectors (per track) of the disk.</p>
+<p>Ok, now let the fun begin! We will create a bootable filesystem on the flash card and copy the files we need from the OS. To make fewer write operations on the memory card, the best thing is to create a disk-image file of the size of the CF card (see <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=vnd&amp;sektion=4">vnd(4)</a></tt> for details) and eventually copy it to the device. For instance, to create a 64MB virtual disk image, type:</p>
+
+<div class="code">
+<pre>
+# <kbd>dd if=/dev/zero of=net4521.img bs=512 count=125440</kbd>
+125440+0 records in
+125440+0 records out
+64225280 bytes transferred in 1.399 secs (45875823 bytes/sec)
+# <kbd>vnconfig -c svnd0 net4521.img</kbd>
+</pre>
+</div>
+
+<p>The <tt>bs</tt> parameter sets the block (sector) size (usually 512 bytes), and <tt>count</tt> the number of sectors, obtained by multiplying the disk geometry values (32 * 8 * 490). <em>Note</em>: if you want to write directly to the disk, without bothering with the virtual disk image, simply replace <tt>svnd0</tt> with the appropriate disk drive (e.g. <tt>sd0</tt>) in the subsequent examples.</p>
+<p>After creating the virtual disk, we need to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=disklabel&amp;sektion=8">disklabel(8)</a></tt> it, build the filesystem and make it bootable; but to fully understand these steps, we must first discuss how OpenBSD boots on the i386 architecture. So let's take a look, in parallel, at the boot process and  how it reflects upon our installation procedure (for more information, please refer to [<a href="http://www.openbsd.org/faq/faq14.html#Boot386">FAQ14</a>]).</p>
+
+<h3><a id="embedded-2.1" name="embedded-2.1"></a>2.1 Master Boot Record</h3>
+
+<p>The <dfn>Master Boot Record</dfn> is the first physical sector (512 bytes) on the disk; it is loaded by the <acronym title="Basic Input-Output System">BIOS</acronym> after the <acronym title="Power-On Self Test">POST</acronym> and it contains the primary partition table (<dfn>Master Partition Table</dfn>) and a small program (<dfn>Master Boot Code</dfn>) to load the Partition Boot Record (see <a href="#2.2">below</a>).</p>
+<p>OpenBSD provides a &quot;MBR template file&quot; (<tt>/usr/mdec/mbr</tt>) which we can install with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=fdisk&amp;sektion=8">fdisk(8)</a></tt>:</p>
+
+<div class="code">
+<pre>
+# <kbd>fdisk -c 490 -h 8 -s 32 -iyf /usr/mdec/mbr svnd0</kbd>
+Writing MBR at offset 0.
+#
+</pre>
+</div>
+
+<p>We need to specify the disk geometry (we have seen before how to retrieve these data) because we're not installing directly to the disk now, but to a virtual disk image. <em>Note</em>: if the OpenBSD release you're installing from is not the same as the release you're installing, you can extract the <tt>mbr</tt> file from the <tt>base<var>XX</var>.tgz</tt> file set.</p>
+
+<h3><a id="embedded-2.2" name="embedded-2.2"></a>2.2 First and second stage boot loaders</h3>
+
+<p>Next, the OpenBSD boot process goes through two stages:</p>
+
+<ul>
+  <li>in the first stage, the MBR loads the PBR (<dfn>Partition Boot Record</dfn> or <dfn>first-stage boot loader</dfn>), which is the first physical sector (512 bytes) on the OpenBSD primary partition. It contains a small program, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=biosboot&amp;sektion=8">biosboot(8)</a></tt>, which has the task of loading the second-stage boot loader (<tt>/boot</tt>);</li>
+  <li>in the second stage, <tt>/boot</tt>, the <dfn>second-stage boot loader</dfn>, has the task of accessing the OpenBSD file system through the machine's BIOS, and locating and loading the actual kernel.</li>
+</ul>
+
+<p>Before installing the boot loaders, we need to create the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=disklabel&amp;sektion=5">disklabel(5)</a>, which contains detailed information about disk geometry and partitions and acts as an interface between the disk and the disk drivers contained within the kernel. The <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=disklabel&amp;sektion=8">disklabel(8)</a></tt> utility allows you to write the label on the disk (once again, disk geometry information will come in handy):</p>
+
+<div class="code">
+<pre>
+# <kbd>disklabel -E svnd0</kbd>
+Label editor (enter '?' for help at any prompt)
+&gt; <kbd>e</kbd>
+Changing device parameters for /dev/rsvnd0c:
+disk type: [vnd] <kbd>ESDI</kbd>
+label name: [fictitious] <kbd>net4521</kbd>
+sectors/track: [100] <kbd>32</kbd>
+tracks/cylinder: [1] <kbd>8</kbd>
+sectors/cylinder: [100] <kbd>256</kbd>
+number of cylinders: [1254] <kbd>490</kbd>
+total sectors: [125440] <kbd>&lt;enter&gt;</kbd>
+&gt; <kbd>a a</kbd>
+offset: [0] <kbd>63</kbd>
+size: [125377] <kbd>&lt;enter&gt;</kbd>
+FS type: [4.2BSD] <kbd>&lt;enter&gt;</kbd>
+&gt; <kbd>q</kbd>
+Write new label?: [y] <kbd>y</kbd>
+#
+</pre>
+</div>
+
+<p>We have created only a single &quot;<tt>/</tt>&quot; partition: swapping on the compact flash is strongly discouraged. Now we can build the filesystem:</p>
+
+<div class="code">
+<pre>
+# <kbd>newfs -S 512 /dev/rsvnd0a</kbd>
+newfs: reduced number of fragments per cylinder group from 7832 to 7792 to enlarge last cylinder group
+/dev/rsvnd0a: 61.2MB in 125376 sectors of 512 bytes
+5 cylinder groups of 15.22MB, 974 blocks, 2048 inodes each
+super-block backups (for fsck -b #) at:
+ 32, 31200, 62368, 93536, 124704,
+#
+</pre>
+</div>
+
+<p>mount it and install the two boot loaders with the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=installboot&amp;sektion=8">installboot(8)</a></tt> command:</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir /mnt/net4521</kbd>
+# <kbd>mount /dev/svnd0a /mnt/net4521</kbd>
+# <kbd>cp /usr/mdec/boot /mnt/net4521/</kbd>
+# <kbd>/usr/mdec/installboot /mnt/net4521/boot /usr/mdec/biosboot svnd0</kbd>
+</pre>
+</div>
+
+<p> We can now set up some boot parameters in the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=boot.conf&amp;sektion=5">/etc/boot.conf(5)</a></tt> configuration file. We will use it to set up the serial console, which has a default baud rate of 19200 (or 38400 for ALIX boards):</p>
+
+<div class="code">
+  <div>/mnt/net4521/etc/boot.conf</div>
+<pre>
+set tty com0
+stty com0 19200
+</pre>
+</div>
+
+<h3><a id="embedded-2.3" name="embedded-2.3"></a>2.3 Building a custom kernel</h3>
+
+<p>Now that the disk is ready, we only have to populate it. Let's start with the kernel, for which we have two options: if the CF card is not too small, the easy and smooth (and recommended) way is copying the standard <tt>bsd</tt> kernel to it:</p>
+
+<div class="code">
+<pre>
+# <kbd>cp /bsd /mnt/net4521/</kbd>
+</pre>
+</div>
+
+<p><em>Or else</em>, if you need the kernel to be smaller and faster at boot time, you can build a custom kernel with only the bare minimum features. The following is a sample configuration file suitable for the latter case:</p>
+
+<div class="code">
+  <div>/usr/src/sys/arch/i386/conf/NET4521</div>
+<pre>
+<i># OpenBSD config file for Soekris net4521 embedded system</i>
+
+machine		i386			<i># architecture, used by config; REQUIRED</i>
+option		I486_CPU
+
+<i># Operation Related Options</i>
+option		DUMMY_NOPS		<i># speed hack; recommended</i>
+
+<i># Debugging Options</i>
+option		DDB
+
+<i># Filesystem Options</i>
+option		FFS
+option		MFS
+option		NFSCLIENT
+option		FDESC
+option          FIFO
+
+<i># Miscellaneous Options</i>
+option		PCIVERBOSE
+option		CRYPTO
+option		TIMER_FREQ=1189161
+option		PCCOMCONSOLE
+option		CONSPEED=19200
+
+<i># Networking Options</i>
+option		INET
+option		INET6
+option		TCP_SACK
+option		TCP_FACK
+option          TCP_SIGNATURE
+option		IPSEC
+option		KEY
+option		ALTQ
+option		ALTQ_NOPCC
+
+maxusers	5			<i># estimated number of users</i>
+config		bsd root on wd0a
+
+mainbus0 	at root
+
+cpu0		at mainbus?
+bios0		at mainbus0
+pcibios0 	at bios0 flags 0x0000	<i># use 0x30 for a total verbose</i>
+
+isa0		at mainbus0
+pci*		at mainbus0
+
+<i># power management and other environmental stuff</i>
+elansc*		at pci?			<i># AMD Elan SC520 System Controller</i>
+gpio*		at elansc?
+
+<i># CardBus bus support</i>
+cardbus*	at cardslot?
+pcmcia*		at cardslot?
+cbb*		at pci?
+cardslot*	at cbb?
+
+npx0		at isa? port 0xf0 irq 13	<i># math coprocessor</i>
+isadma0		at isa?
+
+com0		at isa? port 0x3f8 irq 4        <i># standard PC serial ports</i>
+com1		at isa? port 0x2f8 irq 3
+com2		at isa? port 0x3e8 irq 5
+
+<i># IDE</i>
+wdc0		at isa? port 0x1f0 irq 14 flags 0x00	<i># WD100x compatible hard disk controller driver</i>
+wd*		at wdc? flags 0x0000	<i># WD100x compatible hard disk driver</i>
+
+<i># Networking devices</i>
+sis*		at pci?			<i># SiS 900/7016 ethernet Fast Ethernet driver</i>
+nsphyter*	at mii? phy ?		<i># NS and compatible PHYs</i>
+
+<i># Wireless network cards</i>
+wi*		at pcmcia?		<i># PRISM 2-3 wireless network driver</i>
+
+<i># Pseudo-devices</i>
+pseudo-device	mtrr		1	<i># driver for CPU memory range attributes</i>
+pseudo-device	nvram		1	<i># driver for reading PC NVRAM contents</i>
+pseudo-device	bio		1	<i># ioctl tunnel pseudo-device</i>
+pseudo-device	hotplug		1	<i># devices hot plugging</i>
+
+pseudo-device	ksyms		1	<i># kernel symbol table device</i>
+pseudo-device	systrace	1	<i># enforce and generate policies for system calls</i>
+
+pseudo-device	pf			<i># Packet filter</i>
+pseudo-device	pflog			<i># Packet filter logging interface</i>
+pseudo-device	pfsync			<i># Packet filter state table logging interface</i>
+pseudo-device	loop		2	<i># Loopback</i>
+pseudo-device	bpfilter 	16	<i># Berkeley Packet Filter</i>
+pseudo-device	tun		2	<i># Network tunnel pseudo-device</i>
+pseudo-device	enc		1	<i># IPSEC encapsulating Interface</i>
+pseudo-device	bridge		2	<i># Ethernet bridge interface</i>
+pseudo-device	vlan		32	<i># IEEE 802.1Q encapsulation/decapsulation pseudo-device</i>
+pseudo-device	gre		4	<i># GRE encapsulating network device</i>
+pseudo-device	pty		32	<i># Pseudo-terminals</i>
+pseudo-device	gif		4	<i># Generic tunnel interface</i>
+</pre>
+</div>
+
+<p>So let's build the kernel and install it:</p>
+
+<div class="code">
+<pre>
+# <kbd>cd /usr/src/sys/arch/i386/conf</kbd>
+# <kbd>config NET4521</kbd>
+Don't forget to run &quot;make depend&quot;
+# <kbd>cd ../compile/NET4521</kbd>
+# <kbd>make clean &amp;&amp; make depend &amp;&amp; make</kbd>
+[...]
+# <kbd>cp bsd /mnt/net4521/</kbd>
+</pre>
+</div>
+
+<h3><a id="embedded-2.4" name="embedded-2.4"></a>2.4 Populating the filesystem</h3>
+
+<p>Next we will create the necessary configuration files in <tt>/etc</tt> (well, for the moment <tt>/mnt/net4521/etc/</tt>). We will only list the main ones here: a comprehensive list would be too dependent on the purpose of the device.</p>
+
+<dl class="padded">
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=fstab&amp;sektion=5">/etc/fstab(5)</a></tt></dt>
+  <dd>this file contains information about the filesystems.
+
+<div class="code">
+  <div>/mnt/net4521/etc/fstab</div>
+<pre>
+/dev/wd0a	/	ffs	ro				1 1
+swap		/tmp	mfs	rw,nosuid,-P=/tmplate,-s=16384	0 0
+</pre>
+</div>
+
+    <p>As stated <a href="embedded1.html#1.1">before</a>, we map the <tt>/tmp</tt> filesystem to memory. <tt>/var</tt> and <tt>/root</tt>, which must be read-write, will be symbolic links to <tt>/tmp/var</tt> and <tt>/tmp/root</tt> respectively. We will also create a <tt>/tmplate</tt> directory containing the directory tree which <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=mount_mfs&amp;sektion=8">mount_mfs(8)</a></tt> will use to populate <tt>/tmp</tt> after its creation (we will put pseudo-devices and files required by <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslogd&amp;sektion=8">syslogd(8)</a></tt> into this directory later);</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir /mnt/net4521/tmp{late,}</kbd>
+# <kbd>ln -s /tmp/{var,root} /mnt/net4521/</kbd>
+# <kbd>mkdir -p /mnt/net4521/tmplate/var/cron/{tabs,atjobs}</kbd>
+# <kbd>chmod 555 /mnt/net4521/tmplate/var/cron</kbd>
+# <kbd>chmod 1770 /mnt/net4521/tmplate/var/cron/atjobs</kbd>
+# <kbd>chmod 1730 /mnt/net4521/tmplate/var/cron/cron</kbd>
+# <kbd>mkdir -p /mnt/net4521/tmplate/root</kbd>
+# <kbd>chmod 700 /mnt/net4521/tmplate/root</kbd>
+</pre>
+</div></dd>
+
+  <dt>network configuration files</dt>
+  <dd><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hosts&amp;sektion=5">/etc/hosts(5)</a></tt> (host name database), <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hostname.if&amp;sektion=5">/etc/hostname.<var>if</var>(5)</a></tt> (interface-specific configuration files), <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=myname&amp;sektion=5">/etc/myname(5)</a></tt> (default hostname), <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=mygate&amp;sektion=5">/etc/mygate(5)</a></tt> (default gateway), <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=resolv.conf&amp;sektion=5">/etc/resolv.conf(5)</a></tt> (resolver configuration file);</dd>
+  <dt>users configuration files</dt>
+  <dd><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=group&amp;sektion=5">/etc/group(5)</a></tt> (group permissions file) and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=master.passwd&amp;sektion=5">/etc/master.passwd(5)</a></tt> (password file); the other files (<tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=passwd&amp;sektion=5">/etc/passwd(5)</a></tt>, <tt>/etc/pwd.db</tt>, <tt>/etc/spwd.db</tt>) will be generated by the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pwd_mkdb&amp;sektion=8">pwd_mkdb(8)</a></tt> command:
+
+<div class="code">
+<pre>
+# <kbd>echo &quot;root:$(encrypt -b 8 <var>mypasswd</var>):0:0:daemon:0:0:Charlie &amp;,,,:/root:/bin/ksh&quot; &gt;&gt; /mnt/net4521/etc/master.passwd</kbd>
+# <kbd>echo &quot;wheel:*:0:root&quot; &gt;&gt; /mnt/net4521/etc/group</kbd>
+# <kbd>pwd_mkdb -d /mnt/net4521/etc /mnt/net4521/etc/master.passwd</kbd>
+</pre>
+</div>
+
+    <p>Feel free to add all the system and administrative users and groups you will need. If you want to use <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sudo&amp;sektion=8">sudo(8)</a></tt>, which is usually a good idea, you need to create the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sudoers&amp;sektion=5">sudoers(5)</a></tt> file (using the &quot;<tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=visudo&amp;sektion=8">visudo</a> -f /mnt/net4521/etc/sudoers</tt>&quot; command);</p></dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> configuration files</dt>
+  <dd><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">/etc/pf.conf(5)</a></tt> (configuration and rules) e <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.os&amp;sektion=5">/etc/pf.os(5)</a></tt> (OS fingerprints);</dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ssh&amp;sektion=1">ssh(1)</a></tt> configuration files</dt>
+  <dd><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ssh_config&amp;sektion=5">/etc/ssh/ssh_config</a></tt> (SSH client configuration file), <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sshd_config&amp;sektion=5">/etc/ssh/sshd_config</a></tt> (SSH daemon configuration file), <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=moduli&amp;sektion=5">/etc/moduli(5)</a></tt> (system Diffie-Hellman moduli file). We can also generate the host private keys right now:
+
+<div class="code">
+<pre>
+# <kbd>ssh-keygen -t rsa -f /mnt/net4521/etc/ssh/ssh_host_rsa_key -N &quot;&quot;</kbd>
+# <kbd>ssh-keygen -t rsa1 -f /mnt/net4521/etc/ssh/ssh_host_key -N &quot;&quot;</kbd>
+# <kbd>ssh-keygen -t dsa -f /mnt/net4521/etc/ssh/ssh_host_dsa_key -N &quot;&quot;</kbd>
+</pre>
+</div></dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslog.conf&amp;sektion=5">/etc/syslog.conf(5)</a></tt></dt>
+  <dd>containing <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslogd&amp;sektion=8">syslogd(8)</a></tt> configuration. All log files have to be created (a <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=touch&amp;sektion=1">touch(1)</a></tt> will suffice), otherwise <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslogd&amp;sektion=8">syslogd(8)</a></tt> will complain on boot:
+
+<div class="code">
+<pre>
+# <kbd>mkdir -p /mnt/net4521/tmplate/var/{log,run/dev}</kbd>
+# <kbd>touch /mnt/net4521/tmplate/var/log/{authlog,daemon,messages,secure}</kbd>
+# <kbd>touch /mnt/net4521/tmplate/var/run/utmp</kbd>
+# <kbd>chmod 640 /mnt/net4521/tmplate/var/log/{authlog,daemon}</kbd>
+# <kbd>chmod 600 /mnt/net4521/tmplate/var/log/secure</kbd>
+# <kbd>chmod 664 /mnt/net4521/tmplate/var/run/utmp</kbd>
+</pre>
+</div>
+
+    <p>You may schedule <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=newsyslog&amp;sektion=8">newsyslog(8)</a></tt> to periodically archive log files:</p>
+
+<div class="code">
+<pre>
+# <kbd>echo &quot;0 * * * *  /usr/bin/newsyslog&quot; &gt; /mnt/net4521/tmplate/var/cron/tabs/root</kbd>
+# <kbd>chmod 600 /mnt/net4521/tmplate/var/cron/tabs/root</kbd>
+</pre>
+</div>
+
+    <p>Anyway, since <tt>/var</tt> will reside on volatile memory, it is recommended to forward log messages to a remote log host;</p></dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ttys&amp;sektion=5">/etc/ttys(5)</a></tt></dt>
+  <dd>the terminal initialization file, modified according to our configuration:
+
+<div class="code">
+  <div>/mnt/net4521/etc/ttys</div>
+<pre>
+console	&quot;/usr/libexec/getty Pc&quot;		vt220	off secure
+ttyC0	&quot;/usr/libexec/getty Pc&quot;		vt220	off secure
+ttyC1	&quot;/usr/libexec/getty Pc&quot;		vt220	off secure
+ttyC2	&quot;/usr/libexec/getty Pc&quot;		vt220	off secure
+ttyC3	&quot;/usr/libexec/getty Pc&quot;		vt220	off secure
+tty00	&quot;/usr/libexec/getty std.19200&quot;	vt100	on  secure
+tty01	&quot;/usr/libexec/getty std.9600&quot;	unknown off
+tty02	&quot;/usr/libexec/getty std.9600&quot;	unknown off
+tty03	&quot;/usr/libexec/getty std.9600&quot;	unknown off
+ttyp0	none				network
+ttyp1	none				network
+ttyp2	none				network
+[...]
+</pre>
+</div></dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl.conf&amp;sektion=5">/etc/sysctl.conf(5)</a></tt></dt>
+  <dd>containing <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl&amp;sektion=8">sysctl(8)</a></tt> variables to set at system startup; e.g.:
+
+<div class="code">
+  <div>/mnt/net4521/etc/sysctl.conf</div>
+<pre>
+net.inet.ip.forwarding=1
+[...]
+</pre>
+</div></dd>
+</dl>
+
+<p>Next, we need to copy the startup scripts (<tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">rc(8)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">rc.local(8)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">rc.securelevel(8)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf&amp;sektion=8">rc.conf(8)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf&amp;sektion=8">rc.conf.local(8)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.shutdown&amp;sektion=8">rc.shutdown(8)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=netstart&amp;sektion=8">netstart(8)</a></tt>) and create the device files:</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir /mnt/net4521/dev/</kbd>
+# <kbd>cp /dev/MAKEDEV /mnt/net4521/dev/</kbd>
+# <kbd>cd /mnt/net4521/dev/</kbd>
+# <kbd>./MAKEDEV tun0 tun1 tun2 tun3 bpf0 bpf1 bpf2 bpf3 bpf4 bpf5 bpf6 bpf7 bpf8   \</kbd>
+&gt; <kbd>bpf9 fd1 fd1B fd1C fd1D fd1E fd1F fd1G fd1H fd0 fd0B fd0C fd0D fd0E fd0F     \</kbd>
+&gt; <kbd>fd0G fd0H random crypto pf pctr systrace sd0 sd1 sd2 sd3 sd4 wd0 wd1 wd2 wd3 \</kbd>
+&gt; <kbd>fd tty00 tty01 tty02 tty03 ttyc0 ttyc1 ttyc2 ttyc3 apm std</kbd>
+#
+</pre>
+</div>
+
+<p><em>Note</em>: <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">rc(8)</a></tt> clears the <tt>/tmp</tt> directory on boot, thus removing the contents of the <tt>/var</tt> and <tt>/root</tt> directories; therefore, I would recommend that you delete the following lines from <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">/mnt/net4521/etc/rc</a></tt>:</p>
+
+<div class="code">
+  <div>/mnt/net4521/etc/rc</div>
+<pre>
+(cd /tmp && rm -rf [a-km-pr-zA-Z]*)
+(cd /tmp &&
+    find . ! -name . ! -name lost+found ! -name quota.user \
+        ! -name quota.group -execdir rm -rf -- {} \; -type d -prune)
+</pre>
+</div>
+
+<p><tt>/dev/log</tt>, used by <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslogd&amp;sektion=8">syslogd(8)</a></tt>, must be writable: therefore, we turn it into a symlink to <tt>/var/run/dev/log</tt>.  The same applies to pseudo terminals, which must be able to change owner and permissions:</p>
+
+<div class="code">
+<pre>
+# <kbd>ln -s /var/run/dev/log /mnt/net4521/dev/log</kbd>
+# <kbd>cd /mnt/net4521/tmplate/var/run/dev/</kbd>
+# <kbd>/dev/MAKEDEV pty</kbd>
+# <kbd>for dev in [tp]typ?; do</kbd>
+&gt; <kbd>    ln -s /var/run/dev/$dev /mnt/net4521/dev/$dev</kbd>
+&gt; <kbd>done</kbd>
+#
+</pre>
+</div>
+
+<p>Finally, we can install binaries and libraries. The simplest way is copying them from the system currently in use, or you may extract them from the installation file set (<tt>base<var>XX</var>.tgz</tt>). To save some time, you can create a file with the list of the binaries to copy (a good starting point is <tt>flashsmall.txt</tt> from <a href="http://www.nmedia.net/flashdist/">flashdist</a>):</p>
+
+<div class="code">
+<pre>
+# <kbd>tar -I <var>bin_list.txt</var> -cf - | tar -C /mnt/net4521/ -xpf -</kbd>
+tar: Removing leading / from absolute path names in the archive
+# <kbd>while read file; do</kbd>
+&gt; <kbd>    ldd $file 2&gt;/dev/null | egrep 'rlib|rtld' | awk '{ print $7 }' </kbd>
+&gt; <kbd>done &lt; <var>bin_list.txt</var> | sort -u | xargs tar -cvf - | tar -C /mnt/net4521/ -xpf -</kbd>
+tar: Removing leading / from absolute path names in the archive
+[...]
+#
+</pre>
+</div>
+
+<p>If you wish to further decrease the binaries disk space, you can take a look at <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=crunchgen&amp;sektion=8">crunchgen(8)</a></tt>, which builds them all in a single binary file that modifies its behaviour according to <tt>argv[0]</tt>, or remove the debugging symbols from the shared libraries using the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=strip&amp;sektion=1">strip(1)</a></tt> command:</p>
+
+<div class="code">
+<pre>
+# <kbd>strip -S /mnt/net4521/usr/lib/lib*</kbd>
+</pre>
+</div>
+
+<p>Now we only have to transfer the virtual filesystem we have created to the memory card:</p>
+
+<div class="code">
+<pre>
+# <kbd>umount /mnt/net4521</kbd>
+# <kbd>vnconfig -u svnd0</kbd>
+# <kbd>dd if=net4521.img of=/dev/sd0c bs=512</kbd>
+125440+0 records in
+125440+0 records out
+64225280 bytes transferred in 383.307 secs (167556 bytes/sec)
+#
+</pre>
+</div>
+
+<p>Plug the compact flash into the device, power it up and ...uncork the champagne!</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="embedded1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="embedded3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Embedded OpenBSD</h3>
+    <div>Previous: <a href="embedded1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="embedded3.html">3. Diskless installation</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

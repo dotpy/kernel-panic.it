@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="description" content="Setting up a secure DNS server with OpenBSD and Bind" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a domain name server - Table of contents</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Previous</span></span></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns1.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="dns1.html">1. Introduction</a>
+    </div>
+  </div>
+
+  <hr />
+
+  <h1>OpenBSD as a domain name server</h1>
+  <div id="subtitle">Author: <a href="mailto:danix@kernel-panic.it">Daniele Mazzocchio</a><br />
+                     Applies to: OpenBSD 5.2<br />
+                     Last update: Nov 10, 2012<br />
+                     Download: <a href="OpenBSD_dns_server.pdf"><img src="../../images/pdf.gif" height="20" width="20" alt="[PDF]" /></a>
+  </div>
+
+  <h2>Table of contents</h2>
+
+  <ul>
+    <li><a href="dns1.html">1. Introduction</a></li>
+    <li><a href="dns2.html">2. The Domain Name System</a>
+      <ul>
+        <li><a href="dns2.html#dns-2.1">2.1 A few definitions</a></li>
+        <li><a href="dns2.html#dns-2.2">2.2 The name resolution process</a></li>
+        <li><a href="dns2.html#dns-2.3">2.3 Reverse name resolution</a></li>
+        <li><a href="dns2.html#dns-2.4">2.4 Resource records</a></li>
+      </ul>
+    </li>
+    <li><a href="dns3.html">3. Base configuration</a>
+      <ul>
+        <li><a href="dns3.html#dns-3.1">3.1 The main configuration file</a></li>
+        <li><a href="dns3.html#dns-3.2">3.2 The zone data files</a></li>
+        <li><a href="dns3.html#dns-3.3">3.3 Starting Bind</a></li>
+        <li><a href="dns3.html#dns-3.4">3.4 rndc(8)</a></li>
+        <li><a href="dns3.html#dns-3.5">3.5 Adding a slave name server</a></li>
+      </ul>
+    </li>
+    <li><a href="dns4.html">4. Further Bind configuration</a>
+      <ul>
+        <li><a href="dns4.html#dns-4.1">4.1 Views and split namespace</a></li>
+        <li><a href="dns4.html#dns-4.2">4.2 Delegation</a></li>
+        <li><a href="dns4.html#dns-4.3">4.3 Auto-update and notify</a></li>
+        <li><a href="dns4.html#dns-4.4">4.4 TSIG and security</a></li>
+        <li><a href="dns4.html#dns-4.5">4.5 Logging</a></li>
+      </ul>
+    </li>
+    <li><a href="dns5.html">5. Appendix A</a>
+      <ul>
+        <li><a href="dns5.html#dns-5.1">5.1 First draft of the configuration and zone data files</a>
+          <ul>
+            <li><a href="dns5.html#dns-5.1.1">5.1.1 DMZ primary master</a></li>
+            <li><a href="dns5.html#dns-5.1.2">5.1.2 DMZ secondary master</a></li>
+          </ul>
+        </li>
+        <li><a href="dns5.html#dns-5.2">5.2 Final version of the configuration and zone data files</a>
+          <ul>
+            <li><a href="dns5.html#dns-5.2.1">5.2.1 DMZ primary master</a></li>
+            <li><a href="dns5.html#dns-5.2.2">5.2.2 DMZ secondary master</a></li>
+            <li><a href="dns5.html#dns-5.2.3">5.2.3 LAN primary master</a></li>
+            <li><a href="dns5.html#dns-5.2.4">5.2.4 LAN secondary master</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="dns6.html">6. Appendix B</a>
+      <ul>
+        <li><a href="dns6.html#dns-6.1">6.1 References</a></li>
+        <li><a href="dns6.html#dns-6.2">6.2 Bibliography</a></li>
+      </ul>
+    </li>
+
+  </ul>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Previous</span></span></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns1.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="dns1.html">1. Introduction</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

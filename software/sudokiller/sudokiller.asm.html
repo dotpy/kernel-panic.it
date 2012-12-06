@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,open,source,programming,sudoku,solver,sudokiller,assembler,x86" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>Sudokiller.asm - A Sudoku Solver in x86 Assembler</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/code.css" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.s.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.sh.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.asm</h3>
+    <div>Previous: <a href="sudokiller.s.html">sudokiller.s</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.sh.html">sudokiller.sh</a>
+    </div>
+  </div>
+
+  <hr />
+
+<pre>
+<span class="cmt">;;;; sudokiller.asm ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;                                                                            ;;
+;; Sudoku game solver in x86 assembler                                        ;;
+;;                                                                            ;;
+;; Version      : 1.0                                                         ;;
+;; Created date : 05/09/2005                                                  ;;
+;; Last update  : 06/09/2005                                                  ;;
+;; Author       : Daniele Mazzocchio                                          ;;
+;;                                                                            ;;
+;; Replace the 'board' table with the puzzle you want to be solved, filling   ;;
+;; the empty cells with zeroes. Then compile and run this program using the   ;;
+;; commands:                                                                  ;;
+;;                                                                            ;;
+;;   nasm -f elf sudokiller.asm                                               ;;
+;;   gcc -o sudokiller sudokiller.o                                           ;;
+;;   ./sudokiller                                                             ;;
+;;                                                                            ;;
+;; <a href="sudokiller.tar.gz">Download sources</a>                                                           ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+
+[<span class="kw">section</span> .data]
+<span class="kw">align</span> 4
+
+<span class="cmt">; This is the game board. Fill it with the puzzle you want to solve</span>
+board       <span class="kw">db</span>    0, 6, 0, 1, 0, 4, 0, 5, 0
+            <span class="kw">db</span>    0, 0, 8, 3, 0, 5, 6, 0, 0
+            <span class="kw">db</span>    2, 0, 0, 0, 0, 0, 0, 0, 1
+            <span class="kw">db</span>    8, 0, 0, 4, 0, 7, 0, 0, 6
+            <span class="kw">db</span>    0, 0, 6, 0, 0, 0, 3, 0, 0
+            <span class="kw">db</span>    7, 0, 0, 9, 0, 1, 0, 0, 4
+            <span class="kw">db</span>    5, 0, 0, 0, 0, 0, 0, 0, 2
+            <span class="kw">db</span>    0, 0, 7, 2, 0, 6, 9, 0, 0
+            <span class="kw">db</span>    0, 4, 0, 5, 0, 8, 0, 7, 0
+
+<span class="cmt">; printf format strings</span>
+separator   <span class="kw">db</span>    <span class="str">&quot;+---+---+---+---+---+---+---+---+---+&quot;</span>, 0Ah, 0
+board_row   <span class="kw">db</span>    <span class="str">&quot;| %d | %d | %d | %d | %d | %d | %d | %d | %d |&quot;</span>, 0Ah, 0
+
+
+[section .text]
+<span class="kw">align</span> 4
+
+<span class="kw">extern</span> printf, exit
+<span class="kw">global</span> main
+
+<span class="cmt">; Single-line macros -----------------------------------------------------------</span>
+<span class="kw">%define</span>  SIZE      9                 <span class="cmt">; Width of the Sudoku board</span>
+<span class="kw">%define</span>  BOX_W     3                 <span class="cmt">; Width of the inner boxes</span>
+<span class="kw">%define</span>  BOX_H     3                 <span class="cmt">; Height of the inner boxes</span>
+<span class="kw">%define</span>  EMPTY     0                 <span class="cmt">; Empty cells marker</span>
+<span class="kw">%define</span>  RET_OK    0                 <span class="cmt">; Return code upon success</span>
+<span class="kw">%define</span>  RET_FAIL  1                 <span class="cmt">; Return code upon failure</span>
+
+<span class="cmt">; Macros -----------------------------------------------------------------------</span>
+<span class="kw">%macro</span>  print_separator      0       <span class="cmt">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+    <span class="kw">push</span>   dword separator           <span class="cmt">;</span>
+    <span class="kw">call</span>   printf                    <span class="cmt">; Print a separator between board lines</span>
+    <span class="kw">add</span>    esp, 4                    <span class="cmt">;</span>
+<span class="kw">%endmacro</span>                            <span class="cmt">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+
+<span class="kw">%macro</span>  setup_stack_frame    0       <span class="cmt">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+    <span class="kw">push</span>   ebp                       <span class="cmt">;</span>
+    <span class="kw">mov</span>    ebp, esp                  <span class="cmt">; Set up the stack frame according to the</span>
+    <span class="kw">push</span>   ebx                       <span class="cmt">;   C calling convention, preserving the</span>
+    <span class="kw">push</span>   esi                       <span class="cmt">;   ebp, ebx, esi and edi registers.</span>
+    <span class="kw">push</span>   edi                       <span class="cmt">;</span>
+<span class="kw">%endmacro</span>                            <span class="cmt">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+
+<span class="kw">%macro</span>  destroy_stack_frame  0       <span class="cmt">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+    <span class="kw">pop</span>    edi                       <span class="cmt">;</span>
+    <span class="kw">pop</span>    esi                       <span class="cmt">; Destroy the stack frame restoring the</span>
+    <span class="kw">pop</span>    ebx                       <span class="cmt">;   edi, esi, ebx and ebp registers to</span>
+    <span class="kw">mov</span>    esp, ebp                  <span class="cmt">;   their original values.</span>
+    <span class="kw">pop</span>    ebp                       <span class="cmt">;</span>
+<span class="kw">%endmacro</span>                            <span class="cmt">;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</span>
+
+<span class="cmt">;-------------------------------------------------------------------------------
+; main - Call the guess() function and print the resulting board. If no solution
+;        exists, the board will be printed as it is (with zeroes)
+;
+; Last update : 06/09/2005
+; Args        : None
+; Action      : Call guess(), print the board and exit cleanly.
+;-------------------------------------------------------------------------------</span>
+<span class="func">main</span>:
+    setup_stack_frame                <span class="cmt">; Set up stack frame</span>
+
+    <span class="kw">push</span>   dword 0                   <span class="cmt">; Offset of first cell to guess</span>
+    <span class="kw">call</span>   guess                     <span class="cmt">; Start brute forcing the solution</span>
+    <span class="kw">add</span>    esp, 4                    <span class="cmt">; Clean up the stack</span>
+    <span class="kw">mov</span>    ebx, eax                  <span class="cmt">; Save return code</span>
+
+    <span class="kw">call</span>   print_board               <span class="cmt">; Print resulting board</span>
+
+    <span class="kw">push</span>   ebx                       <span class="cmt">; Exit with guess() return code</span>
+    <span class="kw">call</span>   exit                      <span class="cmt">; Exit cleanly</span>
+    <span class="kw">add</span>    esp, 4                    <span class="cmt">; Clean up the stack</span>
+
+    destroy_stack_frame              <span class="cmt">; Destroy stack frame</span>
+    <span class="kw">ret</span>                              <span class="cmt">; Return</span>
+
+<span class="cmt">;-------------------------------------------------------------------------------
+; guess - Test all candidate numbers for the current cell until the board is
+;         complete
+;
+; Last update : 06/09/2005
+; Args        : offset (at [ebp + 8]) - Offset of the cell to guess
+; Action      : Loop on numbers from 9 to 1 to find candidates for the current
+;               cell. If none is found, return RET_FAIL. Otherwise go on to the
+;               next cell.
+;-------------------------------------------------------------------------------</span>
+<span class="func">guess</span>:
+    setup_stack_frame                <span class="cmt">; Set up stack frame</span>
+
+    <span class="kw">mov</span>    esi, [ebp + 8]            <span class="cmt">; Store offset in esi</span>
+    <span class="kw">cmp</span>    esi, SIZE * SIZE          <span class="cmt">; Is offset outside the board bounds?</span>
+    <span class="kw">je</span>     .return_ok                <span class="cmt">;   If it is, return TRUE</span>
+
+    <span class="kw">xor</span>    edx, edx                  <span class="cmt">; Clean edx</span>
+    <span class="kw">mov</span>    eax, esi                  <span class="cmt">; eax = offset</span>
+    <span class="kw">mov</span>    ecx, SIZE                 <span class="cmt">; Set divisor to find cell's column</span>
+    <span class="kw">div</span>    cx                        <span class="cmt">; edx = column index of cell</span>
+    <span class="kw">mov</span>    ebx, eax                  <span class="cmt">; ebx = row index of cell</span>
+
+    <span class="kw">cmp</span>    byte [board + esi], EMPTY <span class="cmt">; Check if cell is empty</span>
+    <span class="kw">je</span>     .loop                     <span class="cmt">;   If it is, jump to the loop</span>
+    <span class="kw">inc</span>    esi                       <span class="cmt">;   Otherwise increment offset</span>
+    <span class="kw">push</span>   esi                       <span class="cmt">;   push it on the stack</span>
+    <span class="kw">call</span>   guess                     <span class="cmt">;   and go on to the next cell</span>
+    <span class="kw">add</span>    esp, 4                    <span class="cmt">; Clean up the stack</span>
+    <span class="kw">jmp</span>    .return                   <span class="cmt">; Return the value returned by guess()</span>
+
+    <span class="lbl">.loop</span>:
+        <span class="kw">push</span>   edx                   <span class="cmt">; Push cell column index</span>
+        <span class="kw">push</span>   ebx                   <span class="cmt">; Push cell row index</span>
+        <span class="kw">push</span>   ecx                   <span class="cmt">; Push number to check</span>
+        <span class="kw">call</span>   check                 <span class="cmt">; Check if number is a legal candidate</span>
+        <span class="kw">pop</span>    ecx                   <span class="cmt">; Restore ecx (number to check)</span>
+        <span class="kw">pop</span>    ebx                   <span class="cmt">; Restore ebx (row index)</span>
+        <span class="kw">pop</span>    edx                   <span class="cmt">; Restore edx (column index)</span>
+
+        <span class="kw">cmp</span>    eax, RET_OK           <span class="cmt">; Examine check() return value</span>
+        <span class="kw">jne</span>    .next                 <span class="cmt">;   If RET_FAIL, try next number</span>
+        <span class="kw">mov</span>    byte [board + esi], cl <span class="cmt">;  If RET_OK, assign number to cell</span>
+
+        <span class="kw">push</span>   ecx                   <span class="cmt">; Save ecx</span>
+        <span class="kw">push</span>   edx                   <span class="cmt">; Save edx</span>
+        <span class="kw">inc</span>    esi                   <span class="cmt">; Increment offset of number to guess</span>
+        <span class="kw">push</span>   esi                   <span class="cmt">; Push guess() argument</span>
+        <span class="kw">call</span>   guess                 <span class="cmt">; Call guess() on next cell</span>
+        <span class="kw">add</span>    esp, 4                <span class="cmt">; Clean up the stack</span>
+        <span class="kw">pop</span>    edx                   <span class="cmt">; Restore edx</span>
+        <span class="kw">pop</span>    ecx                   <span class="cmt">; Restore ecx</span>
+
+        <span class="kw">cmp</span>    eax, RET_OK           <span class="cmt">; Examine guess() return value</span>
+        <span class="kw">je</span>     .return               <span class="cmt">;   If RET_OK, return RET_OK</span>
+        <span class="kw">dec</span>    esi                   <span class="cmt">;   Else, restore esi to current offset</span>
+        <span class="lbl">.next</span>:
+            <span class="kw">loop</span>   .loop             <span class="cmt">; Loop on every number form 9 to 1</span>
+
+        <span class="kw">mov</span>    byte [board + esi], EMPTY <span class="cmt">; If no number worked, empty the cell</span>
+
+    <span class="kw">mov</span>    eax, RET_FAIL             <span class="cmt">; Set return value to RET_FAIL</span>
+    <span class="kw">jmp</span>    .return                   <span class="cmt">; Jump to Return instructions</span>
+
+    <span class="lbl">.return_ok</span>:
+        <span class="kw">xor</span>    eax, eax              <span class="cmt">; Set return value to RET_OK</span>
+
+    <span class="lbl">.return</span>:
+        destroy_stack_frame          <span class="cmt">; Destroy the stack frame</span>
+        <span class="kw">ret</span>                          <span class="cmt">; Return</span>
+
+<span class="cmt">;-------------------------------------------------------------------------------
+; check - Check if a number is, according to Sudoku rules, a legal candidate for
+;         the given cell
+;
+; Last update : 06/09/2005
+; Args        : num (at [ebp + 8])  - Number to check
+;               row (at [ebp + 12]) - Cell's row index
+;               col (at [ebp + 16]) - Cell's column index
+; Action      : Return RET_FAIL if the number already appears in the row, column
+;               or 3x3 box the cell belongs to. Otherwise return RET_OK.
+;-------------------------------------------------------------------------------</span>
+<span class="func">check</span>:
+    setup_stack_frame                <span class="cmt">; Set up stack frame</span>
+
+    <span class="kw">mov</span>    ebx, [ebp + 8]            <span class="cmt">; Store number in ebx</span>
+    <span class="kw">cld</span>                              <span class="cmt">; Clear DF</span>
+<span class="cmt">;;; Row check - Point to the beginning of the row ([board] + row * SIZE) and
+;;; parse it looking for the number we're checking</span>
+    <span class="kw">mov</span>    esi, board                <span class="cmt">; Load board address in esi</span>
+    <span class="kw">mov</span>    eax, [ebp + 0Ch]          <span class="cmt">; Load row in eax</span>
+    <span class="kw">mov</span>    ecx, SIZE                 <span class="cmt">; Set column counter</span>
+    <span class="kw">mul</span>    cl                        <span class="cmt">; eax = row offset from board</span>
+    <span class="kw">add</span>    esi, eax                  <span class="cmt">; esi = address of row's first cell</span>
+    <span class="lbl">.row_check</span>:
+        <span class="kw">lodsb</span>                        <span class="cmt">; eax = number in current cell</span>
+        <span class="kw">cmp</span>    al, bl                <span class="cmt">; Does the cell contain our number?</span>
+        <span class="kw">je</span>     .return_fail          <span class="cmt">;   If it does, return RET_FAIL</span>
+        <span class="kw">loop</span>   .row_check            <span class="cmt">;   Otherwise, go on to the next cell</span>
+
+<span class="cmt">;;; Column check - Point to the beginning of the column ([board] + col) and
+;;; parse it looking for the number we're checking</span>
+    <span class="kw">mov</span>    esi, board                <span class="cmt">; Store board address in esi</span>
+    <span class="kw">mov</span>    eax, [ebp + 010h]         <span class="cmt">; Load col in eax</span>
+    <span class="kw">add</span>    esi, eax                  <span class="cmt">; esi = Column offset from board</span>
+    <span class="kw">mov</span>    ecx, SIZE                 <span class="cmt">; Set row counter</span>
+    <span class="lbl">.col_check</span>:
+        <span class="kw">cmp</span>    byte [esi], bl        <span class="cmt">; Does the cell contain our number?</span>
+        <span class="kw">je</span>     .return_fail          <span class="cmt">;   If it does, return RET_FAIL</span>
+        <span class="kw">add</span>    esi, SIZE             <span class="cmt">;   Otherwise, point to the next cell</span>
+        <span class="kw">loop</span>   .col_check            <span class="cmt">;   and loop on each column cell</span>
+
+<span class="cmt">;;; Box check - Point to the top-left corner of the box the cell belongs to
+;;; ([board] + (col - (col % BOX_H)) + ((row - (row % BOX_W)) * SIZE)) and
+;;; parse it looking for the number we're checking</span>
+    <span class="kw">mov</span>    esi, board                <span class="cmt">; Store board address in esi</span>
+    <span class="kw">mov</span>    edx, eax                  <span class="cmt">; edx = col</span>
+    <span class="kw">mov</span>    ecx, BOX_H                <span class="cmt">; Set divisor</span>
+    <span class="kw">div</span>    cl                        <span class="cmt">; ah = col % BOX_H</span>
+    <span class="kw">sub</span>    dl, ah                    <span class="cmt">; dl = (col - (col % 3))</span>
+    <span class="kw">add</span>    esi, edx                  <span class="cmt">; esi = [board] + (col - (col % 3))</span>
+
+    <span class="kw">mov</span>    eax, [ebp + 0Ch]          <span class="cmt">; eax = row</span>
+    <span class="kw">mov</span>    edx, eax                  <span class="cmt">; edx = row</span>
+    <span class="kw">div</span>    cl                        <span class="cmt">; ah = row % BOX_W</span>
+    <span class="kw">sub</span>    dl, ah                    <span class="cmt">; dl = (row - (row % 3))</span>
+
+    <span class="kw">mov</span>    eax, SIZE                 <span class="cmt">; Set multiplicator</span>
+    <span class="kw">mul</span>    dl                        <span class="cmt">; eax = ((row - (row % 3)) * 9)</span>
+    <span class="kw">add</span>    esi, eax                  <span class="cmt">; esi = address of box's top-left corner</span>
+    <span class="lbl">.box_check</span>:
+        <span class="kw">mov</span>    edx, ecx              <span class="cmt">; Save row counter</span>
+        <span class="kw">mov</span>    ecx, BOX_W            <span class="cmt">; Set column counter</span>
+        <span class="lbl">.box_row_check</span>:
+            <span class="kw">lodsb</span>                    <span class="cmt">; eax = number in current cell</span>
+            <span class="kw">cmp</span>    al, bl            <span class="cmt">; Does the cell contain our number?</span>
+            <span class="kw">je</span>     .return_fail      <span class="cmt">;   If it does, return RET_FAIL</span>
+            <span class="kw">loop</span>   .box_row_check    <span class="cmt">;   Otherwise go on to the next row cell</span>
+        <span class="kw">add</span>    esi, SIZE - BOX_W     <span class="cmt">; Point to the beginning of next row</span>
+        <span class="kw">mov</span>    ecx, edx              <span class="cmt">; Restore row counter</span>
+        <span class="kw">loop</span>   .box_check            <span class="cmt">; Loop on each box row</span>
+
+    <span class="kw">xor</span>    eax, eax                  <span class="cmt">; eax = RET_OK (0)</span>
+    <span class="kw">jmp</span>    .return                   <span class="cmt">; Number is a legal candidate for this cell</span>
+
+    <span class="lbl">.return_fail</span>:
+        <span class="kw">mov</span>    eax, RET_FAIL         <span class="cmt">; Store return value in eax</span>
+
+    <span class="lbl">.return</span>:
+        destroy_stack_frame          <span class="cmt">; Destroy stack frame</span>
+        <span class="kw">ret</span>                          <span class="cmt">; Return</span>
+
+<span class="cmt">;-------------------------------------------------------------------------------
+; print_board - Print the Sudoku board
+;
+; Last update : 06/09/2005
+; Args        : None
+; Action      : Read board rows pushing each number on the stack and print them.
+;               Rows are read from right to left to push printf arguments in
+;               reverse order
+;-------------------------------------------------------------------------------</span>
+<span class="func">print_board</span>:
+    setup_stack_frame                <span class="cmt">; Set up stack frame</span>
+
+    print_separator                  <span class="cmt">; Print top border</span>
+
+    <span class="kw">mov</span>    esi, board + (SIZE - 1)   <span class="cmt">; Point to the end of the first row</span>
+    <span class="kw">mov</span>    ecx, SIZE                 <span class="cmt">; Set rows counter</span>
+    <span class="lbl">.loop</span>:
+        <span class="kw">std</span>                          <span class="cmt">; Set DF to load data in reverse order</span>
+        <span class="kw">mov</span>    ebx, ecx              <span class="cmt">; Save the outer loop counter</span>
+        <span class="kw">mov</span>    ecx, SIZE             <span class="cmt">; Set the columns counter</span>
+        <span class="lbl">.inloop</span>:
+            <span class="kw">lodsb</span>                    <span class="cmt">; Store cell content in eax</span>
+            <span class="kw">push</span>   eax               <span class="cmt">;   and push it on the stack for printf</span>
+            <span class="kw">loop</span>   .inloop           <span class="cmt">; Loop on each row cell</span>
+
+        <span class="kw">push</span>   board_row             <span class="cmt">; Push format string</span>
+        <span class="kw">call</span>   printf                <span class="cmt">; Print row</span>
+        <span class="kw">add</span>    esp, 028h             <span class="cmt">; Clean stack</span>
+
+        print_separator              <span class="cmt">; Print separator between rows</span>
+
+        <span class="kw">add</span>    esi, SIZE * 2         <span class="cmt">; Point to the end of the next row</span>
+        <span class="kw">mov</span>    ecx, ebx              <span class="cmt">; Restore the outer loop counter</span>
+        <span class="kw">loop</span>   .loop                 <span class="cmt">; Loop on each row</span>
+
+    destroy_stack_frame              <span class="cmt">; Destroy stack frame</span>
+    <span class="kw">ret</span>                              <span class="cmt">; Return</span>
+
+</pre>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.s.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.sh.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.asm</h3>
+    <div>Previous: <a href="sudokiller.s.html">sudokiller.s</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.sh.html">sudokiller.sh</a>
+    </div>
+  </div>
+
+  <script type="text/javascript"> var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

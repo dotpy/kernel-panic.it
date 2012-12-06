@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+
+  <title>Network monitoring with Nagios and OpenBSD - Introduction</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="nagios2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Network monitoring with Nagios and OpenBSD</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="nagios2.html">2. Installation and base configuration</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>1. Introduction</h2>
+
+<p>So our OpenBSD-based network now includes <a href="../carp/index.html">redundant firewalls</a>, <a href="../dns/index.html">domain name servers</a>, a <a href="../mail/index.html">mail gateway</a> and a <a href="../proxy/index.html">web proxy cache</a>. All the services provided by these machines are particularly critical and can't afford even minimal downtime. Redundancy may give us the time to recover a failure before having angry users trying to knock down our door, but it doesn't free us from the responsibility to detect and solve ongoing problems.</p>
+<p>To put it short, it's time to think about monitoring our network! And the following are the perfect ingredients for implementing a full-featured, secure and reliable network monitoring system:</p>
+
+<dl>
+  <dt><a href="http://www.openbsd.org/">OpenBSD</a></dt>
+  <dd>the operating system for the security paranoid, with <q>only two remote holes in the default install, in a heck of a long time!</q>;</dd>
+  <dt><a href="http://www.nagios.org/">Nagios</a></dt>
+  <dd>the <q>industry standard in Open Source monitoring</q>;</dd>
+  <dt><a href="http://httpd.apache.org/">Apache</a></dt>
+  <dd>the <q>secure, efficient and extensible server that provides <acronym title="HyperText Transfer Protocol">HTTP</acronym> services in sync with the current HTTP standards</q>.</dd>
+</dl>
+
+<p>My pick goes to Nagios for its ease of use, flexibility and extensibility. It also features a very clean and straightforward design, as it is structured into three basic building blocks:</p>
+
+<ul>
+  <li>a <dfn>daemon process</dfn>, running periodic checks on specific hosts and services and managing notifications when problems arise;</li>
+  <li>an optional <dfn>web interface</dfn>, to access current status information, historical logs and reports via a simple web browser;</li>
+  <li>a set of <dfn>external plugins</dfn>, i.e. the (possibly custom) scripts executed by the daemon process to actually perform the checks and send out notifications.</li>
+</ul>
+
+<p>Furthermore, these basic components can be easily extended with external modules, making it easy for Nagios to meet even your most demanding needs! Therefore, after the installation and configuration of the Nagios' core components, we will take a brief look at some of its most popular and useful <a href="http://www.nagiosexchange.org/AddOn_Projects.22.0.html">addons</a>:</p>
+
+<ul>
+  <li><a href="nagios5.html#nagios-5.1">NRPE</a>, the <dfn>Nagios Remote Plugin Executor</dfn>, which allows you to execute local plugins on remote hosts;</li>
+  <li><a href="nagios5.html#nagios-5.2">NSCA</a>, the <dfn>Nagios Service Check Acceptor</dfn>, which processes passive service check results submitted by clients to the Nagios server;</li>
+  <li><a href="nagios5.html#nagios-5.3">NagVis</a>, the <dfn>Nagios Visualization Addon</dfn>, which allows you to deeply customize how Nagios data is displayed;</li>
+</ul>
+
+<p>A good knowledge of OpenBSD is assumed, since we won't delve into system management topics such as base configuration or packages/ports 
+installation.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="nagios2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Network monitoring with Nagios and OpenBSD</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="nagios2.html">2. Installation and base configuration</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

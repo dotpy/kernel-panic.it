@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/pydoc.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf7.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="../../programming.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf7.html">7. Anatomy of a Packet Filter rule</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="../../programming.html">Programming</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>8. Using the py-pf module</h2>
+
+<p>In this last chapter, we will see how the <tt>py-pf</tt> module can be effectively used in real-world applications. We will first start by examining the <tt>pf.lib</tt> module, which provides some higher-level classes designed to make it easier to load rules in Packet Filter; then we will move to a concrete example by implementing a very simple load balancer based on <tt>py-pf</tt>.</p>
+
+<h3><a id="pf-8.1" name="pf-8.1"></a>8.1 Keeping things easy with pf.lib</h3>
+
+<p>Usually, creating a ruleset is a repetitive task that requires many identical parameters (such as address family, direction or protocol) to be passed repeatedly to all rule instances. The <tt>pf.lib</tt> module attempts to minimize this overhead by providing some higher-level classes implementing the most common objects in a PF ruleset.</p>
+<p>A simple example will best illustrate how these classes can simplify the creation of PF rulesets; we will see how the ruleset we created in <a href="pf7.html">the previous chapter</a> can be more easily written by using <tt>pf.lib</tt>:</p>
+
+<div class="code">
+<pre>
+import socket
+import pf
+
+<i># Interfaces</i>
+ext_if = pf.PFAddr(type=pf.PF_ADDR_DYNIFTL, ifname=&quot;sis0&quot;)
+int_if = &quot;sis1&quot;
+
+<i># Internal servers</i>
+www_srv  = pf.PFRuleAddr(pf.PFAddr(&quot;192.168.30.10&quot;), pf.lib.TCPPort(80))
+smtp_srv = pf.PFRuleAddr(pf.PFAddr(&quot;192.168.30.11&quot;), pf.lib.TCPPort(25))
+
+<i># NAT outgoing connections
+# rule: match out on $ext_if inet from !($ext_if) to any nat-to ($ext_if)</i>
+r0 = pf.lib.MatchOutRule(ifname=ext_if.ifname,
+                         src=PFRuleAddr(addr=ext_if, neg=True),
+                         nat=pf.lib.NATPool(ext_if))
+
+<i># Redirect web services (with load balancing)
+# rule: match in on $ext_if inet proto tcp from any to ($ext_if) port $www_prt \
+#           rdr-to $www_srv round-robin sticky-address</i>
+r1 = pf.lib.MatchInRule(ifname=ext_if.ifname,
+                        dst=pf.PFRuleAddr(ext_if, www_srv.port),
+                        rdr=pf.lib.RDRPool(www_srv.addr,
+                             opts=pf.PF_POOL_ROUNDROBIN|pf.PF_POOL_STICKYADDR))
+
+<i># Default deny</i>
+# rule: block drop all
+r2 = pf.lib.BlockRule()
+
+<i># Spoofed address protection
+# rule: block drop in quick from urpf-failed</i>
+r3 = pf.lib.BlockInRule(quick=True,
+                        src=pf.PFRuleAddr(pf.PFAddr(&quot;urpf-failed&quot;)))
+
+<i># Allow traffic to web server
+# rules: pass in on $ext_if inet proto tcp from any to $www_srv port $www_prt synproxy state
+#        pass out on $int_if inet proto tcp from any to $www_srv port $www_prt</i>
+r4 = pf.lib.PassInRule(ifname=ext_if.ifname, dst=www_srv,
+                       keep_state=pf.PF_STATE_SYNPROXY)
+r5 = pf.lib.PassOutRule(ifname=int_if, dst=www_srv)
+
+<i># Allow incoming &quot;unreach code needfrag&quot; ICMP packets and all outgoing ICMP traffic.
+# rules: pass in  inet proto icmp all icmp-type unreach code needfrag
+#        pass out inet proto icmp all</i>
+r6 = pf.lib.PassInRule(proto=socket.IPPROTO_ICMP, code=&quot;needfrag&quot;)
+r7 = pf.lib.PassOutPFRule(proto=socket.IPPROTO_ICMP)
+
+<i># Allow smtp traffic from all except for addresses in the &lt;spammers&gt; table
+# rules: table &lt;spammers&gt; persist
+#        pass in on $ext_if inet proto tcp from !&lt;spammers&gt; to $smtp_srv port $smtp_prt
+#        pass out on $int_if inet proto tcp from !&lt;spammers&gt; to $smtp_srv port $smtp_prt</i>
+t1 = pf.PFTable(&quot;spammers&quot;, flags=pf.PFR_TFLAG_PERSIST)
+r8 = pf.lib.PassInRule(ifname=ext_if.ifname,
+                       src=pf.PFRuleAddr(pf.PFAddr(&quot;&lt;{0}&gt;&quot;.format(t1.name)), neg=True),
+                       dst=smtp_srv)
+r9 = pf.lib.PassOutRule(ifname=int_if,
+                        src=pf.PFRuleAddr(pf.PFAddr(&quot;&lt;{0}&gt;&quot;.format(t1.name)), neg=True),
+                        dst=smtp_srv)
+</pre>
+</div>
+
+<h3><a id="pf-8.2" name="pf-8.2"></a>8.2 Example: a simple load balancer</h3>
+
+<p></p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf7.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="../../programming.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf7.html">7. Anatomy of a Packet Filter rule</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="../../programming.html">Programming</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

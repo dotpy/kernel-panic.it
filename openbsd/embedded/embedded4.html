@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,firewall,embedded,soekris,wrap,alix,install,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+
+  <title>Embedded OpenBSD - Network installation</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="embedded3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="embedded5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Embedded OpenBSD</h3>
+    <div>Previous: <a href="embedded3.html">3. Diskless installation</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="embedded5.html">5. Appendix</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>4. Network installation</h2>
+
+<p>The network installation has many steps in common with the diskless installation: once again, we will have to set up the <tt><a href="embedded3.html#3.2">rarpd(8)</a></tt>, <tt><a href="embedded3.html#3.3">dhcpd(8)</a></tt> and <tt><a href="embedded3.html#3.4">tftpd(8)</a></tt> servers. This time, however, the kernel to boot is <tt>bsd.rd</tt> instead of <tt>bsd</tt>. It's a <q>RAM disk kernel</q> which, after boot, provides a RAM-based filesystem containing various interesting utilities for system maintenance and installation. Therefore, the boot configuration file will contain an additional line:</p>
+
+<div class="code">
+  <div>/tftpboot/etc/boot.conf</div>
+<pre>
+set tty com0
+stty com0 19200
+boot bsd.rd
+</pre>
+</div>
+
+<p>To boot from network, on <a href="http://www.soekris.com/">Soekris systems</a>, you must press <tt>ctrl-P</tt> at system startup to enter into the BIOS menu and then type &quot;<tt>boot F0</tt>&quot;. An absolutely normal boot and <a href="http://www.openbsd.org/faq/faq4.html">installation</a> process will follow:</p>
+
+<div class="code">
+<pre>
+# <kbd>cu -l cua00 -s 19200</kbd>
+
+comBIOS ver. 1.26a  20040819  Copyright (C) 2000-2004 Soekris Engineering.
+
+net45xx
+
+0064 Mbyte Memory                        CPU 80486 133 Mhz
+
+
+Slot   Vend Dev  ClassRev Cmd  Stat CL LT HT  Base1    Base2   Int
+-------------------------------------------------------------------
+0:00:0 1022 3000 06000000 0006 2280 00 00 00 00000000 00000000
+0:17:0 104C AC51 06070000 0107 0210 10 3F 82 A0000000 020000A0 10
+0:17:1 104C AC51 06070000 0107 0210 10 3F 82 A0001000 020000A0 10
+0:18:0 100B 0020 02000000 0107 0290 00 3F 00 0000E101 A0002000 11
+0:19:0 100B 0020 02000000 0107 0290 00 3F 00 0000E201 A0003000 05
+
+ 5 Seconds to automatic boot.   Press Ctrl-P for entering Monitor.
+
+comBIOS Monitor.   Press ? for help.
+
+&gt; <kbd>boot F0</kbd>
+
+NSC DP83815/DP83816 Fast Ethernet UNDI, v1.03
+Copyright (C) 2002, 2003 National Semiconductor Corporation
+All rights reserved.
+
+Pre-boot eXecution Environment  PXE-2.0 (build 082)
+Copyright (C) 1997-2000  Intel Corporation
+
+ 
+CLIENT MAC ADDR: 00 00 24 C3 C1 B0
+CLIENT IP: 172.16.0.10  MASK: 255.255.255.0  DHCP IP: 172.16.0.4
+GATEWAY IP: 172.16.0.4
+probing: pc0 com0 com1 pxe![2.1] mem[639K 63M a20=on]
+disk:
+net: mac 00:00:24:c3:c1:b0, ip 172.16.0.10, server 172.16.0.4
+&gt;&gt; OpenBSD/i386 PXEBOOT 1.02
+switching console to com0
+&gt;&gt; OpenBSD/i386 PXEBOOT 1.02
+com0: changing speed to 19200 baud in 5 seconds, change your terminal to match!
+ 
+com0: 19200 baud
+booting tftp:bsd.rd: 4302596+825452 [52+147936+134838]=0x5291b0
+entry point at 0x100120
+ 
+Copyright (c) 1982, 1986, 1989, 1991, 1993
+        The Regents of the University of California.  All rights reserved.
+Copyright (c) 1995-2005 OpenBSD. All rights reserved.  http://www.OpenBSD.org
+ 
+OpenBSD 4.1 (RAMDISK_CD) #573: Sun May 20 00:27:05 MST 2007
+    deraadt@i386.openbsd.org:/usr/src/sys/arch/i386/compile/RAMDISK_CD
+cpu0: AMD Am486DX4 W/B or Am5x86 W/B 150 (&quot;AuthenticAMD&quot; 486-class)
+cpu0: FPU
+real mem  = 66691072 (65128K)
+avail mem = 54427648 (53152K)
+using 839 buffers containing 3436544 bytes (3356K) of memory
+mainbus0 (root)
+bios0 at mainbus0: AT/286+(00) BIOS, date 20/40/19, BIOS32 rev. 0 @ 0xf7840
+pcibios0 at bios0: rev 2.0 @ 0xf0000/0x10000
+pcibios0: pcibios_get_intr_routing - function not supported
+pcibios0: PCI IRQ Routing information unavailable.
+pcibios0: PCI bus #2 is the last bus
+bios0: ROM list: 0xc8000/0x9000
+cpu0 at mainbus0
+pci0 at mainbus0 bus 0: configuration mode 1 (no bios)
+pchb0 at pci0 dev 0 function 0 &quot;AMD ElanSC520 PCI" rev 0x00
+cbb0 at pci0 dev 17 function 0 &quot;Texas Instruments PCI1420 CardBus&quot; rev 0x00: irq 10
+cbb1 at pci0 dev 17 function 1 &quot;Texas Instruments PCI1420 CardBus&quot; rev 0x00: irq 10
+sis0 at pci0 dev 18 function 0 &quot;NS DP83815 10/100&quot; rev 0x00: DP83816A, irq 11, address 00:00:24:c3:c1:b0
+nsphyter0 at sis0 phy 0: DP83815 10/100 PHY, rev. 1
+sis1 at pci0 dev 19 function 0 &quot;NS DP83815 10/100&quot; rev 0x00: DP83816A, irq 5, address 00:00:24:c3:c1:b1
+nsphyter1 at sis1 phy 0: DP83815 10/100 PHY, rev. 1
+cardslot0 at cbb0 slot 0 flags 0
+cardbus0 at cardslot0: bus 1 device 0 cacheline 0x10, lattimer 0x3f
+pcmcia0 at cardslot0
+cardslot1 at cbb1 slot 1 flags 0
+cardbus1 at cardslot1: bus 2 device 0 cacheline 0x10, lattimer 0x3f
+pcmcia1 at cardslot1
+isa0 at mainbus0
+isadma0 at isa0
+pckbc0 at isa0 port 0x60/5  
+pckbd0 at pckbc0 (kbd slot)
+pckbc0: using irq 1 for kbd slot
+wskbd0 at pckbd0 (mux 1 ignored for console): console keyboard
+wdc0 at isa0 port 0x1f0/8 irq 14                              
+wd0 at wdc0 channel 0 drive 0: &lt;SanDisk SDCFB-64&gt;
+wd0: 1-sector PIO, LBA, 61MB, 125440 sectors     
+wd0(wdc0:0:0): using BIOS timings
+npx0 at isa0 port 0xf0/16: using exception 16
+pccom0 at isa0 port 0x3f8/8 irq 4: ns16550a, 16 byte fifo
+pccom0: console
+pccom1 at isa0 port 0x2f8/8 irq 3: ns16550a, 16 byte fifo
+biomask f7c5 netmask ffe5 ttymask ffe7
+rd0: fixed, 3800 blocks
+wi0 at pcmcia0 function 0 &quot;NETGEAR MA401RA Wireless PC, Card, ISL37300P&quot; port 0xa000/64
+wi0: PRISM2.5 ISL3873, Firmware 1.0.7 (primary), 1.3.6 (station), address 00:09:5b:3b:89:58
+root on rd0a                                                                               
+rootdev=0x1100 rrootdev=0x2f00 rawdev=0x2f02
+erase ^?, werase ^W, kill ^U, intr ^C, status ^T
+(I)nstall, (U)pgrade or (S)hell? <kbd>i</kbd>
+[...]
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="embedded3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="embedded5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Embedded OpenBSD</h3>
+    <div>Previous: <a href="embedded3.html">3. Diskless installation</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="embedded5.html">5. Appendix</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

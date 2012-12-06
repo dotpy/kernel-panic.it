@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,web,proxy,cache,squid,squidguard,squidclamav,clamav,adzapper,security,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+
+  <title>The Squid and the Blowfish - Introduction</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="proxy2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>The Squid and the Blowfish</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="proxy2.html">2. Squid</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>1. Introduction</h2>
+
+<p>We have grown so much accustomed to Internet access on our work computers, that we can hardly imagine what people ever did all day long on their workplace before!</p>
+<p>By providing access to a virtually endless amount of information, the Internet has quickly turned into an essential working tool; so essential that most companies can't do without it anymore. But besides providing a huge amount of information, the Internet has also turned into the main virus vehicle (together with e-mail) and doesn't exclusively provide content in line with corporate policies. That's why a proxy server is often as necessary as the Internet connection itself.</p>
+<p>The main benefits of web proxying are:</p>
+
+<ul>
+  <li><dfn>content filtering</dfn>: the proxy can be configured to filter out virus files, ad banners and requests to unwanted websites;</li>
+  <li><dfn>network bandwidth conservation</dfn>: cached pages are served by the proxy itself, thus saving bandwidth and offering faster access times;</li>
+  <li><dfn>authentication</dfn>: Internet access can be authorized (and filtered) based on username/password, IP address, domain name and much more.</li>
+</ul>
+
+<p>The following is the list of the pieces of software we will use:</p>
+
+<dl>
+  <dt><a href="http://www.openbsd.org/">OpenBSD</a></dt>
+  <dd>a robust, security-oriented operating system, with <q>only two remote holes in the default install, in a heck of a long time!</q>;</dd>
+  <dt><a href="http://www.squid-cache.org/">Squid</a></dt>
+  <dd>a <q>caching proxy for the Web supporting HTTP, HTTPS, FTP, and more</q>;</dd>
+  <dt><a href="http://www.squidguard.org/">SquidGuard</a></dt>
+  <dd>a <q>combined filter, redirector and access controller plugin for Squid</q>;</dd>
+  <dt><a href="http://www.clamav.net">ClamAV</a></dt>
+  <dd>an <q>open source (GPL) anti-virus toolkit for UNIX</q>;</dd>
+  <dt><a href="http://squidclamav.darold.net/">SquidClamav</a></dt>
+  <dd>an <q>antivirus redirector for Squid proxy based on the Awards winnings ClamAv anti-virus toolkit</q>;</dd>
+  <dt><a href="http://adzapper.sourceforge.net/">AdZapper</a></dt>
+  <dd>a <q>redirector for squid that intercepts advertising (banners, popup windows, flash animations, etc), page counters and some web bugs (as found)</q>.</dd>
+</dl>
+
+<p>The choice of using free software prevented me from using <a href="http://dansguardian.org/">DansGuardian</a>, an <q>Open Source web content filter</q>, running on many OSes and filtering <q>the actual content of pages based on many methods including phrase matching, <acronym title="Platform for Internet Content Selection">PICS</acronym> filtering and <acronym title="Uniform Resource Locator">URL</acronym> filtering</q>. Fine and dandy, but it is <em>not</em> free for <a href="http://dansguardian.org/?page=copyright2">commercial use</a>.</p>
+<p>A good knowledge of OpenBSD is assumed, since we won't delve into system management topics such as OS installation and base configuration, packages/ports installation or <acronym title="Packet Filter">PF</acronym> syntax.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="proxy2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>The Squid and the Blowfish</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="proxy2.html">2. Squid</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

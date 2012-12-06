@@ -1,0 +1,417 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/pydoc.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf5.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf7.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf5.html">5. Packet Queueing and Prioritization</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pf7.html">7. Anatomy of a Packet Filter rule</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>6. Addresses, address pools and tables</h2>
+
+<p>py-pf provides multiple classes to represent the various types of network addresses that can be contained in PF rules:</p>
+
+<ul>
+  <li>the <tt>pf.PFAddr</tt> and <tt>pf.PFPort</tt> classes represent addresses and ports respectively;</li>
+  <li>the <tt>pf.PFRuleAddr</tt> class represents an address/port pair, which can be used as source or destination when writing filtering rules;</li>
+  <li>the <tt>pf.PFPool</tt> class represents an address pool, which is mainly used as the target for address translation and traffic redirection;</li>
+  <li>the <tt>pf.PFTable</tt> class represents a PF table, which is used to hold a group of IPv4 and/or IPv6 addresses, stored as <tt>pf.PFTableAddr</tt> objects.</li>
+</ul>
+
+<h3><a id="pf-6.1" name="pf-6.1"></a>6.1 Addresses and ports</h3>
+
+<p>In Packet Filter, network addresses are a rather broad concept: besides the familiar IP/netmask format, an address may also be specified as a (dynamic) interface name, a table, a labeled route, and so on.</p>
+
+<h4><a id="pf-6.1.1" name="pf-6.1.1"></a>6.1.1 PFAddr objects</h4>
+
+<p>Addresses are represented by the <tt>pf.PFAddr</tt> class:</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.PFAddr([<var>addr</var>[, <var>af</var>[, <var>**kw</var>]]])</tt><dt>
+  <dd>The optional <tt>addr</tt> argument is the string representation of the address in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format; if omitted, the object will match <em>any</em> address. <tt>af</tt> is the address family, which must be specified if not ascertainable from <tt>addr</tt>. The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFAddr</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFAddr.<span class="attr">type</span></tt></dt>
+  <dd>A constant specifying the address type; it must be one of <tt>pf.PF_ADDR_ADDRMASK</tt> (IPv4 or IPv6 address), <tt>pf.PF_ADDR_NOROUTE</tt> (any non currently routable address), <tt>pf.PF_ADDR_DYNIFTL</tt> (a dynamically configured interface (e.g. <acronym title="Dynamic Host Configuration Protocol">DHCP</acronym> or <acronym title="Point-to-Point Protocol">PPP</acronym>) or an interface group), <tt>pf.PF_ADDR_TABLE</tt> (an address table), <tt>pf.PF_ADDR_RTLABEL</tt> (any address whose associated route has the specified label), <tt>pf.PF_ADDR_URPFFAILED</tt> (any source address failing the <a href="http://www.openbsd.org/faq/pf/filter.html#urpf">uRPF check</a></i>), <tt>pf.PF_ADDR_RANGE</tt> (a range of addresses).</dd>
+
+  <dt><tt>PFAddr.<span class="attr">af</span></tt></dt>
+  <dd>The address family; it can be one of <tt>AF_INET</tt> (IPv4), <tt>AF_INET6</tt> (IPv6) or <tt>AF_UNSPEC</tt> (address family not specified); these constants are available through the <tt>socket</tt> module. Note that the address family can be left unspecified only in a limited set of circumstances, such as in &quot;<tt>block all</tt>&quot; rules.</dd>
+
+  <dt><tt>PFAddr.<span class="attr">ifname</span></tt></dt>
+  <dd>The interface name when <tt>PFAddr.type</tt> is <tt>pf.PF_ADDR_DYNIFTL</tt>.</dd>
+
+  <dt><tt>PFAddr.<span class="attr">iflags</span></tt></dt>
+  <dd>Bitmask of flags for the optional modifiers to apply to the interface, or interface group; can be any of <tt>pf.PFI_AFLAG_NETWORK</tt> (&quot;<tt>:network</tt>&quot; modifier), <tt>pf.PFI_AFLAG_BROADCAST</tt> (&quot;<tt>:broadcast</tt>&quot; modifier), <tt>pf.PFI_AFLAG_PEER</tt> (&quot;<tt>:peer</tt>&quot; modifier) and <tt>pf.PFI_AFLAG_NOALIAS</tt> (&quot;<tt>:0</tt>&quot; modifier).</dd>
+
+  <dt><tt>PFAddr.<span class="attr">addr</span></tt></dt>
+  <dd>String containing the IPv4 or IPv6 address when <tt>PFRule.type</tt> is <tt>pf.PF_ADDR_ADDRMASK</tt> or a tuple containing the first and last address of an address range when <tt>PFRule.type</tt> is <tt>pf.PF_ADDR_RANGE</tt>; set it to <tt>None</tt> to match any address.</dd>
+
+  <dt><tt>PFAddr.<span class="attr">mask</span></tt></dt>
+  <dd>String containing the netmask of the address; it applies to both <tt>pf.PF_ADDR_ADDRMASK</tt> and <tt>pf.PF_ADDR_DYNIFTL</tt> addresses; set it to <tt>None</tt> to match any address.</dd>
+
+  <dt><tt>PFAddr.<span class="attr">tblname</span></tt></dt>
+  <dd>The name of the table when <tt>PFRule.type</tt> is <tt>pf.PF_ADDR_TABLE</tt>.</dd>
+
+  <dt><tt>PFAddr.<span class="attr">rtlabelname</span></tt></dt>
+  <dd>The name of the label when <tt>PFRule.type</tt> is <tt>pf.PF_ADDR_RTLABEL</tt>.</dd>
+</dl>
+
+<p>An example will best illustrate how a PF address can be handled:</p>
+
+<div class="code">
+<pre>
+def print_addr(addr):
+    <i>&quot;&quot;&quot;Display address information about the provided PFAddr object.&quot;&quot;&quot;</i>
+    if addr.type == pf.PF_ADDR_DYNIFTL:
+        <i># The address is a dynamically configured interface or interface group</i>
+        print &quot;(&quot; + addr.ifname,
+
+        <i># Check the 'iflags' modifiers</i>
+        if addr.iflags &amp; pf.PFI_AFLAG_NETWORK:
+            print &quot;:network&quot;,
+        if addr.iflags &amp; pf.PFI_AFLAG_BROADCAST:
+            print &quot;:broadcast&quot;,
+        if addr.iflags &amp; pf.PFI_AFLAG_PEER:
+            print &quot;:peer&quot;,
+        if addr.iflags &amp; pf.PFI_AFLAG_NOALIAS:
+            print &quot;:0&quot;,
+        print &quot;)&quot;
+
+    elif addr.type == pf.PF_ADDR_TABLE:
+        <i># The address is a PF table</i>
+        print &quot;&lt;{.tblname}&gt;&quot;.format(addr)
+
+    elif addr.type == pf.PF_ADDR_ADDRMASK:
+        <i># IPv4 or IPv6 address</i>
+        if addr.addr is None:
+            print &quot;any&quot;
+        else:
+            print &quot;{0.addr}/{0.mask}&quot;.format(addr)
+
+    elif addr.type == pf.PF_ADDR_RANGE:
+        <i># Address range</i>
+        print &quot;{0[0]} - {0[1]}&quot;.format(addr)
+
+    elif addr.type == pf.PF_ADDR_NOROUTE:
+        <i># Address not routable</i>
+        print &quot;no-route&quot;
+
+    elif addr.type == pf.PF_ADDR_URPFFAILED:
+        <i># Source address failing the uRPF check</i>
+        print &quot;urpf-failed&quot;
+
+    elif addr.type == pf.PF_ADDR_RTLABEL:
+        <i># Labeled route</i>
+        print &quot;route \&quot;{.rtlabelname}\&quot;&quot;.format(addr)
+
+    else:
+        <i># Unknown address type</i>
+        print &quot;?&quot;
+</pre>
+</div>
+
+<p><tt>PFAddr</tt> objects can be easily created by passing the address as a string or by specifying its attributes as keywords; for example:</p>
+
+<div class="code">
+<pre>
+net   = PFAddr(&quot;10.0.0.0/8&quot;)
+rng   = PFAddr(&quot;192.168.1.0 - 192.168.1.31&quot;)
+ifnet = PFAddr(&quot;rl0:network&quot;, af=AF_INET)
+any   = PFAddr()
+tbl   = PFAddr(&quot;&lt;spammers&gt;&quot;)
+
+ifnet = PFAddr(type=pf.PF_ADDR_DYNIFTL, ifname=&quot;rl0&quot;,
+               iflags=pf.PFI_AFLAG_NETWORK, af=AF_INET)
+</pre>
+</div>
+
+<h4><a id="pf-6.1.2" name="pf-6.1.2"></a>6.1.2 PFPort objects</h4>
+
+<p>Also ports are a rather broad concept in Packet Filter. They're not just a port number and a protocol; instead, they are made up of a comparison operator and one or two port numbers (depending on the operator). This allows you to specify single port numbers, port ranges or ports higher/lower than a certain value.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFPort</span>([<var>num</var>[, <var>proto</var>[, <var>op</var>]]])</tt><dt>
+  <dd>The <tt>num</tt> argument must contain the port number(s) either as an integer, a tuple or a string (service name). <tt>proto</tt> is the transport-layer protocol expressed as a constant (<tt>IPPROTO_TCP</tt> or <tt>IPPROTO_UDP</tt>); these constants are available through the <tt>socket</tt> module. <tt>op</tt> is the port comparison operator; it must be one of the <tt>PF_OP_*</tt> constants (see example below).</dd>
+</dl>
+
+<p><tt>PFPort</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFPort.<span class="attr">num</span></tt></dt>
+  <dd>A two-items tuple containing the port numbers; if <tt>PFPort.op</tt> is a unary operator, the second port is set to <tt>0</tt>.</dd>
+
+  <dt><tt>PFPort.<span class="attr">proto</span></tt></dt>
+  <dd>The transport layer protocol; it must be one of <tt>IPPROTO_TCP</tt>, <tt>IPPROTO_UDP</tt> or <tt>0</tt> (protocol unspecified).</dd>
+
+  <dt><tt>PFPort.<span class="attr">op</span></tt></dt>
+  <dd>The port comparison operator; it must be one of the <tt>PF_OP_*</tt> constants.</dd>
+</dl>
+
+<p>A simple example is better than a long talk:</p>
+
+<div class="code">
+<pre>
+def print_port(port):
+    s = {PF_OP_NONE: &quot;{0[0]}&quot;,
+         PF_OP_IRG:  &quot;{0[0]} &gt;&lt; {0[1]}&quot;,
+         PF_OP_XRG:  &quot;{0[0]} &lt;&gt; {0[1]}&quot;,
+         PF_OP_EQ:   &quot;= {0[0]}&quot;,
+         PF_OP_NE:   &quot;!= {0[0]}&quot;,
+         PF_OP_LT:   &quot;&lt; {0[0]}&quot;,
+         PF_OP_LE:   &quot;&lt;= {0[0]}&quot;,
+         PF_OP_GT:   &quot;&gt; {0[0]}&quot;,
+         PF_OP_GE:   &quot;&gt;= {0[0]}&quot;,
+         PF_OP_RRG:  &quot;{0[0]}:{0[1]}&quot;}
+
+    print s[port.op].format(port.num)
+</pre>
+</div>
+
+<p><tt>PFPort</tt> objects can be created by passing the port as an integer, a string or a tuple; for example:</p>
+
+<div class="code">
+<pre>
+p1 = PFPort(&quot;www&quot;, socket.IPPROTO_TCP)
+p2 = PFPort(&quot;&gt; 1024&quot;, socket.IPPROTO_TCP)
+p3 = PFPort(&quot;2000 &gt;&lt; 3000&quot;, socket.IPPROTO_UDP)
+p4 = PFPort(22, socket.IPPROTO_TCP, pf.PF_OP_NE)
+p5 = PFPort((2000, 3000), socket.IPPROTO_TCP, pf.PF_OP_IRG)   <i># Same as p3</i>
+</pre>
+</div>
+
+<h4><a id="pf-6.1.3" name="pf-6.1.3"></a>6.1.3 PFRuleAddr objects</h4>
+
+<p>A <tt>pf.PFRuleAddr</tt> object represents an address/port pair, which is used as source or destination in filtering rules; it is basically a container for a <tt><a href="#pf-6.1.1">PFAddr</a></tt> and <tt><a href="#pf-6.1.2">PFPort</a></tt> pair.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFRuleAddr</span>([<var>addr</var>[, <var>port</var>[, <var>neg</var>]]])</tt><dt>
+  <dd>The optional <tt>addr</tt> and <tt>port</tt> parameters must be a <tt><a href="#pf-6.1.1">PFAddr</a></tt> and <tt><a href="#pf-6.1.2">PFPort</a></tt> object respectively; <tt>neg</tt> is a boolean value that allows you to negate the address.</dd>
+</dl>
+
+<p><tt>PFRuleAddr</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFRuleAddr.<span class="attr">addr</span></tt></dt>
+  <dd>This is a <tt><a href="#pf-6.1.1">PFAddr</a></tt> object that represents the address.</dd>
+
+  <dt><tt>PFRuleAddr.<span class="attr">port</span></tt></dt>
+  <dd>A <tt><a href="#pf-6.1.2">PFPort</a></tt> object that represents the port.</dd>
+
+ <dt><tt>PFRuleAddr.<span class="attr">neg</span></tt></dt>
+  <dd>A boolean value that, if set to <tt>True</tt>, negates the address/port pair.</dd>
+</dl>
+
+<p>Below are a few examples:</p>
+
+<div class="code">
+<pre>
+addr    = pf.PFAddr(&quot;1.2.3.4&quot;)
+port    = pf.PFPort(&quot;80&quot;, socket.IPPROTO_TCP)
+www_srv = pf.PFRuleAddr(addr, port)
+
+spam_tbl = pf.PFAddr(&quot;&lt;spammers&gt;&quot;)
+not_spam = pf.PFRuleAddr(spam_tbl, neg=True)
+</pre>
+</div>
+
+<h3><a id="pf-6.2" name="pf-6.2"></a>6.2 Address pools</h3>
+
+<p>An <a href="http://www.openbsd.org/faq/pf/pools.html">address pool</a> is a group of addresses which is typically used as the target for address translation and traffic redirection (<tt>nat-to</tt>, <tt>rdr-to</tt>, <tt>route-to</tt>, <tt>reply-to</tt> and <tt>dup-to</tt> filter options). Addresses in the pool can be either a single IP address or a table, and are represented by means of <tt><a href="#pf-6.1.1">PFAddr</a></tt> objects.</p>
+
+<h4><a id="pf-6.2.1" name="pf-6.2.1"></a>6.2.1 PFPool objects</h4>
+
+<p>Address pools are represented by the <tt>pf.PFPool</tt> class.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFPool</span>(<var>id</var>, <var>pool</var>[, <var>**kw</var>])</tt><dt>
+  <dd>The <tt>id</tt> argument specifies the pool type; valid values are <tt>pf.PF_POOL_ROUTE</tt> (when the pool is the target of a <tt>route-to</tt> option), <tt>pf.PF_POOL_NAT</tt> (with <tt>nat-to</tt>) and <tt>pf.PF_POOL_RDR</tt> (with <tt>rdr-to</tt>). The <tt>pool</tt> parameter holds the <tt><a href="#pf-6.1.1">PFAddr</a></tt> object containing the address(es) in the pool; though <tt><a href="#pf-6.1.1">PFAddr</a></tt> objects can represent many address types, only a single address or a table are valid for a pool (i.e. <tt>PFAddr.type</tt> must be <tt>pf.PF_ADDR_ADDRMASK</tt> or <tt>pf.PF_ADDR_TABLE</tt>). The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFPool</tt> objects support the following methods and attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFPool.<span class="attr">id</span></tt></dt>
+  <dd>A constant specifying the pool type; it can be one of <tt>PF_POOL_ROUTE</tt>, <tt>PF_POOL_NAT</tt> or <tt>PF_POOL_RDR</tt>.</dd>
+
+  <dt><tt>PFPool.<span class="attr">pool</span></tt></dt>
+  <dd>The <tt><a href="#pf-6.1.1">PFAddr</a></tt> object containing the address(es) in the pool.</dd>
+
+  <dt><tt>PFPool.<span class="attr">proxy_port</span></tt></dt>
+  <dd>A <tt><a href="#pf-6.1.2">PFPort</a></tt> instance containing the range of port numbers (or, if the port numbers are the same, the single port) to use for <tt>pf.PF_POOL_NAT</tt> and <tt>pf.PF_POOL_RDR</tt> pools; by default, the port range for NAT is from <tt>pf.PF_NAT_PROXY_PORT_LOW</tt> to <tt>pf.PF_NAT_PROXY_PORT_HIGH</tt>. If both port numbers are <tt>0</tt>, the original port is kept.</dd>
+
+  <dt><tt>PFPool.<span class="attr">opts</span></tt></dt>
+  <dd>A bitmask specifying the options applied to the pool; it must be ANDed with the <tt>pf.PF_POOL_TYPEMASK</tt> constant before testing its value. Valid flags are <tt>pf.PF_POOL_BITMASK</tt> (corresponding to the &quot;<tt>bitmask</tt>&quot; option in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>), <tt>pf.PF_POOL_RANDOM</tt> (&quot;<tt>random</tt>&quot; option), <tt>pf.PF_POOL_SRCHASH</tt> (&quot;<tt>source-hash</tt>&quot; option) and <tt>pf.PF_POOL_ROUNDROBIN</tt> (&quot;<tt>round-robin</tt>&quot; option); <tt>pf.PF_POOL_RANDOM</tt> and <tt>pf.PF_POOL_ROUNDROBIN</tt> pools allow the setting of the <tt>pf.PF_POOL_STICKYADDR</tt> flag (&quot;<tt>sticky-address</tt>&quot; option).</dd>
+</dl>
+
+<p>Below are a few examples of creating and managing address pools:</p>
+
+<div class="code">
+<pre>
+<i># Create a NAT address pool (assuming that the table &lt;int_net&gt; already exists)</i>
+pool = pf.PFPool(pf.PF_POOL_NAT, pf.PFAddr(&quot;&lt;int_net&gt;&quot;))
+
+<i># Create a RDR address pool</i>
+pool = PFPool(pf.PF_POOL_RDR, pf.PFAddr(&quot;192.168.23.4&quot;), proxy_port=pf.PFPort(80))
+
+<i># Create a &quot;round-robin&quot; and &quot;sticky-address&quot; pool</i>
+p = pf.PFPool(pf.PF_RDR, PFAddr(&quot;&lt;web_servers&gt;&quot;),
+              opts=pf.PF_POOL_ROUNDROBIN|pf.PF_POOL_STICKYADDR)
+</pre>
+</div>
+
+<h3><a id="pf-6.3" name="pf-6.3"></a>6.3 Tables</h3>
+
+<p><a href="http://www.openbsd.org/faq/pf/tables.html">Tables</a> are used to hold a group of IPv4 and/or IPv6 addresses; they are normally used to store a large number of addresses as table lookups are very fast and resource-efficient.</p>
+
+<h4><a id="pf-6.3.1" name="pf-6.3.1"></a>6.3.1 PFTable objects</h4>
+
+<p>py-pf represents tables by means of <tt>pf.PFTable</tt> objects, while methods for actually creating, populating and managing tables on the system are provided by the <a href="pf2.html"><tt>pf.PacketFilter</tt></a> class.</p>
+<p>There are two different ways to actually load tables in the firewall: they can be either created at runtime, using the <tt>PacketFilter.add_table()</tt> method or loaded along with a ruleset, using <tt>PacketFilter.load_ruleset()</tt>. Please note that tables without the <tt>PFR_TFLAG_PERSIST</tt> flag set and not referenced by any rule are automatically removed by the kernel: in this case only the latter method can be used, as it commits the transaction only when all tables and rules have been created.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFTable</span>(<var>table</var>[, <var>*addrs</var>[, <var>**kw</var>]])</tt><dt>
+  <dd>The first parameter is the name of the table; <tt>*addrs</tt> allows you to insert one or more addresses in the table at creation time, while <tt>**kw</tt> allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFTable</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFtable.<span class="attr">name</span></tt></dt>
+  <dd>The table name.</dd>
+
+  <dt><tt>PFtable.<span class="attr">addrs</span></tt></dt>
+  <dd>A tuple of <a href="#pf-6.3.2"><tt>PFTableAddr</tt></a> objects containing the addresses in the table.</dd>
+
+  <dt><tt>PFtable.<span class="attr">anchor</span></tt></dt>
+  <dd>The name of the anchor the table is attached to.</dd>
+
+  <dt><tt>PFtable.<span class="attr">flags</span></tt></dt>
+  <dd>A bitmask containing the flags associated with the table. Valid flags are: <tt>pf.PFR_TFLAG_CONST</tt> (constant table), <tt>pf.PFR_TFLAG_PERSIST</tt> (persistent table), <tt>pf.PFR_TFLAG_ACTIVE</tt> (table present in the active tableset), <tt>pf.PFR_TFLAG_INACTIVE</tt> (table defined in the inactive tableset), <tt>pf.PFR_TFLAG_REFERENCED</tt> (table referenced by one or more rules) and <tt>pf.PFR_TFLAG_REFDANCHOR</tt> (hidden table); only the first two flags can be manually set when creating a table.</dd>
+</dl>
+
+<p>Below are a few examples of creating and managing address tables:</p>
+
+<div class="code">
+<pre>
+<i># Define a new constant table</i>
+web_srv = [&quot;192.168.23.11&quot;, &quot;192.168.23.12&quot;, &quot;192.168.23.13&quot;]
+t = PFTable(&quot;web_servers&quot;, *web_srv, flags=pf.PFR_TFLAG_CONST)
+
+<i># Print all currently loaded tables</i>
+def print_table(tbl):
+    flags  = 'c' if (tbl.flags &amp; pf.PFR_TFLAG_CONST) else '-'
+    flags += 'p' if (tbl.flags &amp; pf.PFR_TFLAG_PERSIST) else '-'
+    flags += 'a' if (tbl.flags &amp; pf.PFR_TFLAG_ACTIVE) else '-'
+    flags += 'i' if (tbl.flags &amp; pf.PFR_TFLAG_INACTIVE) else '-'
+    flags += 'r' if (tbl.flags &amp; pf.PFR_TFLAG_REFERENCED) else '-'
+    flags += 'h' if (tbl.flags &amp; pf.PFR_TFLAG_REFDANCHOR) else '-'
+    flags += 'C' if (tbl.flags &amp; pf.PFR_TFLAG_COUNTERS) else '-'
+    print &quot;{0}\t{1.name}&quot;.format(flags, tbl)
+
+filter = pf.PacketFilter()
+for table in filter.get_tables():
+    print_table(table)
+</pre>
+</div>
+
+<h4><a id="pf-6.3.2" name="pf-6.3.2"></a>6.3.2 PFTableAddr objects</h4>
+
+<p>Network addresses in tables are represented by <tt>pf.PFTableAddr</tt> objects; they are quite simpler than <tt><a href="#pf-6.1.1">PFAddr</a></tt> addresses, because they can only hold IPv4 and IPv6 addresses.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFTableAddr</span>(<var>addr</var>[, <var>**kw</var>])</tt><dt>
+  <dd>The first parameter is a string containing the IPv4/IPv6 address while <tt>**kw</tt> allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFTableAddr</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFtableAddr.<span class="attr">af</span></tt></dt>
+  <dd>The address family; it can be one of <tt>AF_INET</tt> (IPv4) or <tt>AF_INET6</tt> (IPv6); these constants are available through the <tt>socket</tt> module.</dd>
+
+  <dt><tt>PFtableAddr.<span class="attr">addr</span></tt></dt>
+  <dd>String containing the IPv4 or IPv6 address.</dd>
+
+  <dt><tt>PFtableAddr.<span class="attr">mask</span></tt></dt>
+  <dd>String containing the netmask of the address.</dd>
+
+  <dt><tt>PFtableAddr.<span class="attr">neg</span></tt></dt>
+  <dd>A boolean value that, if set to <tt>True</tt>, negates the address.</dd>
+</dl>
+
+<h3><a id="pf-6.4" name="pf-6.4"></a>6.4 PFUid and PFGid objects</h3>
+
+<p>Packet filtering may also be performed based on the owner (user or group) of the socket that sends/receives the packets.</p>
+<p>User and group IDs are represented by <tt>pf.PFUid</tt> and <tt>pf.PFGid</tt> instances respectively, which are very similar to <tt><a href="#pf-6.1.2">PFPort</a></tt> objects. In fact, they are made up of a comparison operator and one or two ID numbers (depending on the operator); this allows you to specify single users/groups, as well as ranges of user IDs.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFUid</span>([<var>num</var>[, <var>op</var>]])</tt><dt>
+  <dt>class <tt>pf.<span class="attr">PFGid</span>([<var>num</var>[, <var>op</var>]])</tt><dt>
+  <dd>The <tt>num</tt> argument must contain the user/group ID(s) either as a string, a tuple or an integer. <tt>op</tt> is the comparison operator; it must be one of the <tt>PF_OP_*</tt> constants.</dd>
+</dl>
+
+<p><tt>PFUid</tt> and <tt>PFGid</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFUid.<span class="attr">num</span></tt></dt>
+  <dt><tt>PFGid.<span class="attr">num</span></tt></dt>
+  <dd>A two-items tuple containing the user/group IDs; if <tt>PFUid.op</tt>/<tt>PFGid.op</tt> is a unary operator, the second ID is set to <tt>0</tt>.</dd>
+
+  <dt><tt>PFUid.<span class="attr">op</span></tt></dt>
+  <dt><tt>PFGid.<span class="attr">op</span></tt></dt>
+  <dd>The comparison operator; it must be one of the <tt>PF_OP_*</tt> constants.</dd>
+</dl>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf5.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf7.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf5.html">5. Packet Queueing and Prioritization</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pf7.html">7. Anatomy of a Packet Filter rule</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

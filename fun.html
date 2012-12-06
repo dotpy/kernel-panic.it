@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,JavaScript,games,fun,mastermind,slot,machine,puzzle,mine,sweeper" />
+  <meta name="description" content="Javascript Games" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2007 by Kernel-Panic.it." />
+
+  <title>.: Kernel Panic - Fun :.</title>
+
+  <link rel="stylesheet" type="text/css" href="css/menu.css" />
+  <link rel="stylesheet" type="text/css" href="css/kp.css" />
+  <link rel="stylesheet" type="text/css" href="css/fun.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+  <script type="text/JavaScript">
+    function game_popup(game, w_width, w_height) {
+      var url  = "fun/jsgames/" + game + "/";
+      var size = "width=" + w_width + ",height=" + w_height;
+      var win_props = "resizable,scrollbars";
+
+      window.open(url, '', size + win_props);
+    }
+  </script>
+
+</head>
+
+<body>
+
+  <table id="container">
+
+    <tr>
+      <td id="header" colspan="2">
+        <h1>Kernel Panic</h1>
+      </td>
+      <td id="flags">
+      </td>
+    </tr>
+
+    <tr>
+      <td class="top" colspan="2"></td>
+      <td class="right-col"></td>
+    </tr>
+
+    <tr>
+      <td class="left-col" rowspan="2">
+        <ul>
+          <li id="home"><a class="menu" href="index.html"><span>Home</span></a></li>
+          <li id="openbsd"><a class="menu" href="openbsd.html"><span>OpenBSD</span></a></li>
+          <li id="linux"><a class="menu" href="linux.html"><span>Linux</span></a></li>
+          <li id="programming"><a class="menu" href="programming.html"><span>Programming</span></a></li>
+          <li id="security"><a class="menu" href="security.html"><span>Security</span></a></li>
+          <li id="software"><a class="menu" href="software.html"><span>Software</span></a></li>
+          <li id="fun"><a class="menu" href="fun.html"><span>Fun</span></a>
+            <ul id="submenu">
+              <li><a href="#mindthepeg">Mind the peg</a></li>
+              <li><a href="#slotmachine">Slot Machine</a></li>
+              <li><a href="#cowpasture">Cow Pasture</a></li>
+              <li><a href="#puzzle">Puzzle</a></li>
+            </ul>
+          </li>
+        </ul>
+      </td>
+
+      <td class="main" rowspan="2">
+        <p>Everyone needs some diversion every once in a while... especially at work. And what's more discreet than some good old JavaScript games?</p>
+
+        <div class="box">
+          <h3><a id="mindthepeg" name="mindthepeg" href="javascript:game_popup('mindthepeg', 510, 440);"><img src="images/mindthepeg.png" alt="" />Mind the Peg</a></h3>
+          <dl>
+            <dt>Object of the game:</dt>
+            <dd>Guess the sequence of four different coloured pegs (out of six) randomly selected by the computer.</dd>
+            <dt>How to play:</dt>
+            <dd>Click on the colours to select sequences of four pegs. For each guess, the computer returns:
+              <ul>
+                <li>a white peg for each correct colour in the correct position</li>
+                <li>a red peg for each correct colour in an incorrect position.</li>
+              </ul>
+              The game is over when you guess the correct sequence (you win) or after ten incorrect guesses (you lose).
+            </dd>
+          </dl>
+        </div>
+
+        <div class="box">
+          <h3><a id="slotmachine" name="slotmachine" href="javascript:game_popup('slotmachine', 560, 470);"><img src="images/slotmachine.png" alt="" />Slot Machine</a></h3>
+          <dl>
+            <dt>Object of the game:</dt>
+            <dd>Win as much money as possible.</dd>
+            <dt>How to play:</dt>
+            <dd>Place your bet and click on the handle. You win:
+              <ul>
+                <li>10 times your bet for three-of-kind,</li>
+                <li>5 times your bet for two-of-kind,</li>
+                <li>10 extra dollars for each Puffy.</li>
+              </ul>
+            </dd>
+          </dl>
+        </div>
+
+        <div class="box">
+          <h3><a id="cowpasture" name="cowpasture" href="javascript:game_popup('cowpasture', 540, 340);"><img src="images/cowpasture.png" alt="" />Cow Pasture</a></h3>
+          <dl>
+            <dt>Object of the game:</dt>
+            <dd>Find out the &quot;bad surprises&quot; hidden in the cow pasture.</dd>
+            <dt>How to play:</dt>
+            <dd>Click on a cell to find out how many &quot;bad surprises&quot; are around it. When you think you've found a cell on which you'd better ...not walk, mark it off by right-clicking on it. Once you have marked off the ten &quot;dangerous&quot; cells and cleared the rest of the grid, you win!</dd>
+          </dl>
+        </div>
+
+        <div class="box">
+          <h3><a id="puzzle" name="puzzle" href="javascript:game_popup('puzzle', 650, 540);"><img src="images/puzzle.png" alt="" />Puzzle</a></h3>
+          <dl>
+            <dt>Object of the game:</dt>
+            <dd>Piece together Mona Lisa.</dd>
+            <dt>How to play:</dt>
+            <dd>Click on &quot;Shuffle&quot; to mix up the pieces; then piece back together Mona Lisa by clicking on the pieces surrounding the empty (black) spot to slide them into the empty spot.</dd>
+          </dl>
+        </div>
+      </td>
+
+      <td class="right-col">
+        <h2 id="links"><span>Links</span></h2>
+        <ul>
+          <li><a href="http://www.openbsd.org/">OpenBSD</a></li>
+          <li><a href="http://www.openbsd.org/faq/">OpenBSD FAQ</a></li>
+          <li><a href="http://undeadly.org/">OpenBSD Journal</a></li>
+          <li><a href="http://www.openbsdsupport.org/">OpenBSDsupport</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://www.kernel.org/">Kernel.org</a></li>
+          <li><a href="http://www.debian.org/">Debian</a></li>
+          <li><a href="http://www.slackware.com/">Slackware</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://www.python.org/">Python</a></li>
+          <li><a href="http://www.php.net/">PHP</a></li>
+          <li><a href="http://www.w3c.org/">W3C</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://www.securityfocus.com/">Security Focus</a></li>
+          <li><a href="http://www.cve.mitre.org/">CVE</a></li>
+        </ul>
+        <ul>
+          <li><a href="http://github.com/">GitHub</a></li>
+          <li><a href="http://sourceforge.net/">SourceForge</a></li>
+          <li><a href="http://freecode.com/">Freecode</a></li>
+        </ul>
+
+        <h2 id="search"><span>Search</span></h2>
+        <form action="http://www.google.com/search" method="get">
+        <div>
+          <input type="text" name="q" maxlength="255" size="10" value="" />
+          <input type="hidden" name="domains" value="kernel-panic.it" />
+          <input type="hidden" name="sitesearch" value="kernel-panic.it" />
+          <input type="image" src="images/go.png" alt="go" class="submit" />
+        </div>
+        </form>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="validators">
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post">  
+          <div>
+            <input type="hidden" name="cmd" value="_s-xclick" />                 
+            <input type="image" src="images/donate.gif" name="submit" alt="Donate" />
+            <img src="https://www.paypal.com/it_IT/i/scr/pixel.gif" alt="" width="1" height="1" />  
+            <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----" />  
+          </div>
+        </form>
+        <p><a href="http://validator.w3.org/check?uri=referer"><img src="images/xhtml10.png" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+        <p><a href="http://jigsaw.w3.org/css-validator/"><img src="images/vcss.png" alt="Valid CSS!" height="31" width="88" /></a></p>
+      </td>
+    </tr>
+
+    <tr>
+      <td class="bottom" colspan="2"><address>Designed by kernel-panic.it</address></td>
+      <td class="right-col"></td>
+    </tr>
+
+  </table>
+
+</body>
+
+</html>
+

@@ -1,0 +1,66 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-panic.it                    *
+ *   XHTML Tutorial styles (http://www.kernel-panic.it/programming/xhtml/)    *
+ ******************************************************************************/
+
+dd {
+  padding-bottom: 10px;
+}
+
+dl.bold-term dt {
+  font-weight: bold;
+}
+
+caption {
+  font-weight: bold;
+  padding: 10px;
+}
+
+/*************************** Attributes List Table ****************************/
+table.attributes {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000;
+}
+
+table.attributes th {
+  color: #fff;
+  background-color: #28394f;
+}
+
+table.attributes td {
+  border: 1px solid #000;
+  vertical-align: top;
+}
+
+table.attributes td.sep {
+  border-bottom-width: 2px;
+}
+
+table.attributes img {
+  float: right;
+}
+
+/***************************** Sample codes Table *****************************/
+table.example {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.example th {
+  color: #fff;
+  background-color: #28394f;
+  border: 1px solid #28394f;
+}
+
+table.example td {
+  border: 1px solid #000;
+  vertical-align: top;
+  width: 50%;
+  padding: 10px;
+}
+
+table.example td.code {
+  background-color: #e3efff;
+}
+

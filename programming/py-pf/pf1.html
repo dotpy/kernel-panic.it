@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/pydoc.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../programming.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../programming.html">Programming</a>&nbsp;
+         Next: <a href="pf2.html">2. The PacketFilter class</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>1. Introduction</h2>
+
+<p><dfn><a href="../../software/py-pf/">py-pf</a></dfn> is a pure-<a href="http://www.python.org">Python</a> module that allows you to manage <a href="http://www.openbsd.org">OpenBSD</a>'s Packet Filter from Python scripts. <a href="http://www.openbsd.org/faq/pf/index.html"><dfn>Packet Filter</dfn></a> is OpenBSD's firewalling subsystem, renowned for its performance and security and providing, among other features:</p>
+
+<ul>
+  <li>stateful filtering of TCP/IP traffic</li>
+  <li>Network Address Translation and traffic redirection</li>
+  <li>packets normalization and reassembly</li>
+  <li>Dynamic load/unload of rules and addresses by using anchors and tables</li>
+  <li>bandwidth control and packet prioritization</li>
+  <li>traffic filtering based on OS fingerprint</li>
+
+</ul>
+
+<p>py-pf allows you to control all these functions from Python in a very simple and flexible way.</p>
+<p>Well, you might object that OpenBSD already provides a powerful utility for controlling Packet Filter, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt>, which covers the most commonly used functions. It's true, but nevertheless, py-pf aims to provide something different: a scripting tool that brings together the flexibility of Packet Filter's C API and the power of Python, making it easier to parse and manage <acronym title="Packet Filter">PF</acronym> data (such as addresses, rules, state tables) and to integrate firewalling capabilities in more complex applications.</p>
+<p>Similarly to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt>, py-pf sends commands to the kernel through the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ioctl&amp;sektion=2">ioctl(2)</a></tt> interface provided by the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> pseudo-device; this allows Python to natively communicate with the kernel, thanks to the <tt><a href="http://docs.python.org/lib/module-fcntl.html">fcntl</a></tt> and <tt><a href="http://docs.python.org/lib/module-ctypes.html">ctypes</a></tt> modules, with no need to write a specific C extension module.</p>
+<p>py-pf is still under development, but already supports most of Packet Filter's functionalities, including:</p>
+
+<ul>
+  <li>starting and stopping packet filtering and bandwidth control (ALTQ);</li>
+  <li>retrieving the current ruleset, loading and removing rules, nesting rulesets with anchors;</li>
+  <li>managing address tables;</li>
+  <li>configuring Packet Filter's runtime options;</li>
+  <li>retrieving the internal packet filter statistics and counters;</li>
+  <li>managing state tables, including the ability to selectively kill specific states;</li>
+  <li>handling of packet queueing and prioritization;</li>
+</ul>
+
+<p>OS fingerprint support will be added in the next future.</p>
+
+<p>This document assumes that you are familiar with Packet Filter; if you are not, I would suggest that you first take a look at the official <a href="http://www.openbsd.org/faq/pf/index.html">PF User's guide</a>.
+
+<h3><a id="pf-1.1" name="pf-1.1"></a>1.1 The pf module</h3>
+
+<p><a href="../../software/py-pf/">py-pf</a> is made up of a single module, <tt>pf</tt>, which provides a number of classes for controlling the behavior of OpenBSD's Packet Filter and managing PF data, such as rules, anchors, network addresses, and so on.</p>
+<p>The <tt>pf</tt> module exports the following exception:</p>
+
+<dl>
+  <dt><tt>pf.<span class="attr">PFError</span></tt></dt>
+  <dd>This is a generic exception for PF-related errors; argument is a string describing what caused the error.</dd>
+</dl>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../programming.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf2.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="index.html">Table of contents</a>&nbsp;
+         Up: <a href="../../programming.html">Programming</a>&nbsp;
+         Next: <a href="pf2.html">2. The PacketFilter class</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

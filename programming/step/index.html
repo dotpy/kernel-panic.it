@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="description" content="step is a pure-Python module providing a very simple template engine with minimum syntax. It supports variable expansion, flow control and embedding of Python code." />
+  <meta name="keywords" content="step,simple,template,engine,Python,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>step - Simple Template Engine for Python</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/pydoc.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="../offtheshelf/index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../programming.html"><span>Up</span></a></li>
+      <li class="next"><span class="nav-list"><span>Next</span></span></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>step - Simple Template Engine for Python</h3>
+    <div>Previous: <a href="../offtheshelf/index.html">offtheshelf - A simple embedded NoSQL database</a>&nbsp;
+         Up: <a href="../../programming.html">Programming</a>
+    </div>
+  </div>
+
+  <hr />
+
+  <h1>step - Simple Template Engine for Python</h1>
+
+<p><tt>step</tt> is a pure-Python module providing a very simple template engine with minimum syntax. It supports variable expansion, flow control and embedding of Python code.</p>
+
+<dl class="padded">
+  <dt><tt>step.<span class="attr">Template</span>(<var>template</var>)</tt></dt>
+  <dd>Create a new template instance; <tt>template</tt> is a string containing any kind of textual content and a set of directives representing variables, control structures and blocks of Python code (see the <a href="#step-2">supported syntax</a>).</dd>
+</dl>
+
+<h2><a id="step-1" name="step-1"></a>1. Template objects</h2>
+
+<p>You can generate different strings from a template by providing a specific namespace.</p>
+
+<dl class="padded">
+  <dt><tt>Template.<span class="attr">expand</span>([<var>namespace</var>[, <var>**kw</var>]])</tt></dt>
+  <dd>Return the string resulting from the interpretation of the template string and variable substitution; <tt>namespace</tt> is a dictionary used for variables evaluation; additional keyword arguments are added to <tt>namespace</tt>.</dd>
+</dl>
+
+<h2><a id="step-2" name="step-2"></a>2. Supported syntax</h2>
+
+<p>Variables are enclosed in <tt>${}</tt> and follow the same syntax rules as Python variables; e.g.:</p>
+
+<div class="code">
+<pre>
+This is variable x: ${x}
+This is the third item of my_list: ${my_list[2]}
+This is not a variable: $\{x\}
+</pre>
+</div>
+
+<p>Flow control expressions are written like regular Python control structures, preceded by the <tt>%</tt> sign and must be closed by a <tt>%end&lt;statement&gt;</tt> tag; e.g.:</p>
+
+<div class="code">
+<pre>
+%if (x &gt; 2):
+    x is greater than 2
+%else:
+    x is ${x}
+%endif
+</pre>
+</div>
+
+<p>All text between <tt>&lt;%</tt> and <tt>%&gt;</tt> is considered Python code; you can use the builtin <tt>echo()</tt> function to output some text from within Python code blocks; e.g.:</p>
+
+<div class="code">
+<pre>
+&lt;%
+import time
+echo(&quot;Current timestamp is {}&quot;.format(time.time()))
+%&gt;
+&lt;\% This is not Python code %\&gt;
+</pre>
+</div>
+
+<p>You can use the special function <tt>isdef()</tt> to perform some actions only if a name is defined in the template namespace; e.g.:</p>
+
+<div class="code">
+<pre>
+%if isdef(&quot;my_var&quot;)
+    my_var is ${my_var}
+%endif
+</pre>
+</div>
+
+<p>The <tt>setopt()</tt> function allows you to enable options that modify the template output; the only supported option is &quot;<tt>strip</tt>&quot;, which removes leading/trailing whitespace, contiguous whitespace and empty lines and defaults to true; e.g.:</p>
+
+<div class="code">
+<pre>
+&lt;%setopt(&quot;strip&quot;, True)%&gt;
+</pre>
+</div>
+
+<p>A backslash at the end of a line will suppress the newline character.</p>
+
+<h2><a id="step-3" name="step-3"></a>3. Examples</h2>
+
+<p>A simple example generating an HTML document:</p>
+
+<div class="code">
+<pre>
+import step
+
+template = r&quot;&quot;&quot;
+&lt;%setopt(&quot;strip&quot;, False)%&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;title&gt;${title}&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;My Items&lt;/h1&gt;
+
+    &lt;ul&gt;
+    %for item in items:
+      &lt;li&gt;${item}&lt;/li&gt;
+    %endfor
+    &lt;/ul&gt;
+
+    %if isdef(&quot;info&quot;):
+        &lt;p&gt;${info}&lt;/p&gt;
+    %endif
+
+    &lt;footer&gt;
+&lt;%
+import time
+echo(&quot;Last refresh: {}\n&quot;.format(time.ctime()))
+%&gt;
+    &lt;/footer&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+&quot;&quot;&quot;
+
+namespace = {&quot;title&quot;: &quot;My title&quot;,
+             &quot;items&quot;: [&quot;item 1&quot;, &quot;item 2&quot;, &quot;item 3&quot;],
+             &quot;info&quot;: &quot;More interesting information&quot;}
+
+print step.Template(template).expand(namespace)
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="../offtheshelf/index.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../programming.html"><span>Up</span></a></li>
+      <li class="next"><span class="nav-list"><span>Next</span></span></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>step - Simple Template Engine for Python</h3>
+    <div>Previous: <a href="../offtheshelf/index.html">offtheshelf - A simple embedded NoSQL database</a>&nbsp;
+         Up: <a href="../../programming.html">Programming</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

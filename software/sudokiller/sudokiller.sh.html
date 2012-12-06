@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,open,source,programming,sudoku,solver,sudokiller,bash" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>Sudokiller.sh - A Sudoku Solver in Bash</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/code.css" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.asm.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.c.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.sh</h3>
+    <div>Previous: <a href="sudokiller.asm.html">sudokiller.asm</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.c.html">sudokiller.c</a>
+    </div>
+  </div>
+
+  <hr />
+
+<pre>
+<span class="cmt">#!/usr/bin/env bash
+
+################################################################################
+#                                                                              #
+# SudoKiller 1.0 - Bash SuDoku solver                                          #
+#                                                                              #
+# NAME        : sudokiller.sh                                                  #
+# VERSION     : 1.0                                                            #
+# CREATED DATE: 19/09/2005                                                     #
+# LAST UPDATE : 20/09/2005                                                     #
+# AUTHOR      : Daniele Mazzocchio                                             #
+#                                                                              #
+# Fill the 'board' array with the SuDoku table, replacing the empty cells with #
+# zeroes, and run this script.                                                 #
+#                                                                              #
+# <a href="sudokiller.tar.gz">Download sources</a>                                                             #
+################################################################################
+
+# This is the game board. Fill it with the puzzle you want to solve</span>
+board=(0 6 0 1 0 4 0 5 0
+       0 0 8 3 0 5 6 0 0
+       2 0 0 0 0 0 0 0 1
+       8 0 0 4 0 7 0 0 6
+       0 0 6 0 0 0 3 0 0
+       7 0 0 9 0 1 0 0 4
+       5 0 0 0 0 0 0 0 2
+       0 0 7 2 0 6 9 0 0
+       0 4 0 5 0 8 0 7 0)
+
+
+<span class="cmt">################################################################################
+# Constants definition                                                         #
+################################################################################</span>
+SIZE=9                                   <span class="cmt"># Width of the SuDoku board</span>
+BOX_W=3                                  <span class="cmt"># Width of the inner boxes</span>
+BOX_H=3                                  <span class="cmt"># Height of the inner boxes</span>
+EMPTY=0                                  <span class="cmt"># Empty cells marker</span>
+
+RET_OK=0                                 <span class="cmt"># Return value upon success</span>
+RET_FAIL=1                               <span class="cmt"># Return value upon failure</span>
+
+
+<span class="cmt">################################################################################
+# Functions                                                                    #
+################################################################################</span>
+<span class="kw">function</span> <span class="func">guess</span> () {
+    <span class="cmt"># Test all candidate numbers for current cell until board is complete</span>
+    <span class="kw">local</span> index=$1                       <span class="cmt"># Index of the cell to guess</span>
+
+    <span class="kw">local</span> row=$((index / SIZE ))         <span class="cmt"># Row index of current cell</span>
+    <span class="kw">local</span> col=$((index % SIZE ))         <span class="cmt"># Column index of current cell</span>
+    <span class="kw">local</span> i                              <span class="cmt"># Local counter variable</span>
+
+    <span class="cmt"># Check if $index is out of array bounds</span>
+    [[ $index <span class="kw">-eq</span> ${#board[@]} ]] <span class="kw">&amp;&amp;</span> <span class="kw">return</span> $RET_OK
+
+    <span class="cmt"># If the cell isn't empty, go on to the next one</span>
+    <span class="kw">if</span> [[ ${board[index]} <span class="kw">-ne</span> $EMPTY ]]; <span class="kw">then</span>
+        guess $(( index + 1 ))
+        <span class="kw">return</span> $?
+    <span class="kw">fi</span>
+
+    <span class="cmt"># Test all numbers from 1 to 9</span>
+    <span class="kw">for</span> ((i=1; i &lt;= SIZE; i++)); <span class="kw">do</span>
+        check $i $row $col <span class="kw">&amp;&amp;</span> {
+            <span class="cmt"># Assign $i to cell and go on to the next cell</span>
+            board[index]=$i
+            guess $(( index + 1 )) <span class="kw">&amp;&amp;</span> <span class="kw">return</span> $RET_OK
+        }
+    <span class="kw">done</span>
+
+    <span class="cmt"># If all numbers fail, empty the cell and return RET_FAIL</span>
+    board[index]=$EMPTY
+    return $RET_FAIL
+}
+
+<span class="kw">function</span> <span class="func">check</span> () {
+    <span class="cmt"># Check if a number is, according to Sudoku rules, a legal candidate for the
+    #   cell identified by its row and column indexes</span>
+    <span class="kw">local</span> num=$1                         <span class="cmt"># Number to check</span>
+    <span class="kw">local</span> row=$2                         <span class="cmt"># Cell's row index</span>
+    <span class="kw">local</span> col=$3                         <span class="cmt"># Cell's column index</span>
+
+    <span class="kw">local</span> i                              <span class="cmt"># Local counter variable</span>
+
+    <span class="cmt"># Check if the cell's row contains num</span>
+    <span class="kw">for</span> i <span class="kw">in</span> ${board[@]:$(( row * SIZE )):SIZE}; <span class="kw">do</span>
+        [[ $num <span class="kw">-eq</span> $i ]] <span class="kw">&amp;&amp;</span> <span class="kw">return</span> $RET_FAIL
+    <span class="kw">done</span>
+
+    <span class="cmt"># Check if the cell's column contains num</span>
+    <span class="kw">for</span> (( i=col; i &lt; ${#board[@]}; i+=SIZE )); <span class="kw">do</span>
+        [[ $num <span class="kw">-eq</span> ${board[i]} ]] <span class="kw">&amp;&amp;</span> <span class="kw">return</span> $RET_FAIL
+    <span class="kw">done</span>
+
+    <span class="cmt"># Get the top left corner indexes of the cell's 3x3 box</span>
+    <span class="kw">local</span> box_row=$(( $row - $row % BOX_H ))
+    <span class="kw">local</span> box_col=$(( $col - $col % BOX_W ))
+
+    <span class="cmt"># Check if the box contains num</span>
+    <span class="kw">for</span> (( r = 0; r &lt; BOX_H; r++ )); <span class="kw">do</span>
+        <span class="kw">for</span> i <span class="kw">in</span> ${board[@]:$(( box_col + (box_row + r) * SIZE )):BOX_W}; <span class="kw">do</span>
+            [[ $num <span class="kw">-eq</span> $i ]] <span class="kw">&amp;&amp;</span> <span class="kw">return</span> $RET_FAIL
+        <span class="kw">done</span>
+    <span class="kw">done</span>
+
+    <span class="cmt"># If all previous tests have been passed, return RET_OK</span>
+    <span class="kw">return</span> $RET_OK
+}
+
+
+<span class="cmt">################################################################################
+# Main                                                                         #
+################################################################################</span>
+
+guess 0
+rc=$?
+
+<span class="kw">if</span> [[ $rc <span class="kw">-eq</span> $RET_OK ]]; <span class="kw">then</span>
+    <span class="cmt"># Print the resulting board</span>
+    <span class="kw">for</span> i <span class="kw">in</span> ${!board[@]}; <span class="kw">do</span>
+        [[ $(( i % SIZE )) <span class="kw">-eq</span> 0 ]] <span class="kw">&amp;&amp;</span> \
+            <span class="kw">echo</span> -n $<span class="str">'\n+---+---+---+---+---+---+---+---+---+\n|'</span>
+        <span class="kw">echo</span> -n <span class="str">" ${board[i]} |"</span>
+    <span class="kw">done</span>
+    <span class="kw">echo</span> $<span class="str">'\n+---+---+---+---+---+---+---+---+---+\n'</span>
+<span class="kw">else</span>
+    <span class="kw">echo</span> <span class="str">"Sorry, solution not found..."</span>
+<span class="kw">fi</span>
+
+<span class="kw">exit</span> $rc
+
+</pre>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.asm.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.c.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.sh</h3>
+    <div>Previous: <a href="sudokiller.asm.html">sudokiller.asm</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.c.html">sudokiller.c</a>
+    </div>
+  </div>
+
+  <script type="text/javascript"> var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

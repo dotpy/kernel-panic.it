@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,open,source,programming,sudoku,solver,sudokiller,java" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>Sudokiller.java - A Sudoku Solver in Java</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/code.css" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.gf.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.js.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.java</h3>
+    <div>Previous: <a href="sudokiller.gf.html">sudokiller.gf</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.js.html">sudokiller.js</a>
+    </div>
+  </div>
+
+  <hr />
+
+<pre>
+<span class="cmt">/*******************************************************************************
+ * SudoKiller.java - A Graphical Java Sudoku solver                            *
+ *                                                                             *
+ * Source code is made up of multiple files (one for each class) that are      *
+ * shown, here, sequentially.                                                  *
+ *                                                                             *
+ * <a href="sudokiller.tar.gz">Download sources</a>                                                            *
+ *******************************************************************************/</span>
+
+<span class="cmt">/*******************************************************************************
+ * Main.java                                                                   *
+ *******************************************************************************/</span>
+<span class="kw">package</span> sudokiller;
+
+<span class="cmt">/**
+ * Sudoku game solver.
+ * It creates a GUI with a default puzzle; you can replace it with the puzzle
+ * you want to solve. Then click the 'Start' button (or type 'ALT-s') to get the
+ * solution.
+ *
+ * @author Daniele Mazzocchio
+ * @version 1.0
+ */</span>
+<span class="kw">public class</span> <span class="class">Main</span> {
+    
+    <span class="cmt">/**
+     * Creates the GUI with a default puzzle.
+     * @params args Command-line arguments (unused)
+     */</span>
+    <span class="kw">public static void</span> <span class="meth">main</span>(<span class="kw">String[]</span> args) {
+        <span class="kw">int[][]</span> board = {{0, 6, 0, 1, 0, 4, 0, 5, 0},
+                         {0, 0, 8, 3, 0, 5, 6, 0, 0},
+                         {2, 0, 0, 0, 0, 0, 0, 0, 1},
+                         {8, 0, 0, 4, 0, 7, 0, 0, 6},
+                         {0, 0, 6, 0, 0, 0, 3, 0, 0},
+                         {7, 0, 0, 9, 0, 1, 0, 0, 4},
+                         {5, 0, 0, 0, 0, 0, 0, 0, 2},
+                         {0, 0, 7, 2, 0, 6, 9, 0, 0},
+                         {0, 4, 0, 5, 0, 8, 0, 7, 0}};
+        
+        <span class="kw">new</span> SwingSudoKiller(<span class="kw">new</span> SwingSudokuBoard(board));
+    }   
+}
+
+
+<span class="cmt">/*******************************************************************************
+ * SudokuBoard.java                                                            *
+ *******************************************************************************/</span>
+<span class="kw">package</span> sudokiller;
+
+<span class="cmt">/**
+ * This is the base class for implementing a Sudoku board.
+ * It mostly is a two-dimensional &lt;code&gt;int&lt;code&gt; array and provides
+ * basic methods for getting/setting cells contents. Board cells are identified
+ * by their row and column and are zero-indexed.
+ * 
+ * @author Daniele Mazzocchio
+ * @version 1.0
+ */</span>
+<span class="kw">public class</span> <span class="class">SudokuBoard</span> {
+    <span class="kw">final int</span> EMPTY = 0;      <span class="cmt">// Empty cells marker</span>
+    <span class="kw">final int</span> size;           <span class="cmt">// Size of the board (number of rows and columns)</span>
+    <span class="kw">final int</span> box_size;       <span class="cmt">// Size of the inner boxes</span>
+
+    <span class="kw">private int[][]</span> board;    <span class="cmt">// 2D array representing the game board</span>
+
+    <span class="cmt">/**
+     * Creates an empty board.
+     * @param size Number of rows and columns of the board.
+     */</span>
+    <span class="kw">public</span> <span class="meth">SudokuBoard</span>(<span class="kw">int</span> size) {
+        board = <span class="kw">new int</span>[size][size];
+        <span class="kw">this</span>.size = size;
+        <span class="kw">this</span>.box_size = (<span class="kw">int</span>) Math.sqrt(size);
+    }
+    
+    <span class="cmt">/**
+     * Creates and initializes the board.
+     * @param board Array to initialize the board contents.
+     */</span>
+    <span class="kw">public</span> <span class="meth">SudokuBoard</span>(<span class="kw">int[][]</span> board) {
+        <span class="kw">this</span>(board.length);
+        <span class="kw">this</span>.board = board;
+    }
+    
+    <span class="cmt">/**
+     * Puts a number into a specific cell.
+     * @param num Number to put into the board cell.
+     * @param row Cell's row.
+     * @param col Cell's column.
+     */</span>
+    <span class="kw">public void</span> <span class="meth">setCell</span>(<span class="kw">int</span> num, <span class="kw">int</span> row, <span class="kw">int</span> col) {
+        board[row][col] = num;
+    }
+
+    <span class="cmt">/**
+     * Returns the number contained in a specific cell.
+     * @param row Cell's row.
+     * @param col Cell's column.
+     * @return The number contained in the cell.
+     */</span>
+    <span class="kw">public int</span> <span class="meth">getCell</span>(<span class="kw">int</span> row, <span class="kw">int</span> col) {
+        <span class="kw">return</span> board[row][col];
+    }
+}
+
+
+<span class="cmt">/*******************************************************************************
+ * SudoKiller.java                                                             *
+ *******************************************************************************/</span>
+<span class="kw">package</span> sudokiller;
+
+<span class="cmt">/**
+ * This is the base class for implementing a Sudoku solver.
+ * It provides a simple method for guessing the solution, but lets subclasses
+ * decide how to display it.
+ * 
+ * @author Daniele Mazzocchio
+ * @version 1.0
+ */</span>
+<span class="kw">abstract class</span> <span class="class">SudoKiller</span> {
+    <span class="kw">private</span> SudokuBoard sb;    <span class="cmt">// Puzzle to solve;</span>
+
+    <span class="cmt">/**
+     * Initializes the game board.
+     * @param sb The puzzle to solve.
+     */</span>
+    <span class="kw">public</span> <span class="meth">SudoKiller</span>(SudokuBoard sb) {
+        <span class="kw">this</span>.sb = sb;
+    }
+    
+    <span class="cmt">/**
+     * Check if a number is, according to Sudoku rules, a legal candidate for
+     * the given cell.
+     * @param num Number to check.
+     * @param row Cell's row.
+     * @param col Cell's column.
+     * @return &lt;code&gt;false&lt;code&gt; if &lt;code&gt;num&lt;code&gt; already appears in the row,
+     *         column or box the cell belongs to or &lt;code&gt;true&lt;code&gt; otherwise.
+     */</span>
+    <span class="kw">private boolean</span> <span class="meth">check</span>(<span class="kw">int</span> num, <span class="kw">int</span> row, <span class="kw">int</span> col) {
+        <span class="kw">int</span> r = (row / sb.box_size) * sb.box_size;
+        <span class="kw">int</span> c = (col / sb.box_size) * sb.box_size;
+        
+        <span class="kw">for</span> (<span class="kw">int</span> i = 0; i < sb.size; i++) {
+            <span class="kw">if</span> (sb.getCell(row, i) == num ||
+                sb.getCell(i, col) == num ||
+                sb.getCell(r + (i % sb.box_size), c + (i / sb.box_size)) == num) {
+                <span class="kw">return false</span>;
+            }
+        }
+        <span class="kw">return true</span>;
+    }
+    
+    <span class="cmt">/**
+     * Test all candidate numbers for a given cell until the board is complete.
+     * @param row Cell's row.
+     * @param col Cell's column.
+     * @return &lt;code&gt;false&lt;code&gt; if no legal numbers are found for this cell.
+     */</span>
+    <span class="kw">public boolean</span> <span class="meth">guess</span>(<span class="kw">int</span> row, <span class="kw">int</span> col) {
+        <span class="kw">int</span> nextCol = (col + 1) % sb.size;
+        <span class="kw">int</span> nextRow = (nextCol == 0) ? row + 1 : row;
+        
+        <span class="kw">try</span> {
+            <span class="kw">if</span> (sb.getCell(row, col) != sb.EMPTY)
+                <span class="kw">return</span> guess(nextRow, nextCol);
+        }
+        <span class="kw">catch</span> (ArrayIndexOutOfBoundsException e) {
+                <span class="kw">return true</span>;
+        }
+
+        <span class="kw">for</span> (<span class="kw">int</span> i = 1; i <= sb.size; i++) {
+            <span class="kw">if</span> (check(i, row, col)) {
+                sb.setCell(i, row, col);
+                <span class="kw">if</span> (guess(nextRow, nextCol)) {
+                    <span class="kw">return true</span>;
+                }
+            }
+        }
+        sb.setCell(sb.EMPTY, row, col);
+        <span class="kw">return false</span>;
+    }
+}
+
+    
+<span class="cmt">/*******************************************************************************
+ * SwingSudokuBoard.java                                                       *
+ *******************************************************************************/</span>
+<span class="kw">package</span> sudokiller;
+
+<span class="kw">import</span> java.awt.*;
+<span class="kw">import</span> javax.swing.*;
+
+<span class="cmt">/**
+ * This class represents a graphical Sudoku board.
+ * It is mostly a two-dimensional &lt;code&gt;JTextField&lt;code&gt; array
+ * providing all the functionality of a &lt;code&gt;SudokuBoard&lt;code&gt; object.
+ * Board cells are identified by their row and column and are zero-indexed.
+ *
+ * @author Daniele Mazzocchio
+ * @version 1.0
+ */</span>
+<span class="kw">public class</span> <span class="class">SwingSudokuBoard</span> <span class="kw">extends</span> SudokuBoard {
+    <span class="kw">private</span> JTextField[][] cells;          <span class="cmt">// Graphical game board</span>
+    <span class="kw">private</span> JPanel panel = new JPanel();   <span class="cmt">// Container</span>
+
+    <span class="cmt">/**
+     * Draws an empty board.
+     * @param size Number of rows and columns of the board.
+     */</span>
+    <span class="kw">public</span> <span class="meth">SwingSudokuBoard</span>(<span class="kw">int</span> size) {
+        <span class="kw">super</span>(size);
+        cells = <span class="kw">new</span> JTextField[size][size];
+        panel.setLayout(<span class="kw">new</span> GridLayout(size, size));
+        <span class="kw">for</span> (<span class="kw">int</span> row = 0; row < size; row++) {
+            <span class="kw">for</span> (<span class="kw">int</span> col = 0; col < size; col++)  {
+                cells[row][col] = <span class="kw">new</span> JTextField(1);
+                panel.add(cells[row][col]);
+            }
+        }
+    }
+
+    <span class="cmt">/**
+     * Draws and initializes the board.
+     * @param board Array to initialize the board contents.
+     */</span>
+    <span class="kw">public</span> <span class="meth">SwingSudokuBoard</span>(<span class="kw">int[][]</span> board) {
+        <span class="kw">this</span>(board.length);
+        <span class="kw">for</span> (<span class="kw">int</span> row = 0; row < size; row++) {
+            <span class="kw">for</span> (<span class="kw">int</span> col = 0; col < size; col++) {
+                setCell(board[row][col], row, col);
+            }
+        }
+    }
+    
+    <span class="cmt">/**
+     * Puts a number into a specific text field.
+     * @param num Number to put into the text field (cell).
+     * @param row Cell's row.
+     * @param col Cell's column.
+     */</span>
+    <span class="kw">public void</span> <span class="meth">setCell</span>(<span class="kw">int</span> num, <span class="kw">int</span> row, <span class="kw">int</span> col) {
+        <span class="kw">super</span>.setCell(num, row, col);
+        <span class="kw">String</span> text = (num == EMPTY) ? <span class="str">&quot;&quot;</span> : String.valueOf(num);
+        cells[row][col].setText(text);
+    }
+    
+    <span class="cmt">/**
+     * Returns the number contained in a specific text field (cell).
+     * @param row Cell's row.
+     * @param col Cell's column.
+     * @return The number contained in the cell.
+     */</span>
+    <span class="kw">public int</span> <span class="meth">getCell</span>(<span class="kw">int</span> row, <span class="kw">int</span> col) {
+        <span class="kw">int</span> cell;
+
+        <span class="kw">try</span> {
+            cell = Integer.parseInt(cells[row][col].getText());
+        }
+        <span class="kw">catch</span> (NumberFormatException e) {
+            cell = EMPTY;
+        }
+        <span class="kw">return</span> cell;
+    }
+    
+    <span class="cmt">/**
+     * Returns the JPanel containing the board.
+     * @return Returns the board container.
+     */</span>
+    <span class="kw">public</span> JPanel <span class="meth">getPanel</span>() {
+        <span class="kw">return</span> panel;
+    }
+}
+
+
+<span class="cmt">/*******************************************************************************
+ * SwingSudoKiller.java                                                        *
+ *******************************************************************************/</span>
+<span class="kw">package</span> sudokiller;
+
+<span class="kw">import</span> java.awt.*;
+<span class="kw">import</span> java.awt.event.*;
+<span class="kw">import</span> javax.swing.*;
+
+<span class="cmt">/**
+ * Graphical Sudoku game solver.
+ * The user should fill the board with the puzzle to solve and click the
+ * 'Start' button (or type 'ALT-s') to get the solution.
+ *
+ * @author Daniele Mazzocchio
+ * @version 1.0
+ */</span>
+<span class="kw">public class</span> <span class="class">SwingSudoKiller</span> <span class="kw">extends</span> SudoKiller {
+
+    <span class="cmt">/**
+     * Draw the game board.
+     * @param ssb The puzzle to solve.
+     */</span>
+    <span class="kw">public</span> <span class="meth">SwingSudoKiller</span>(SwingSudokuBoard ssb) {
+        <span class="kw">super</span>(ssb);
+        <span class="kw">final</span> JPanel panel = ssb.getPanel();
+
+        Runnable runner = <span class="kw">new</span> <span class="meth">Runnable</span>() {
+            <span class="kw">public void</span> run() {
+                <span class="kw">final</span> JFrame frame = <span class="kw">new</span> JFrame(<span class="str">"SudoKiller"</span>);
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+                ActionListener al = <span class="kw">new</span> <span class="meth">ActionListener</span>() {
+                    <span class="kw">public void</span> actionPerformed(ActionEvent ae) {
+                        <span class="kw">if</span> (! guess(0, 0))
+                            JOptionPane.showMessageDialog(frame, <span class="str">&quot;Solution not found!&quot;</span>);
+                    }
+                };
+                frame.setLayout(new GridBagLayout());
+                addComponent(frame, panel, 0, 0, 1, 1);
+                
+                JButton b = <span class="kw">new</span> JButton(<span class="str">&quot;Start!&quot;</span>);
+                b.setMnemonic(KeyEvent.VK_S);
+                b.addActionListener(al);
+                addComponent(frame, b, 0, 1, 1, 1);
+
+                frame.setSize(240, 280);
+                frame.setVisible(true);
+            }
+        };
+        EventQueue.invokeLater(runner);
+    }
+    
+    <span class="cmt">/**
+     * Add a component to the GUI.
+     * @param container Container to add the component to.
+     * @param component The component to be added.
+     * @param gridx Horizontal cell position inside the grid.
+     * @param gridy Vertical cell position inside the grid.
+     * @param gridwidth Number of cells in a row for the text field.
+     * @param gridheight Number of cells in a column for the text field.
+     */</span>
+    <span class="kw">private static void</span> <span class="meth">addComponent</span>(Container container, Component component,
+        <span class="kw">int</span> gridx, <span class="kw">int</span> gridy, <span class="kw">int</span> gridwidth, <span class="kw">int</span> gridheight) {
+        Insets insets = <span class="kw">new</span> Insets(0, 0, 0, 0);
+        GridBagConstraints gbc = <span class="kw">new</span> GridBagConstraints(gridx, gridy, gridwidth,
+                gridheight, 1, 1, GridBagConstraints.CENTER,
+                GridBagConstraints.BOTH, insets, 0, 0);
+        container.add(component, gbc);
+    }
+}
+</pre>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.gf.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.js.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.java</h3>
+    <div>Previous: <a href="sudokiller.gf.html">sudokiller.gf</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.js.html">sudokiller.js</a>
+    </div>
+  </div>
+
+  <script type="text/javascript"> var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

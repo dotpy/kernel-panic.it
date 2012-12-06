@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+
+  <title>Redundant firewalls with OpenBSD, CARP and pfsync - Base configuration</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="carp2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="carp4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Redundant firewalls with OpenBSD, CARP and pfsync</h3>
+    <div>Previous: <a href="carp2.html">2. Network description</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="carp4.html">4. The CARP protocol</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>3. Base configuration</h2>
+
+<p>Let's take a brief look at the base system configuration, which applies to all of our firewalls.</p>
+<p>We won't go through the installation of the operating system, which is deeply documented on the <a href="http://www.openbsd.org/faq/faq4.html">OpenBSD web site</a>. The only (obvious) remark is that you should install only the bare minimum, to prevent firewall security and reliability from being compromised by unnecessary software. Therefore, during installation, you only need to select file sets marked as <q><b>Required</b></q> by the <a href="http://www.openbsd.org/faq/faq4.html#FilesNeeded">documentation</a>, i.e.:</p>
+
+<ul>
+  <li><tt>bsd</tt>, the kernel;</li>
+  <li><tt>base<var>XX</var>.tgz</tt>, the base system;</li>
+  <li><tt>etc<var>XX</var>.tgz</tt>, the configuration files in <tt>/etc</tt>.</li>
+</ul>
+
+<p>There should be no need to install the compiler (<tt>comp<var>XX</var>.tgz</tt>), also to avoid providing such a useful tool to possible intruders (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
+<p>After the first reboot, we can start setting up some configuration files; by default, OpenBSD comes with very few services enabled through <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>inetd(8)</tt></a>:</p>
+
+<div class="code">
+<pre>
+$ <kbd>grep -v ^# /etc/inetd.conf</kbd>
+ident           stream  tcp     nowait  _identd /usr/libexec/identd     identd -el
+ident           stream  tcp6    nowait  _identd /usr/libexec/identd     identd -el
+127.0.0.1:comsat dgram  udp     wait    root    /usr/libexec/comsat     comsat
+[::1]:comsat    dgram   udp6    wait    root    /usr/libexec/comsat     comsat
+daytime         stream  tcp     nowait  root    internal
+daytime         stream  tcp6    nowait  root    internal
+time            stream  tcp     nowait  root    internal
+time            stream  tcp6    nowait  root    internal
+$
+</pre>
+</div>
+
+<p>The system is considered secure also with these services turned on (see [<a href="http://www.absoluteopenbsd.com/">ABSO</a>]); anyway, disabling them all will make no harm.</p>
+<p>It's also a good practice to edit the <tt>/etc/motd</tt> file to give as few information as possible about the system and to warn users, whether legitimate or not, that all access is being logged and that any unauthorized access will be prosecuted (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
+<p>You should already have configured the network during installation; anyway, if you need to make some changes, these are the main files to edit:</p>
+
+<dl>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hostname.if&amp;sektion=5">/etc/hostname.<var>if</var>(5)</a></tt></dt>
+  <dd>containing information regarding the configuration of each network interface (address, netmask, etc.);</dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=mygate&amp;sektion=5">/etc/mygate(5)</a></tt></dt>
+  <dd>containing the address of the gateway host;</dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=myname&amp;sektion=5">/etc/myname(5)</a></tt></dt>
+  <dd>containing the symbolic hostname (<acronym title="Fully Qualified Domain Name">FQDN</acronym>) of the machine;</dd>
+  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=resolv.conf&amp;sektion=5">/etc/resolv.conf(5)</a></tt></dt>
+  <dd>containing the resolver configuration settings (name servers, local domain name, etc.).</dd>
+</dl>
+
+<p>Considering the large amount of DNS-based attacks, it is also preferable, especially on firewalls, not to rely on DNS to resolve names and addresses of the most critical systems, but rather inserting them into the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hosts&amp;sektion=5">/etc/hosts(5)</a></tt> file. To make sure the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hosts&amp;sektion=5">/etc/hosts(5)</a></tt> file has a higher priority than DNS, just make sure that the first line in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=resolv.conf&amp;sektion=5">/etc/resolv.conf(5)</a></tt> is:</p>
+
+<div class="code">
+  <div>/etc/resolv.conf</div>
+  <pre>lookup file bind</pre>
+</div>
+
+<p>Packet Filter is enabled by default and loads rules from the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">/etc/pf.conf(5)</a></tt> file; a different path can be specified by assigning it to the <tt>pf_rules</tt> variable in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf&amp;sektion=8">/etc/rc.conf.local(8)</a></tt>.</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+pf_rules=/new/path/to/pf.conf</pre>
+</div>
+
+<p>You may also set <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pflogd&amp;sektion=8">pflogd(8)</a></tt> flags in the variable <tt>pflogd_flags</tt>. Last, don't forget to enable IP forwarding by issuing the command:</p>
+
+<div class="code">
+<pre>
+# <kbd>sysctl net.inet.ip.forwarding=1</kbd>
+net.inet.ip.forwarding: 0 -&gt; 1
+#
+</pre>
+</div>
+
+<p>and to uncomment the following line in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl.conf&amp;sektion=5">/etc/sysctl.conf(5)</a></tt> to re-enable it after reboot:</p>
+
+<div class="code">
+  <div>/etc/sysctl.conf</div>
+<pre>
+net.inet.ip.forwarding=1
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="carp2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="carp4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Redundant firewalls with OpenBSD, CARP and pfsync</h3>
+    <div>Previous: <a href="carp2.html">2. Network description</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="carp4.html">4. The CARP protocol</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

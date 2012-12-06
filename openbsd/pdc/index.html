@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="description" content="Building a Primary Domain Controller with OpenBSD, OpenLDAP, Samba, Bind, ClamAV, Samba-vscan and CUPS" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,primary,domain,controller,file,server,Samba,OpenLDAP,smbldap,samba-vscan,ClamAV,CUPS" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a Primary Domain Controller - Table of contents</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Previous</span></span></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc1.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="pdc1.html">1. Introduction</a>
+    </div>
+  </div>
+
+  <hr />
+
+  <h1>OpenBSD as a Primary Domain Controller</h1>
+  <div id="subtitle">Author: <a href="mailto:danix@kernel-panic.it">Daniele Mazzocchio</a><br />
+                     Applies to: OpenBSD 4.6<br />
+                     Last update: Nov 4, 2009<br />
+                     Download: <a href="OpenBSD_pdc.pdf"><img src="../../images/pdf.gif" height="20" width="20" alt="[PDF]" /></a>
+  </div>
+
+  <h2>Table of contents</h2>
+
+  <ul>
+    <li><a href="pdc1.html">1. Introduction</a></li>
+    <li><a href="pdc2.html">2. OpenLDAP</a>
+      <ul>
+        <li><a href="pdc2.html#pdc-2.1">2.1 The LDAP protocol</a></li>
+        <li><a href="pdc2.html#pdc-2.2">2.2 Installation and configuration</a></li>
+        <li><a href="pdc2.html#pdc-2.3">2.3 LDAP over TLS/SSL</a>
+          <ul>
+            <li><a href="pdc2.html#pdc-2.3.1">2.3.1 Setting up the PKI</a></li>
+            <li><a href="pdc2.html#pdc-2.3.2">2.3.2 OpenLDAP configuration</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="pdc3.html">3. A bit of Samba</a>
+      <ul>
+        <li><a href="pdc3.html#pdc-3.1">3.1 Installation and configuration</a></li>
+      </ul>
+    </li>
+    <li><a href="pdc4.html">4. The IDX-smbldap-tools</a>
+      <ul>
+        <li><a href="pdc4.html#pdc-4.1">4.1 Configuration</a></li>
+        <li><a href="pdc4.html#pdc-4.2">4.2 Populating the LDAP database</a></li>
+        <li><a href="pdc4.html#pdc-4.3">4.3 Configuring ypldap(8)</a></li>
+      </ul>
+    </li>
+    <li><a href="pdc5.html">5. Keeping viruses away with Samba-vscan</a></li>
+    <li><a href="pdc6.html">6. Sharing printers with CUPS</a>
+      <ul>
+        <li><a href="pdc6.html#pdc-6.1">6.1 Getting the driver files</a></li>
+        <li><a href="pdc6.html#pdc-6.2">6.2 Exporting printers to Samba</a></li>
+      </ul>
+    </li>
+    <li><a href="pdc7.html">7. Appendix</a>
+      <ul>
+        <li><a href="pdc7.html#pdc-7.1">7.1 References</a></li>
+        <li><a href="pdc7.html#pdc-7.2">7.2 Bibliography</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Previous</span></span></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc1.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="pdc1.html">1. Introduction</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

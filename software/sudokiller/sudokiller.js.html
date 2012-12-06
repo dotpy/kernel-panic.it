@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,open,source,programming,sudoku,solver,sudokiller,javascript" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>Sudokiller.js - A Sudoku Solver in Javascript</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/code.css" />
+  
+  <script type="text/javascript">
+    function sudokiller() {
+        window.open('src/sudokiller.js.html', '', 'width=400,height=340,resizable,scrollbars');
+    }
+  </script>
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.java.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.lisp.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.js</h3>
+    <div>Previous: <a href="sudokiller.java.html">sudokiller.java</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.lisp.html">sudokiller.lisp</a>
+    </div>
+  </div>
+
+  <hr />
+
+<pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;?xml-stylesheet href=&quot;#SudokuStyle&quot; type=&quot;text/css&quot;?&gt;
+
+&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Strict//EN&quot; &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd&quot;&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+
+    &lt;title&gt;Sudokiller - A JavaScript SuDoku Solver&lt;/title&gt;
+
+    &lt;style type=&quot;text/css&quot; id=&quot;SudokuStyle&quot;&gt;
+      p { text-align: center; }
+      table { border: 1px solid #000; border-collapse: collapse;
+              margin-left: auto; margin-right: auto; }
+      input { border: 1px solid #ccc; }
+    &lt;/style&gt;
+
+    &lt;script type=&quot;text/Javascript&quot;&gt;
+
+      <span class="cmt">/************************************************************************
+       *
+       * sudokiller.js - Javascript SuDoku solver (<a href="javascript:sudokiller();">see it in action!</a>)
+       * 
+       * Author: Daniele Mazzocchio
+       * Last update: Jan 30, 2006
+       *
+       * <a href="sudokiller.tar.gz">Download sources</a>
+       ************************************************************************/</span>
+
+       <span class="kw">function</span> <span class="func">SudoKiller</span>() {
+          <span class="cmt">/*
+           * Constructor of the SuDoku solver.
+           */</span>
+          BOARD_SIZE = 9;           <span class="cmt">// Width and height of the SuDoku board</span>
+          BOX_SIZE = 3;             <span class="cmt">// Width and height of the inner boxes</span>
+          EMPTY = <span class="str">&quot;&quot;</span>;               <span class="cmt">// Empty cell marker</span>
+
+          <span class="kw">var</span> board = <span class="kw">new</span> Array();  <span class="cmt">// Cells array</span>
+
+          <span class="kw">function</span> <span class="func">check</span>(num, row, col) {
+              <span class="cmt">/*
+               * Check if num is, according to SuDoku rules, a legal candidate
+               * for the given cell.
+               */</span>
+              <span class="kw">var</span> row_index, col_index, box_index;    <span class="cmt">// Indexes of the cells to check</span>
+              <span class="kw">var</span> r = (Math.floor(row / BOX_SIZE) * BOX_SIZE);
+              <span class="kw">var</span> c = (Math.floor(col / BOX_SIZE) * BOX_SIZE);
+
+              <span class="kw">for</span> (<span class="kw">var</span> i=0; i&lt;BOARD_SIZE; i++) {
+                  row_index = (row * BOARD_SIZE) + i;
+                  col_index = col + (i * BOARD_SIZE);
+                  box_index = (r + Math.floor(i / BOX_SIZE)) * BOARD_SIZE + c + (i % BOX_SIZE);
+                  <span class="kw">if</span> (num == board[row_index].value <span class="kw">||</span>
+                      num == board[col_index].value <span class="kw">||</span>
+                      num == board[box_index].value)
+                      <span class="kw">return</span> <span class="kw">false</span>;
+              }
+              <span class="kw">return</span> <span class="kw">true</span>;
+          }
+
+          <span class="kw">function</span> <span class="func">guess</span>(index) {
+              <span class="cmt">/*
+               * Recursively test all candidate numbers for a given cell until
+               * the board is complete.
+               */</span>
+              <span class="kw">var</span> row = Math.floor(index / BOARD_SIZE);
+              <span class="kw">var</span> col = index % BOARD_SIZE;
+
+              <span class="kw">if</span> (index &gt;= board.length)
+                  <span class="kw">return</span> <span class="kw">true</span>;
+
+              <span class="kw">if</span> (board[index].value != EMPTY)
+                  <span class="kw">return</span> guess(index + 1);
+
+              <span class="kw">for</span> (<span class="kw">var</span> i=1; i&lt;=BOARD_SIZE; i++) {
+                  <span class="kw">if</span> (check(i, row, col)) {
+                      board[index].value = i;
+                      <span class="kw">if</span> (guess(index + 1))
+                          <span class="kw">return</span> <span class="kw">true</span>;
+                  }
+              }
+
+              board[index].value = EMPTY;
+              <span class="kw">return</span> <span class="kw">false</span>;
+          }
+          
+          <span class="kw">this</span>.<span class="func">kill</span> = <span class="kw">function</span>() {
+              <span class="cmt">/*
+               * Get the board content and start solving the game.
+               */</span>
+              board = document.getElementsByTagName(<span class="str">&quot;input&quot;</span>);
+              <span class="kw">if</span> (!guess(0))
+                  <span class="kw">alert</span>(<span class="str">&quot;Sorry, solution not found!&quot;</span>);
+          }
+      }
+    
+      SudoKiller.prototype.<span class="func">drawBoard</span> = <span class="kw">function</span>() {
+          <span class="cmt">/*
+           * Draw the game board.
+           */</span>
+          <span class="kw">var</span> hstyle, vstyle;      <span class="cmt">// Borders styles</span>
+          <span class="kw">for</span> (<span class="kw">var</span> row=0; row&lt;BOARD_SIZE; row++) {
+              document.write(<span class="str">'&lt;tr&gt;'</span>);
+              hstyle = row % BOX_SIZE ? <span class="str">&quot;&quot;</span> : <span class="str">&quot;border-top: 1px solid #000;&quot;</span>;
+              <span class="kw">for</span> (<span class="kw">var</span> col=0; col&lt;BOARD_SIZE; col++) {
+                  vstyle = col % BOX_SIZE ? <span class="str">&quot;&quot;</span> : <span class="str">&quot;border-left: 1px solid #000;&quot;</span>;
+                  document.write(<span class="str">'&lt;td style=&quot;'</span> + hstyle + vstyle + <span class="str">'&quot;&gt;'</span>);
+                  document.write(<span class="str">'&lt;input type=&quot;text&quot; size=&quot;1&quot; maxlength=&quot;1&quot; /&gt;&lt;/td&gt;'</span>);
+              }
+              document.write(<span class="str">'&lt;/tr&gt;'</span>);
+          }
+      }
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt;Fill the SuDoku board with the puzzle you want to solve and press the &amp;quot;Kill!&amp;quot; button.&lt;/p&gt;
+    &lt;table&gt;
+      &lt;script type=&quot;text/javascript&quot;&gt;
+        <span class="kw">var</span> sk = <span class="kw">new</span> SudoKiller();
+        sk.drawBoard();
+      &lt;/script&gt;
+    &lt;/table&gt;
+    &lt;p&gt;&lt;button type=&quot;button&quot; onclick=&quot;sk.kill();&quot;&gt;Kill!&lt;/button&gt;&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.java.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.lisp.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.js</h3>
+    <div>Previous: <a href="sudokiller.java.html">sudokiller.java</a>&nbsp;
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.lisp.html">sudokiller.lisp</a>
+    </div>
+  </div>
+
+  <script type="text/javascript"> var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

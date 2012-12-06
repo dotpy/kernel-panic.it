@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,Amavisd,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a mail server - Courier-IMAP</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="mail4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Previous: <a href="mail4.html">4. MySQL</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="mail6.html">6. Content filtering</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>5. Courier-IMAP</h2>
+
+<p>Now that our server can send and receive email, it sounds reasonable to let users read it! For this purpose, we're going to install <a href="http://www.courier-mta.org/imap/">Courier-IMAP</a>, <q>a fast, scalable, enterprise <acronym title="Internet Message Access Protocol">IMAP</acronym> server that uses <a href="http://www.qmail.org/man/man5/maildir.html">Maildirs</a></q>. This is the same IMAP server that comes with the <a href="http://www.courier-mta.org/">Courier mail server</a>, but configured as a standalone IMAP server that can be used with other mail servers, such as Postfix.</p>
+
+<h3><a id="mail-5.1" name="mail-5.1"></a>5.1 Installation and configuration</h3>
+
+<p>The following is the list of the required packages:</p>
+
+<ul>
+  <li>expect-no_tk</li>
+  <li>gdbm</li>
+  <li>gettext</li>
+  <li>libidn</li>
+  <li>libltdl</li>
+  <li>tcl</li>
+  <li>courier-authlib</li>
+  <li>courier-imap</li>
+  <li>courier-authlib-mysql</li>
+</ul>
+
+<p>Once you have added all the packages, you will find a fresh new <tt>/etc/courier/</tt> directory containing Courier IMAP's configuration files. Let's take a brief look at each of them.</p>
+<p>The <tt>/etc/courier/authdaemonrc</tt> configuration file sets several operational parameters for the <tt>authdaemond</tt> process (the resident authentication daemon); fortunately, we only need to edit the <tt>authmodulelist</tt> parameter, which specifies the list of available authentication modules; set it to <tt>authmysql</tt> to exclusively enable <a href="mail4.html">MySQL</a> based authentication:</p>
+
+<div class="code">
+  <div>/etc/courier/authdaemonrc</div>
+<pre>
+[ ... ]
+authmodulelist=&quot;authmysql&quot;
+[ ... ]
+</pre>
+</div>
+
+<p>The <tt>/etc/courier/authmysqlrc</tt> configuration file contains the <tt>authmysql</tt> database connection parameters; below is a sample configuration file:</p>
+
+<div class="code">
+  <div>/etc/courier/authmysqlrc</div>
+<pre>
+MYSQL_SERVER         127.0.0.1
+MYSQL_USERNAME       vmail
+MYSQL_PASSWORD       vmail
+<i># If you connect through the socket:
+#MYSQL_SOCKET         /path/to/mysql.sock
+#MYSQL_PORT           0</i>
+MYSQL_PORT           3306
+MYSQL_OPT            0
+MYSQL_DATABASE       mail
+MYSQL_USER_TABLE     users
+MYSQL_CRYPT_PWFIELD  password
+MYSQL_DEFAULT_DOMAIN kernel-panic.it
+MYSQL_UID_FIELD      uid
+MYSQL_GID_FIELD      gid
+MYSQL_LOGIN_FIELD    login
+MYSQL_HOME_FIELD     home
+MYSQL_NAME_FIELD     name
+MYSQL_MAILDIR_FIELD  maildir
+MYSQL_QUOTA_FIELD    quota
+<i># MYSQL_WHERE_CLAUSE	field=value AND field=value...</i>
+</pre>
+</div>
+
+<p>The next step is creating the <acronym title="Secure Socket Layer">SSL</acronym> certificate for the IMAPS protocol. To make your life easier, Courier-IMAP comes with a script, <tt><a href="http://www.courier-mta.org/mkimapdcert.html">mkimapdcert(8)</a></tt>, which will create the certificate after reading all the necessary configuration information from <tt>/etc/courier/imapd.cnf</tt>. So, after customizing that file (in particular, pay close attention to the common name (CN) parameter, which must match the name of the server the users will connect to), run <tt><a href="http://www.courier-mta.org/mkimapdcert.html">mkimapdcert(8)</a></tt> to generate the certificate:</p>
+
+<div class="code">
+<pre>
+# <kbd>/usr/local/sbin/mkimapdcert</kbd>
+[ ... ]
+</pre>
+</div>
+
+<p>Now we only have to start the daemons:</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir -p /var/run/courier{,-auth}/</kbd>
+# <kbd>/usr/local/sbin/authdaemond start</kbd>
+# <kbd>/usr/local/libexec/imapd.rc start</kbd>
+# <kbd>/usr/local/libexec/imapd-ssl.rc start</kbd>
+</pre>
+</div>
+
+<p>configure the system to start Courier-IMAP on boot:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+pkg_scripts=&quot;mysqld postfix courier_authdaemond courier_imap courier_imap_ssl&quot;
+</pre>
+</div>
+
+<p>...and test our hard work! I suggest using a simple Python script, just to give our weary fingers a break:</p>
+
+<div class="code">
+  <div>IMAP_test.py</div>
+<pre>
+#!/usr/bin/env python
+
+import imaplib
+
+<i># Constants</i>
+IMAP_SRV = &quot;mail.kernel-panic.it&quot;
+USER     = &quot;d.mazzocchio@kernel-panic.it&quot;
+PASSWD   = &quot;danix&quot;
+
+<i># Connect to server</i>
+imap_srv = imaplib.IMAP4(IMAP_SRV)
+imap_srv.login(USER, PASSWD)
+
+<i># Select the INBOX folder</i>
+imap_srv.select()
+
+<i># Retrieve message list</i>
+msg_nums = imap_srv.search(None, 'ALL')[1]
+
+<i># Print all messages</i>
+for num in msg_nums[0].split():
+    msg = imap_srv.fetch(num, '(RFC822)')[1]
+    print 'Message %s\n%s\n' % (num, msg[0][1])
+
+<i># Disconnect from server</i>
+imap_srv.close()
+imap_srv.logout()
+</pre>
+</div>
+
+<h3><a id="mail-5.2" name="mail-5.2"></a>5.2 Adding POP3 access</h3>
+
+<p>It is usually desirable that email users be offered the choice between IMAP and <acronym title="Post Office Protocol v3">POP3</acronym> remote access; after all, POP3 users tend to use less disk space, bandwidth and resources on the server.</p>
+<p>Adding POP3 support to our mail server is fairly simple; first, we need to add the appropriate package:</p>
+
+<ul>
+  <li>courier-pop3</li>
+</ul>
+
+<p>Then, we have to run <tt><a href="http://www.courier-mta.org/mkpop3dcert.html">mkpop3dcert(8)</a></tt> to generate the SSL certificate for POP3 over SSL (similarly to <tt><a href="http://www.courier-mta.org/mkimapdcert.html">mkimapdcert(8)</a></tt>, SSL parameters are read from a configuration file, <tt>/etc/courier/pop3d.cnf</tt>) and start the daemons:</p>
+
+<div class="code">
+<pre>
+# <kbd>/usr/local/sbin/mkpop3dcert</kbd>
+[ ... ]
+# <kbd>/usr/local/libexec/pop3d.rc start</kbd>
+# <kbd>/usr/local/libexec/pop3d-ssl.rc start</kbd>
+</pre>
+</div>
+
+<p>Add the following lines to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.local&amp;sektion=8">/etc/rc.local(8)</a></tt> to start the POP3 server on boot:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+pkg_scripts=&quot;mysqld postfix courier_authdaemond courier_imap courier_imap_ssl courier_pop3 courier_pop3_ssl&quot;
+</pre>
+</div>
+
+<p>Finally, we can perform a quick test to make sure everything works as expected:</p>
+
+<div class="code">
+<pre>
+# <kbd>telnet mail.kernel-panic.it 110</kbd>
+Trying 172.16.240.150...
+Connected to mail.kernel-panic.it.
+Escape character is '^]'.
++OK Hello there.
+<kbd>user d.mazzocchio@kernel-panic.it</kbd>
++OK Password required.
+<kbd>pass danix</kbd>
++OK logged in.
+<kbd>list</kbd>
+1 2531
+[ ... ]
+<kbd>quit</kbd>
++OK Bye-bye.
+Connection closed by foreign host.
+#
+</pre>
+</div>
+
+<h3><a id="mail-5.3" name="mail-5.3"></a>5.3 Managing disk space</h3>
+
+<p>Quotas allow you to specify the maximum size of maildirs, in order to prevent the <tt>/var/vmail</tt> filesystem from filling up. The best option would certainly be to use the operating system's built-in <a href="http://www.openbsd.org/faq/faq10.html#Quotas">quota support</a>, but we can't, because we have a single user writing to all the maildirs; therefore, we must rely on the mail software to enforce quotas on maildirs.</p>
+<p>Courier-IMAP comes with built-in quota support, but this solves only one half of the problem: in fact, also Postfix must be able to reject mail sent to over-quota users. To this end, we will rely on the <tt><a href="http://www.courier-mta.org/deliverquota.html">deliverquota(8)</a></tt> utility, which delivers mail taking into account any software-imposed quota on maildirs.</p>
+<p>The first step is assigning a quota to each maildir with <tt><a href="http://www.courier-mta.org/maildirmake.html">maildirmake(1)</a></tt>. E.g.:</p>
+
+<div class="code">
+<pre>
+# <kbd>/usr/local/bin/maildirmake -q 10000000S /var/vmail/<var>kernel-panic.it</var>/<var>d.mazzocchio</var></kbd>
+# <kbd>chown vmail /var/vmail/<var>kernel-panic.it</var>/<var>d.mazzocchio</var>/maildirsize</kbd>
+</pre>
+</div>
+
+<p>The above command installs an (approximately) 10MB quota on the <tt>/var/vmail/kernel-panic.it/d.mazzocchio</tt> maildir. <em>Note</em>: <tt><a href="http://www.courier-mta.org/maildirmake.html">maildirmake(1)</a></tt> also allows you to create and initialize maildirs, thus allowing users to access them; otherwise, a user's maildir will be created upon receiving his first email.</p>
+<p>Next, we need to define, in <tt><a href="http://www.postfix.org/master.5.html">/etc/postfix/master.cf(5)</a></tt>, a special Postfix daemon for delivery through <tt><a href="http://www.courier-mta.org/deliverquota.html">deliverquota(8)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/postfix/master.cf</div>
+<pre>
+[ ... ]
+qdeliver  unix  -       n       n       -       -       pipe
+  flags=uh user=vmail argv=/usr/local/bin/deliverquota -c -w 90 /var/vmail/${domain}/${user}
+</pre>
+</div>
+
+<p>and tell Postfix to use this daemon for final delivery to virtual domains, by setting the value of the <tt>virtual_transport</tt> parameter in <tt>/etc/postfix/main.cf</tt>:</p>
+
+<div class="code">
+  <div>/etc/postfix/main.cf</div>
+<pre>
+virtual_transport = qdeliver
+</pre>
+</div>                                    
+
+<p><tt><a href="http://www.courier-mta.org/deliverquota.html">deliverquota(8)</a></tt> will place a warning message into the maildir if, after the message is successfuly delivered, the maildir is at least 90 percent full (<tt>-w 90</tt>). The body of the warning message is copied verbatim from the <tt>/etc/courier/quotawarnmsg</tt> file.</p>
+<p>Please note that, as reported by Giovanni Bechis, <tt><a href="http://www.courier-mta.org/deliverquota.html">deliverquota(8)</a></tt> fails to correctly deliver emails sent to an alias that maps to multiple accounts, one of which has the same name as the alias itself, unless you set the following parameters in <tt>/etc/postfix/main.cf</tt>:
+
+<div class="code">
+  <div>/etc/postfix/main.cf</div>
+<pre>
+qdeliver_destination_concurrency_limit = 1
+qdeliver_destination_recipient_limit = 1 
+</pre>
+</div>
+
+<p><em>Note</em>: setting these parameters to &quot;<tt>1</tt>&quot; disables parallel deliveries to the same recipient.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="mail4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Previous: <a href="mail4.html">4. MySQL</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="mail6.html">6. Content filtering</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

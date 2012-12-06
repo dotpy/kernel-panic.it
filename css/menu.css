@@ -1,0 +1,34 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                                 Main menu                                  *
+ ******************************************************************************/
+
+/* Set the background to preload the hover images */
+#home { background: transparent url('../images/home_over.png') no-repeat; }
+#home a { background: transparent url('../images/home.png') no-repeat; }
+#home a:hover { background-image: url('../images/home_over.png'); }
+
+#openbsd { background: transparent url('../images/openbsd_over.png') no-repeat; }
+#openbsd a { background: transparent url('../images/openbsd.png') no-repeat; }
+#openbsd a:hover { background-image: url('../images/openbsd_over.png'); }
+
+#linux { background: transparent url('../images/linux_over.png') no-repeat; }
+#linux a { background: transparent url('../images/linux.png') no-repeat; }
+#linux a:hover { background-image: url('../images/linux_over.png'); }
+
+#programming { background: transparent url('../images/programming_over.png') no-repeat; }
+#programming a { background: transparent url('../images/programming.png') no-repeat; }
+#programming a:hover { background-image: url('../images/programming_over.png'); }
+
+#security { background: transparent url('../images/security_over.png') no-repeat; }
+#security a { background: transparent url('../images/security.png') no-repeat; }
+#security a:hover { background-image: url('../images/security_over.png'); }
+
+#software { background: transparent url('../images/software_over.png') no-repeat; }
+#software a { background: transparent url('../images/software.png') no-repeat; }
+#software a:hover { background-image: url('../images/software_over.png'); }
+
+#fun { background: transparent url('../images/fun_over.png') no-repeat; }
+#fun a { background: transparent url('../images/fun.png') no-repeat; }
+#fun a:hover { background-image: url('../images/fun_over.png'); }
+

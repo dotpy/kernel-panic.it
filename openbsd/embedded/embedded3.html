@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,firewall,embedded,soekris,wrap,alix,install,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+
+  <title>Embedded OpenBSD - Diskless installation</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="embedded2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="embedded4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Embedded OpenBSD</h3>
+    <div>Previous: <a href="embedded2.html">2. Installing directly to disk</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="embedded4.html">4. Network installation</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>3. Diskless installation</h2>
+
+<p>Creating an embedded system with no mass memory offers several benefits:</p>
+
+<ul>
+  <li>no need to use compact flash cards or 2.5&quot; disks anymore, thus saving a little money;</li>
+  <li>by using NFS, you will probably have larger disks available;</li>
+  <li>you can centrally manage disks;</li>
+  <li>you can share filesystems (usually <tt>/usr</tt>, which rarely changes) among multiple hosts, thus making maintenance and upgrading easier and faster;</li>
+</ul>
+
+<p>but there are also some drawbacks:</p>
+
+<ul>
+  <li>a new server becomes necessary, to provide all services needed to boot the devices;</li>
+  <li>on security-critical systems, like firewalls, using NFS is often a poor option;</li>
+  <li>boot server configuration may not be trivial.</li>
+</ul>
+
+<p>So let's get to the configuration! We need to set up a boot server, on which most of the installation will take place; all we need from the embedded device is its MAC address. To get it, you just have to attach to the console and power it up:</p>
+
+<div class="code">
+<pre>
+# <kbd>cu -s 19200 -l cua00</kbd>
+
+comBIOS ver. 1.26a  20040819  Copyright (C) 2000-2004 Soekris Engineering.
+
+net45xx
+
+0064 Mbyte Memory                        CPU 80486 133 Mhz 
+
+
+Slot   Vend Dev  ClassRev Cmd  Stat CL LT HT  Base1    Base2   Int 
+-------------------------------------------------------------------
+0:00:0 1022 3000 06000000 0006 2280 00 00 00 00000000 00000000 
+0:17:0 104C AC51 06070000 0107 0210 10 3F 82 A0000000 020000A0 10
+0:17:1 104C AC51 06070000 0107 0210 10 3F 82 A0001000 020000A0 10
+0:18:0 100B 0020 02000000 0107 0290 00 3F 00 0000E101 A0002000 11
+0:19:0 100B 0020 02000000 0107 0290 00 3F 00 0000E201 A0003000 05
+
+ 1 Seconds to automatic boot.   Press Ctrl-P for entering Monitor.
+
+NSC DP83815/DP83816 Fast Ethernet UNDI, v1.03                                  
+Copyright (C) 2002, 2003 National Semiconductor Corporation
+All rights reserved.
+
+Pre-boot eXecution Environment  PXE-2.0 (build 082)
+Copyright (C) 1997-2000  Intel Corporation
+
+
+CLIENT MAC ADDR: 00 00 24 C3 C1 B0  
+[...]
+</pre>
+</div>
+
+<p>We will now take a look at how to compile a diskless kernel, and then step through the system boot process to understand which network services we will need to set up on the boot server.</p>
+
+<h3><a id="embedded-3.1" name="embedded-3.1"></a>3.1 Building a custom kernel</h3>
+
+<p>Everything we have seen <a href="embedded2.html#2.3">before</a> about kernel configuration and compiling still applies; just make sure you specify, in the configuration file, that the system must look for the root and swap filesystems on NFS:</p>
+
+<div class="code">
+  <div>/usr/src/sys/arch/i386/conf/NET4521</div>
+<pre>
+[...]
+config		bsd root on nfs swap on nfs
+[...]
+</pre>
+</div>
+
+<h3><a id="embedded-3.2" name="embedded-3.2"></a>3.2 rarpd(8)</h3>
+
+<p>On boot, the device first tries to configure its network settings. Since it only knows its MAC address, it generates a <acronym title="Reverse Address Resolution Protocol">RARP</acronym> request to get an IP address.  Therefore, we must enable the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rarpd&amp;sektion=8">rarpd(8)</a></tt> daemon in the boot server's <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> file:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+rarpd_flags=&quot;-a&quot;
+</pre>
+</div>
+
+<p>If you don't want the daemon to listen on all the interfaces, just replace the &quot;<tt>-a</tt>&quot; parameter with the name of the interface to listen on. To honour RARP requests, the daemon uses two files:</p>
+
+<ul>
+  <li><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ethers&amp;sektion=5">/etc/ethers(5)</a></tt> which maps ethernet addresses to host names:
+
+<div class="code">
+  <div>/etc/ethers</div>
+<pre>
+00:00:24:c3:c1:b0	net4521.kernel-panic.it
+</pre>
+</div></li>
+  <li><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hosts&amp;sektion=5">/etc/hosts(5)</a></tt>, which maps IP addresses to host names:
+
+<div class="code">
+  <div>/etc/hosts</div>
+<pre>
+172.16.0.10		net4521.kernel-panic.it
+</pre>
+</div></li>
+</ul>
+
+<p>If the requesting host does not exist in both files, the daemon won't be able to send a reply.</p>
+
+<h3><a id="embedded-3.3" name="embedded-3.3"></a>3.3 dhcpd(8)</h3>
+
+<p>Now that it has got its own IP address, the embedded device will look for the boot file. To get the file name, it will send a DHCP request, to which our server will be glad to reply. Therefore, we need to enable the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=dhcpd&amp;sektion=8">dhcpd(8)</a></tt> daemon in the boot server's <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> file:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+dhcpd_flags=&quot;&quot;
+</pre>
+</div>
+
+<p>and configure it:</p>
+
+<div class="code">
+  <div>/etc/dhcpd.conf</div>
+<pre>
+[...]
+<i># Diskless devices group</i>
+group {
+	filename &quot;pxeboot&quot;;		<i># Boot file</i>
+	<i>#next-server  pxe-server;	# PXE server (if different from the DHCP server)</i>
+
+	host net4521 { hardware ethernet 00:00:24:c3:c1:b0; }
+}
+[...]
+</pre>
+</div>
+
+<h3><a id="embedded-3.4" name="embedded-3.4"></a>3.4 tftpd(8)</h3>
+
+<p>Ok, now that it knows the name of the boot file, the diskless device will attempt to download it, via <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=tftp&amp;sektion=1">tftp(1)</a></tt>, from the server in the &quot;<tt>next-server</tt>&quot; parameter or from the DHCP server itself. To enable <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=tftpd&amp;sektion=8">tftpd(8)</a></tt> on our boot server, we need to uncomment the following line in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8">/etc/inetd.conf(8)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/inetd.conf</div>
+<pre>
+tftp		dgram	udp	wait	root	/usr/libexec/tftpd	tftpd -s /tftpboot
+</pre>
+</div>
+
+<p>create the <tt>/tftpboot</tt> directory and populate it with the appropriate files: <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pxeboot&amp;sektion=8">pxeboot(8)</a></tt> (the <span lang="en">second-stage PXE boot loader</span>), <tt>bsd</tt> (the custom kernel) and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=boot&amp;sektion=8">/tftpboot/etc/boot.conf(8)</a></tt>, which contains the boot parameters:</p>
+
+<div class="code">
+  <div>/tftpboot/etc/boot.conf</div>
+<pre>
+set tty com0
+stty com0 19200
+</pre>
+</div>
+
+<h3><a id="embedded-3.5" name="embedded-3.5"></a>3.5 bootparamd(8)</h3>
+
+<p>Now the system will boot, until it needs to mount the NFS filesystems. To find them out, it will broadcast a BOOTPARAMS request, waiting for some <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=bootparamd&amp;sektion=8">rpc.bootparamd(8)</a></tt> daemon to tell it the parameters of the NFS filesystems to mount. Therefore, we need to start the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=bootparamd&amp;sektion=8">bootparamd(8)</a></tt> daemon on our server. Once again, we have to edit a couple of variables in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+bootparamd_flags=&quot;&quot;
+portmap=&quot;YES&quot;
+</pre>
+</div>
+
+<p>As you can see, to make <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=bootparamd&amp;sektion=8">bootparamd(8)</a></tt> work, we need to start the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=portmap&amp;sektion=8">portmap(8)</a></tt> daemon too, which converts RPC program numbers into DARPA protocol port numbers.  <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=bootparamd&amp;sektion=8">bootparamd(8)</a></tt> has its own configuration file, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=bootparams&amp;sektion=5">/etc/bootparams(5)</a></tt>, which must contain an entry for each client, specifying the pathnames for its root and (optionally) swap areas (fields are delimited with blank or tab, and entries may span across multiple lines using a back-slash):</p>
+
+<div class="code">
+  <div>/etc/bootparams</div>
+<pre>
+net4521	root=<var>boot-srv</var>:/exports/net4521/root/ \
+	swap=<var>boot-srv</var>:/exports/net4521/swap
+</pre>
+</div>
+
+<h3><a id="embedded-3.6" name="embedded-3.6"></a>3.6 nfs</h3>
+
+<p>The last step to complete the boot process is to mount the NFS filesystems. Therefore, we must set up the NFS server; let's edit the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> file once again to set a couple of variables:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+nfs_server=&quot;YES&quot;
+nfsd_flags=&quot;-tun 4&quot;
+</pre>
+</div>
+
+<p>and set up the filesystems to mount:</p>
+
+<ul>
+  <li><tt>/exports/net4521/root</tt>, the directory that will contain the whole filesystem of the embedded device (except <tt>/usr</tt>: in fact, if the systems have the same architecture, the server can save a lot of disk space exporting its own <tt>/usr</tt> directory); we have seen <a href="embedded2.html#2.4">before</a> how to populate the filesystem;</li>
+  <li><tt>/exports/net4521/swap</tt>, the file that will contain the system's swap area; you can build it by running:
+
+<div class="code">
+<pre>
+# <kbd>dd if=/dev/zero of=/exports/net4521/swap  bs=1m count=128</kbd>
+</pre>
+</div>
+
+    which creates a 128MB swap file.</li>
+</ul>
+
+<p>On the NFS server, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=exports&amp;sektion=5">/etc/exports(5)</a></tt> file lists the exported filesystems and sets the hosts and export options for each one:</p>
+
+<div class="code">
+  <div>/etc/exports</div>
+<pre>
+/usr -ro 172.16.0.10
+/export/net4521 -maproot=root -alldirs 172.16.0.10
+</pre>
+</div>
+
+<p>The client filesystem table, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=fstab&amp;sektion=5">/etc/fstab(5)</a></tt> (which, to be precise, resides on the server, in <tt>/exports/net4521/root/etc/fstab</tt>), will look like:</p>
+
+<div class="code">
+  <div>/etc/fstab</div>
+<pre>
+<var>boot-srv</var>:/exports/net4521/root	/	nfs	rw	0 0
+<var>boot-srv</var>:/usr			/usr	nfs	rw	0 0
+</pre>
+</div>
+
+<p>Now we only have to power up the device and, if some champagne remained from the previous chapter, now is time to go get it and finish it.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="embedded2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="embedded4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Embedded OpenBSD</h3>
+    <div>Previous: <a href="embedded2.html">2. Installing directly to disk</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="embedded4.html">4. Network installation</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

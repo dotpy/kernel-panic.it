@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="bowlfish,OpenBSD,soekris,wrap,install,compact,flash,embedded,firewall,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+
+  <title>BowlFish - OpenBSD installer for embedded systems</title>
+
+  <link rel="stylesheet" type="text/css" href="css/bf.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <table id="container">
+    <tr>
+      <td colspan="2">
+        <h1 id="header"><span>BowlFish</span></h1>
+      </td>
+    </tr>
+    <tr>
+      <td id="menu-cell">
+        <ul id="menu">
+          <li id="home"><a class="menu-item" href="index.html"><span>Home</span></a>
+            <ul id="sub1">
+              <li><a href="index.html#bf-news"><span>News</span></a></li>
+              <li><a href="index.html#bf-contacts"><span>Contacts</span></a></li>
+            </ul>
+          </li>
+          <li id="docs"><a class="menu-item" href="docs.html"><span>Docs</span></a>
+            <ul id="sub2">
+              <li><a href="docs.html#docs-1"><span>Installation guide</span></a></li>
+              <li><a href="docs.html#docs-2"><span>Filesystem layout</span></a></li>
+              <li><a href="docs.html#docs-3"><span>FAQ</span></a></li>
+            </ul>
+          </li>
+          <li id="dwl"><a class="menu-item" href="http://sourceforge.net/projects/bwl/"><span>Download</span></a>
+            <ul id="sub3">
+              <li><a href="http://sourceforge.net/projects/bwl/"><span>Latest release</span></a></li>
+            </ul>
+          </li>
+          <li id="rsrc"><span class="menu-item"><span>Resources</span></span>
+            <ul id="sub4">
+              <li><a href="resources.html#manufacturers"><span>Manufacturers</span></a></li>
+              <li><a href="resources.html#projects"><span>Related projects</span></a></li>
+              <li><a href="resources.html#tutorials"><span>Tutorials</span></a></li>
+            </ul>
+          </li>
+        </ul>
+      </td>
+      <td rowspan="2" id="main">
+
+        <a id="manufacturers" name="manufacturers"></a>
+        <h2>Manufacturers</h2>
+
+          <ul>
+            <li><a href="http://www.soekris.com/">Soekris Engineering, Inc.</a>, Soekris Engineering's website</li>
+            <li><a href="http://www.pcengines.ch/">PC Engines GmbH</a> - your flexible partner in Embedded PC Design</li>
+            <li><a href="http://www.fatport.com/">FatPort Corporation</a>, Secure Broadband Wireless</li>
+          </ul>
+
+        <a id="prjects" name="projects"></a>
+        <h2>Related Projects</h2>
+
+          <ul>
+            <li><a href="http://www.nmedia.net/flashrd/">Flashrd</a>, an <q>OpenBSD installer with an eye towards larger flash devices</q></li>
+            <li><a href="http://opensoekris.sourceforge.net/">OpenSoekris</a>, Flashdist based OpenBSD installer</li>
+            <li><a href="http://sourceforge.net/projects/compactbsd">CompactBSD</a>, Python OpenBSD installer</li>
+            <li><a href="http://www.kuroneko.ca/flashdist/">Eric's flashdist</a>, a modified version of flashdist</li>
+            <li><a href="http://www.gcfn.net/wyang/pubs/flashdist-wrapper">Flashdist-wrapper</a>, a modified version of flashdist that writes to a file instead of a device</li>
+            <li><a href="http://www.mindrot.org/flashboot.html">Flashboot</a>, a small infrastructure to build minimal OpenBSD installations suitable for booting of flash devices</li>
+          </ul>
+
+        <a id="tutorials" name="tutorials"></a>
+        <h2>Tutorials</h2>
+
+          <ul>
+            <li><a href="../../openbsd/embedded/">Embedded OpenBSD</a></li>
+            <li><a href="http://256.com/gray/docs/soekris_openbsd_diskless/">Soekris on OpenBSD Running Diskless</a></li>
+            <li><a href="http://glozer.net/soekris/soekris.html">Soekris Router Project</a></li>
+            <li><a href="http://www.onlamp.com/pub/a/bsd/2004/03/11/Big_Scary_Daemons.html">Homemade Embedded BSD Systems</a></li>
+            <li><a href="http://www.onlamp.com/pub/a/bsd/2004/04/29/Big_Scary_Daemons.html">Diskless, Low-Form-Factor OpenBSD Systems</a></li>
+          </ul>
+
+      </td>
+    </tr>
+    <tr>
+      <td id="logos">
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post">  
+          <div>
+            <input type="hidden" name="cmd" value="_s-xclick" />                 
+            <input type="image" src="images/donate.gif" name="submit" alt="Donate" />
+            <img src="https://www.paypal.com/it_IT/i/scr/pixel.gif" alt="" width="1" height="1" />  
+            <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----" />  
+          </div>
+        </form>
+        <p><a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=152635&amp;type=1" alt="SourceForge.net Logo" height="31" width="88" /></a></p>
+        <p><a href="http://validator.w3.org/check?uri=referer"><img src="images/xhtml10.png" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
+        <p><a href="http://jigsaw.w3.org/css-validator/"><img src="images/vcss.gif" alt="Valid CSS!" height="31" width="88" /></a></p>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2"><address>Designed by <a href="http://www.kernel-panic.it">kernel-panic.it</a></address></td>
+    </tr>
+  </table>
+
+</body>
+
+</html>

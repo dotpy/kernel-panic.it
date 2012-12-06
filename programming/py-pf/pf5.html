@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+    <link rel="stylesheet" type="text/css" href="../../css/pydoc.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf4.html">4. Managing state tables</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pf6.html">6. Addresses, address pools and tables</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>5. Packet Queueing and Prioritization</h2>
+
+<p>Packet Filter allows you to manage bandwidth by creating queues and assigning packets to them; OpenBSD's Packet Filter currently supports three <dfn>schedulers</dfn> (i.e. algorithms used to decide which packets get delayed, dropped, or sent out immediately):</p>
+
+<ul>
+  <li>Class Based Queueing (CBQ)</li>
+  <li>Hierarchical Fair Service Curve (HFSC)</li>
+  <li>Priority Queueing (PRIQ)</li>
+</ul>
+
+<p>For a detailed description of each algorithm, please refer to the <a href="http://www.openbsd.org/faq/pf/queueing.html">PF User's Guide</a>. Each scheduler has its own class in py-pf, which will be discussed in the following paragraphs.</p>
+
+<h3><a id="pf-5.1" name="pf-5.1"></a>5.1 PFAltqCBQ objects</h3>
+
+<p>Class Based Queueing is managed through the <tt>pf.PFAltqCBQ</tt> class:</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFAltqCBQ</span>([<var>altq</var>[, <var>**kw</var>]])</tt><dt>
+  <dd>The optional <tt>altq</tt> argument is a string containing the name of the queue; if omitted, the queue will be treated as a root queue (&quot;<tt>altq on</tt>&quot; directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format); if present, the queue will be treated as a child queue (&quot;<tt>queue</tt>&quot; directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format). The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFAltqCBQ</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFAltqCBQ.<span class="attr">ifname</span></tt></dt>
+  <dd>String containing the name of the interface on which this queue is activated.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">scheduler</span></tt></dt>
+  <dd>A constant always equal to <tt>pf.ALTQT_CBQ</tt>.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">qname</span></tt></dt>
+  <dd>String containing the name of the queue, or an empty string if this is a root queue.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">ifbandwidth</span></tt></dt>
+  <dd>The actual bandwidth of the interface on which this queue is activated. <em>Note</em>: this parameter must be explicitely set for interfaces that do not know their bandwidth.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">bandwidth</span></tt></dt>
+  <dd>The maximum bitrate to be processed by the queue; if greater than 100, this value will be treated as an absolute value, otherwise as a percentage of the parent queue's bandwidth.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">parent</span></tt></dt>
+  <dd>String containing the name of the parent queue, or an empty string if this queue is a direct child of a root queue.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">parent_qid</span></tt></dt>
+  <dd>The numeric ID of the parent queue.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">tbrsize</span></tt></dt>
+  <dd>For root queues, the size, in bytes, of the token bucket regulator. If not specified, heuristics based on the interface bandwidth are used to determine the size.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">priority</span></tt></dt>
+  <dd>The priority level of the queue as an integer; the valid range is <tt>0</tt> to <tt>7</tt>; the default is <tt>pf.DEFAULT_PRIORITY</tt>.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">qlimit</span></tt></dt>
+  <dd>The maximum number of packets held in the queue; the default is <tt>pf.DEFAULT_QLIMIT</tt>.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">qid</span></tt></dt>
+  <dd>The numeric ID of the queue.</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">optflags</span></tt></dt>
+  <dd>A bitmask containing additional options for the queue; valid flags are: <tt>pf.CBQCLF_DEFCLASS</tt> (treat queue as default queue), <tt>pf.CBQCLF_ECN</tt> (enable Explicit Congestion Notification on queue), <tt>pf.CBQCLF_RED</tt> (enable Random Early Detection on queue), <tt>pf.CBQCLF_BORROW</tt> (the queue can borrow bandwidth from the parent).</dd>
+
+  <dt><tt>PFAltqCBQ.<span class="attr">opts</span></tt></dt>
+  <dd>A dictionary of additional options, normally determined via heuristics.</dd>
+</dl>
+
+<h3><a id="pf-5.2" name="pf-5.2"></a>5.2 PFAltqHFSC objects</h3>
+
+<p>Hierarchical Fair Service Curve queueing is managed through the <tt>pf.PFAltqHFSC</tt> class:</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.PFAltqHFSC([<var>altq</var>[, <var>**kw</var>]])</tt><dt>
+  <dd>The optional <tt>altq</tt> argument is a string containing the name of the queue; if omitted, the queue will be treated as a root queue (&quot;<tt>altq on</tt>&quot; directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format); if present, the queue will be treated as a child queue (&quot;<tt>queue</tt>&quot; directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format). The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFAltqHFSC</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFAltqHFSC.<span class="attr">ifname</span></tt></dt>
+  <dd>String containing the name of the interface on which this queue is activated.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">scheduler</span></tt></dt>
+  <dd>A constant always equal to <tt>pf.ALTQT_HFSC</tt>.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">qname</span></tt></dt>
+  <dd>String containing the name of the queue, or an empty string if this is a root queue.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">ifbandwidth</span></tt></dt>
+  <dd>The actual bandwidth of the interface on which this queue is activated. <em>Note</em>: this parameter must be explicitely set for interfaces that do not know their bandwidth.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">bandwidth</span></tt></dt>
+  <dd>The maximum bitrate to be processed by the queue; if greater than 100, this value will be treated as an absolute value, otherwise as a percentage of the parent queue's bandwidth.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">parent</span></tt></dt>
+  <dd>String containing the name of the parent queue, or an empty string if this queue is a direct child of a root queue.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">parent_qid</span></tt></dt>
+  <dd>The numeric ID of the parent queue.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">tbrsize</span></tt></dt>
+  <dd>For root queues, the size, in bytes, of the token bucket regulator. If not specified, heuristics based on the interface bandwidth are used to determine the size.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">priority</span></tt></dt>
+  <dd>The priority level of the queue as an integer; the valid range is <tt>0</tt> to <tt>7</tt>; the default is <tt>pf.DEFAULT_PRIORITY</tt>.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">qlimit</span></tt></dt>
+  <dd>The maximum number of packets held in the queue; the default is <tt>pf.DEFAULT_QLIMIT</tt>.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">qid</span></tt></dt>
+  <dd>The numeric ID of the queue.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">optflags</span></tt></dt>
+  <dd>A bitmask containing additional options for the queue; valid flags are: <tt>pf.HFCF_DEFAULTCLASS</tt> (treat queue as default queue), <tt>pf.HFCF_ECN</tt> (enable Explicit Congestion Notification on queue), <tt>pf.HFCF_RED</tt> (enable Random Early Detection on queue).</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">rtsc</span></tt></dt>
+  <dd>A 3-tuple specifying the bandwidth share of a backlogged queue. The format for service curve specifications is (<var>m1</var>, <var>d</var>, <var>m2</var>). <var>m2</var> controls the bandwidth assigned to the queue; if non-zero, <var>m1</var> and <var>d</var> control the initial bandwidth assignment: for the first <var>d</var> milliseconds the queue gets the bandwidth given as <var>m1</var>, afterwards the value given in <var>m2</var>.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">lssc</span></tt></dt>
+  <dd>A 3-tuple specifying the minimum required bandwidth for the queue, in the same format as <tt>PFAltqHFSC.rtsc</tt>.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">ulsc</span></tt></dt>
+  <dd>A 3-tuple specifying the maximum allowed bandwidth for the queue, in the same format as <tt>PFAltqHFSC.rtsc</tt>.</dd>
+</dl>
+
+<h3><a id="pf-5.3" name="pf-5.3"></a>5.3 PFAltqPriQ objects</h3>
+
+<p>Priority Queueing is managed through the <tt>pf.PFAltqPriQ</tt> class:</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.PFAltqPriQ([<var>altq</var>[, <var>**kw</var>]])</tt><dt>
+  <dd>The optional <tt>altq</tt> argument is a string containing the name of the queue; if omitted, the queue will be treated as a root queue (&quot;<tt>altq on</tt>&quot; directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format); if present, the queue will be treated as a child queue (&quot;<tt>queue</tt>&quot; directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format). The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p><tt>PFAltqPriQ</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFAltqPriQ.<span class="attr">ifname</span></tt></dt>
+  <dd>String containing the name of the interface on which this queue is activated.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">scheduler</span></tt></dt>
+  <dd>A constant always equal to <tt>pf.ALTQT_PRIQ</tt>.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">qname</span></tt></dt>
+  <dd>String containing the name of the queue, or an empty string if this is a root queue.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">ifbandwidth</span></tt></dt>
+  <dd>The actual bandwidth of the interface on which this queue is activated. <em>Note</em>: this parameter must be explicitely set for interfaces that do not know their bandwidth.</dd>
+
+  <dt><tt>PFAltqHFSC.<span class="attr">bandwidth</span></tt></dt>
+  <dd>The maximum bitrate to be processed by the queue; if greater than 100, this value will be treated as an absolute value, otherwise as a percentage of the parent queue's bandwidth.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">parent</span></tt></dt>
+  <dd>The name of the parent queue, i.e. an empty string since, in Priority Queueing, all queues are direct children of the root queue.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">parent_qid</span></tt></dt>
+  <dd>The numeric ID of the parent queue.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">tbrsize</span></tt></dt>
+  <dd>For root queues, the size, in bytes, of the token bucket regulator. If not specified, heuristics based on the interface bandwidth are used to determine the size.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">priority</span></tt></dt>
+  <dd>The priority level of the queue as an integer; the valid range is <tt>0</tt> to <tt>15</tt>; the default is <tt>pf.DEFAULT_PRIORITY</tt>.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">qlimit</span></tt></dt>
+  <dd>The maximum number of packets held in the queue; the default is <tt>pf.DEFAULT_QLIMIT</tt>.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">qid</span></tt></dt>
+  <dd>The numeric ID of the queue.</dd>
+
+  <dt><tt>PFAltqPriQ.<span class="attr">optflags</span></tt></dt>
+  <dd>A bitmask containing additional options for the queue; valid flags are: <tt>pf.PRCF_DEFAULTCLASS</tt> (treat queue as default queue), <tt>pf.PRCF_ECN</tt> (enable Explicit Congestion Notification on queue), <tt>pf.PRCF_RED</tt> (enable Random Early Detection on queue).</dd>
+</dl>
+
+<h3><a id="pf-5.4" name="pf-5.4"></a>5.4 Packet queueing in action</h3>
+
+<p>This paragraph contains a few examples on how to enable packet queueing with the various schedulers, in order to get a better understanding on how these objects work. Let's start with Priority Queueing:</p>
+
+<div class="code">
+<pre>
+<i># Enable queueing on the external interface to control outgoing traffic.</i>
+ext_if = &quot;fxp0&quot;
+ifbw = 610 * 1000    <i># Interface bandwidth (610Kbps)</i>
+
+<i># First we define the root queue:
+#   altq on fxp0 priq bandwidth 610Kb</i>
+rootq = pf.PFAltqPriQ(ifname=ext_if, ifbandwidth=ifbw)
+
+<i># Next we define the child queues:
+#   queue std_out    priq(default)
+#   queue ssh_im_out priority 4 priq(red)
+#   queue dns_out    priority 5</i>
+std_outq    = pf.PFAltqPriQ(&quot;std_out&quot;, ifname=ext_if, ifbandwidth=ifbw,
+                            optflags=pf.PRCF_DEFAULTCLASS)
+ssh_im_outq = pf.PFAltqPriQ(&quot;ssh_im_out&quot;, ifname=ext_if, ifbandwidth=ifbw,
+                            priority=4, optflags=pf.PRCF_RED)
+dns_outq    = pf.PFAltqPriQ(&quot;dns_out&quot;, ifname=ext_if, ifbandwidth=ifbw,
+                            priority=5)
+
+<i># Load the queues on the system</i>
+filter = PacketFilter()
+filter.add_altqs(rootq, std_outq, ssh_im_outq, dns_outq)
+
+<i># Check that queues have been loaded correctly</i>
+for q in filter.get_altqs():
+    print q
+</pre>
+</div>
+
+<p>Now let's have a look at a Class Based Queueing example. Please note that, unlike Priority Queueing, CBQ and HFSC queues are arranged in an hierarchical manner (i.e. in a inverted-tree structure); therefore, in addition to the root queue that enables queueing on a specific interface, you also need to create an additional queue that will be parent for the other queues: <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt> manages this automatically by creating a parent queue named &quot;root_<var>ifname</var>&quot;, so you may want to stick to the same naming convention.</p>
+<p>For child queues, the <tt>parent</tt> attribute (i.e. the name of their parent queue) must be explicitly set, for PF to correctly build the queue tree; also note that the hierarchy can be further expanded by defining queues within queues.</p>
+
+<div class="code">
+<pre>
+<i># Enable queueing on the internal interface to control incoming traffic.</i>
+int_if = &quot;fxp1&quot;
+ifbw = 2 * 1000 * 1000    <i># Max bandwidth (2Mbps)</i>
+
+<i># First we define the root queue:
+#   altq on fxp1 cbq bandwidth 2Mb </i>
+rootq = pf.PFAltqCBQ(ifname=int_if, ifbandwidth=ifbw)
+
+<i># Next we need to define the parent of all subsequent rules</i>
+parentq = pf.PFAltqCBQ(qname=&quot;root_&quot; + int_if, ifname=int_if, ifbandwidth=ifbw,
+                       bandwidth=ifbw)
+
+<i># Now we can define the child queues:
+#   queue std_in    bandwidth 1.6Mb cbq(default)
+#   queue ssh_im_in bandwidth 200Kb priority 4
+#   queue dns_in    bandwidth 120Kb cbq(borrow)</i>
+std_inq    = pf.PFAltqCBQ(qname=&quot;std_in&quot;, ifname=int_if, ifbandwidth=ifbw,
+                          parent=parentq.qname, bandwidth=int(1.6*1000*1000),
+                          optflags=pf.CBQCLF_DEFCLASS)
+ssh_im_inq = pf.PFAltqCBQ(qname=&quot;ssh_im_in&quot;, ifname=int_if, ifbandwidth=ifbw,
+                          parent=parentq.qname, bandwidth=200*1000, priority=4)
+dns_inq    = pf.PFAltqCBQ(qname=&quot;dns_in&quot;, ifname=int_if, ifbandwidth=ifbw,
+                          parent=parentq.qname, bandwidth=120*1000,
+                          optflags=pf.CBQCLF_BORROW)
+
+<i># Load the queues on the system</i>
+filter = pf.PacketFilter()
+filter.add_altqs(rootq, parentq, std_inq, ssh_im_inq, dns_inq)
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf4.html">4. Managing state tables</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pf6.html">6. Addresses, address pools and tables</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

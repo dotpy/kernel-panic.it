@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,web,XHTML,XML,HTML,CSS,browser,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>XHTML 1.0 crib sheet - Entities</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="css/xhtml.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="xhtml3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="xhtml5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>XHTML 1.0 crib sheet</h3>
+    <div>Previous: <a href="xhtml3.html">3. XHTML 1.0 element by element</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="xhtml5.html">5. Between past and future</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>4. Entities</h2>
+
+<p>Some characters are not displayed by XHTML user agents, either because they have a special meaning in XHTML (e.g. square brackets, &quot;<code>&lt;</code>&quot; e &quot;<code>&gt;</code>&quot;, which enclose tag names) or because they don't belong to the character set of the document, e.g. greek or mathematical symbols.</p>
+<p>Therefore, these characters must be represented through <dfn>entities</dfn>, which allow you to display special characters by using any of the following special sequences:</p>
+
+<ul>
+  <li>ampersand, a mnemonic string, semi colon (e.g. <code>&amp;infin;</code>);</li>
+  <li>ampersand, hash mark, a decimal value, semi colon (e.g. <code>&amp;#8734;</code>);</li>
+  <li>ampersand, hash mark, &quot;<tt>x</tt>&quot;, a hex value, semi colon (e.g. <code>&amp;#x221e;</code>);</li>
+</ul>
+
+<p>XHTML 1.0 defines three groups of entities:</p>
+
+<ul>
+  <li><a href="http://www.w3.org/TR/xhtml1/DTD/xhtml-lat1.ent">Latin 1</a>, Latin-1 character set (ISO-8859-1);</li>
+  <li><a href="http://www.w3.org/TR/xhtml1/DTD/xhtml-special.ent">Special</a>, markup and internationalization characters;</li>
+  <li><a href="http://www.w3.org/TR/xhtml1/DTD/xhtml-symbol.ent">Symbols</a>, greek characters and symbols.</li>
+</ul>
+
+<p>Following are listed all the defined entities, split in the three above groups. For each entity, you will find its mnemonic, decimal and hex representation and how it is displayed by your browser.</p>
+
+<table class="attributes">
+<caption>Latin 1 entities</caption>
+<tr><th>Mnemonic</th><th>Hexadecimal</th><th>Decimal</th><th>Output</th></tr>
+<tr><td>&amp;nbsp;</td><td>&amp;#xa0;</td><td>&amp;#160;</td><td>&nbsp;</td></tr>
+<tr><td>&amp;iexcl;</td><td>&amp;#xa1;</td><td>&amp;#161;</td><td>&iexcl;</td></tr>
+<tr><td>&amp;cent;</td><td>&amp;#xa2;</td><td>&amp;#162;</td><td>&cent;</td></tr>
+<tr><td>&amp;pound;</td><td>&amp;#xa3;</td><td>&amp;#163;</td><td>&pound;</td></tr>
+<tr><td>&amp;curren;</td><td>&amp;#xa4;</td><td>&amp;#164;</td><td>&curren;</td></tr>
+<tr><td>&amp;yen;</td><td>&amp;#xa5;</td><td>&amp;#165;</td><td>&yen;</td></tr>
+<tr><td>&amp;brvbar;</td><td>&amp;#xa6;</td><td>&amp;#166;</td><td>&brvbar;</td></tr>
+<tr><td>&amp;sect;</td><td>&amp;#xa7;</td><td>&amp;#167;</td><td>&sect;</td></tr>
+<tr><td>&amp;uml;</td><td>&amp;#xa8;</td><td>&amp;#168;</td><td>&uml;</td></tr>
+<tr><td>&amp;copy;</td><td>&amp;#xa9;</td><td>&amp;#169;</td><td>&copy;</td></tr>
+<tr><td>&amp;ordf;</td><td>&amp;#xaa;</td><td>&amp;#170;</td><td>&ordf;</td></tr>
+<tr><td>&amp;laquo;</td><td>&amp;#xab;</td><td>&amp;#171;</td><td>&laquo;</td></tr>
+<tr><td>&amp;not;</td><td>&amp;#xac;</td><td>&amp;#172;</td><td>&not;</td></tr>
+<tr><td>&amp;shy;</td><td>&amp;#xad;</td><td>&amp;#173;</td><td>&shy;</td></tr>
+<tr><td>&amp;reg;</td><td>&amp;#xae;</td><td>&amp;#174;</td><td>&reg;</td></tr>
+<tr><td>&amp;macr;</td><td>&amp;#xaf;</td><td>&amp;#175;</td><td>&macr;</td></tr>
+<tr><td>&amp;deg;</td><td>&amp;#xb0;</td><td>&amp;#176;</td><td>&deg;</td></tr>
+<tr><td>&amp;plusmn;</td><td>&amp;#xb1;</td><td>&amp;#177;</td><td>&plusmn;</td></tr>
+<tr><td>&amp;sup2;</td><td>&amp;#xb2;</td><td>&amp;#178;</td><td>&sup2;</td></tr>
+<tr><td>&amp;sup3;</td><td>&amp;#xb3;</td><td>&amp;#179;</td><td>&sup3;</td></tr>
+<tr><td>&amp;acute;</td><td>&amp;#xb4;</td><td>&amp;#180;</td><td>&acute;</td></tr>
+<tr><td>&amp;micro;</td><td>&amp;#xb5;</td><td>&amp;#181;</td><td>&micro;</td></tr>
+<tr><td>&amp;para;</td><td>&amp;#xb6;</td><td>&amp;#182;</td><td>&para;</td></tr>
+<tr><td>&amp;middot;</td><td>&amp;#xb7;</td><td>&amp;#183;</td><td>&middot;</td></tr>
+<tr><td>&amp;cedil;</td><td>&amp;#xb8;</td><td>&amp;#184;</td><td>&cedil;</td></tr>
+<tr><td>&amp;sup1;</td><td>&amp;#xb9;</td><td>&amp;#185;</td><td>&sup1;</td></tr>
+<tr><td>&amp;ordm;</td><td>&amp;#xba;</td><td>&amp;#186;</td><td>&ordm;</td></tr>
+<tr><td>&amp;raquo;</td><td>&amp;#xbb;</td><td>&amp;#187;</td><td>&raquo;</td></tr>
+<tr><td>&amp;frac14;</td><td>&amp;#xbc;</td><td>&amp;#188;</td><td>&frac14;</td></tr>
+<tr><td>&amp;frac12;</td><td>&amp;#xbd;</td><td>&amp;#189;</td><td>&frac12;</td></tr>
+<tr><td>&amp;frac34;</td><td>&amp;#xbe;</td><td>&amp;#190;</td><td>&frac34;</td></tr>
+<tr><td>&amp;iquest;</td><td>&amp;#xbf;</td><td>&amp;#191;</td><td>&iquest;</td></tr>
+<tr><td>&amp;Agrave;</td><td>&amp;#xc0;</td><td>&amp;#192;</td><td>&Agrave;</td></tr>
+<tr><td>&amp;Aacute;</td><td>&amp;#xc1;</td><td>&amp;#193;</td><td>&Aacute;</td></tr>
+<tr><td>&amp;Acirc;</td><td>&amp;#xc2;</td><td>&amp;#194;</td><td>&Acirc;</td></tr>
+<tr><td>&amp;Atilde;</td><td>&amp;#xc3;</td><td>&amp;#195;</td><td>&Atilde;</td></tr>
+<tr><td>&amp;Auml;</td><td>&amp;#xc4;</td><td>&amp;#196;</td><td>&Auml;</td></tr>
+<tr><td>&amp;Aring;</td><td>&amp;#xc5;</td><td>&amp;#197;</td><td>&Aring;</td></tr>
+<tr><td>&amp;AElig;</td><td>&amp;#xc6;</td><td>&amp;#198;</td><td>&AElig;</td></tr>
+<tr><td>&amp;Ccedil;</td><td>&amp;#xc7;</td><td>&amp;#199;</td><td>&Ccedil;</td></tr>
+<tr><td>&amp;Egrave;</td><td>&amp;#xc8;</td><td>&amp;#200;</td><td>&Egrave;</td></tr>
+<tr><td>&amp;Eacute;</td><td>&amp;#xc9;</td><td>&amp;#201;</td><td>&Eacute;</td></tr>
+<tr><td>&amp;Ecirc;</td><td>&amp;#xca;</td><td>&amp;#202;</td><td>&Ecirc;</td></tr>
+<tr><td>&amp;Euml;</td><td>&amp;#xcb;</td><td>&amp;#203;</td><td>&Euml;</td></tr>
+<tr><td>&amp;Igrave;</td><td>&amp;#xcc;</td><td>&amp;#204;</td><td>&Igrave;</td></tr>
+<tr><td>&amp;Iacute;</td><td>&amp;#xcd;</td><td>&amp;#205;</td><td>&Iacute;</td></tr>
+<tr><td>&amp;Icirc;</td><td>&amp;#xce;</td><td>&amp;#206;</td><td>&Icirc;</td></tr>
+<tr><td>&amp;Iuml;</td><td>&amp;#xcf;</td><td>&amp;#207;</td><td>&Iuml;</td></tr>
+<tr><td>&amp;ETH;</td><td>&amp;#xd0;</td><td>&amp;#208;</td><td>&ETH;</td></tr>
+<tr><td>&amp;Ntilde;</td><td>&amp;#xd1;</td><td>&amp;#209;</td><td>&Ntilde;</td></tr>
+<tr><td>&amp;Ograve;</td><td>&amp;#xd2;</td><td>&amp;#210;</td><td>&Ograve;</td></tr>
+<tr><td>&amp;Oacute;</td><td>&amp;#xd3;</td><td>&amp;#211;</td><td>&Oacute;</td></tr>
+<tr><td>&amp;Ocirc;</td><td>&amp;#xd4;</td><td>&amp;#212;</td><td>&Ocirc;</td></tr>
+<tr><td>&amp;Otilde;</td><td>&amp;#xd5;</td><td>&amp;#213;</td><td>&Otilde;</td></tr>
+<tr><td>&amp;Ouml;</td><td>&amp;#xd6;</td><td>&amp;#214;</td><td>&Ouml;</td></tr>
+<tr><td>&amp;times;</td><td>&amp;#xd7;</td><td>&amp;#215;</td><td>&times;</td></tr>
+<tr><td>&amp;Oslash;</td><td>&amp;#xd8;</td><td>&amp;#216;</td><td>&Oslash;</td></tr>
+<tr><td>&amp;Ugrave;</td><td>&amp;#xd9;</td><td>&amp;#217;</td><td>&Ugrave;</td></tr>
+<tr><td>&amp;Uacute;</td><td>&amp;#xda;</td><td>&amp;#218;</td><td>&Uacute;</td></tr>
+<tr><td>&amp;Ucirc;</td><td>&amp;#xdb;</td><td>&amp;#219;</td><td>&Ucirc;</td></tr>
+<tr><td>&amp;Uuml;</td><td>&amp;#xdc;</td><td>&amp;#220;</td><td>&Uuml;</td></tr>
+<tr><td>&amp;Yacute;</td><td>&amp;#xdd;</td><td>&amp;#221;</td><td>&Yacute;</td></tr>
+<tr><td>&amp;THORN;</td><td>&amp;#xde;</td><td>&amp;#222;</td><td>&THORN;</td></tr>
+<tr><td>&amp;szlig;</td><td>&amp;#xdf;</td><td>&amp;#223;</td><td>&szlig;</td></tr>
+<tr><td>&amp;agrave;</td><td>&amp;#xe0;</td><td>&amp;#224;</td><td>&agrave;</td></tr>
+<tr><td>&amp;aacute;</td><td>&amp;#xe1;</td><td>&amp;#225;</td><td>&aacute;</td></tr>
+<tr><td>&amp;acirc;</td><td>&amp;#xe2;</td><td>&amp;#226;</td><td>&acirc;</td></tr>
+<tr><td>&amp;atilde;</td><td>&amp;#xe3;</td><td>&amp;#227;</td><td>&atilde;</td></tr>
+<tr><td>&amp;auml;</td><td>&amp;#xe4;</td><td>&amp;#228;</td><td>&auml;</td></tr>
+<tr><td>&amp;aring;</td><td>&amp;#xe5;</td><td>&amp;#229;</td><td>&aring;</td></tr>
+<tr><td>&amp;aelig;</td><td>&amp;#xe6;</td><td>&amp;#230;</td><td>&aelig;</td></tr>
+<tr><td>&amp;ccedil;</td><td>&amp;#xe7;</td><td>&amp;#231;</td><td>&ccedil;</td></tr>
+<tr><td>&amp;egrave;</td><td>&amp;#xe8;</td><td>&amp;#232;</td><td>&egrave;</td></tr>
+<tr><td>&amp;eacute;</td><td>&amp;#xe9;</td><td>&amp;#233;</td><td>&eacute;</td></tr>
+<tr><td>&amp;ecirc;</td><td>&amp;#xea;</td><td>&amp;#234;</td><td>&ecirc;</td></tr>
+<tr><td>&amp;euml;</td><td>&amp;#xeb;</td><td>&amp;#235;</td><td>&euml;</td></tr>
+<tr><td>&amp;igrave;</td><td>&amp;#xec;</td><td>&amp;#236;</td><td>&igrave;</td></tr>
+<tr><td>&amp;iacute;</td><td>&amp;#xed;</td><td>&amp;#237;</td><td>&iacute;</td></tr>
+<tr><td>&amp;icirc;</td><td>&amp;#xee;</td><td>&amp;#238;</td><td>&icirc;</td></tr>
+<tr><td>&amp;iuml;</td><td>&amp;#xef;</td><td>&amp;#239;</td><td>&iuml;</td></tr>
+<tr><td>&amp;eth;</td><td>&amp;#xf0;</td><td>&amp;#240;</td><td>&eth;</td></tr>
+<tr><td>&amp;ntilde;</td><td>&amp;#xf1;</td><td>&amp;#241;</td><td>&ntilde;</td></tr>
+<tr><td>&amp;ograve;</td><td>&amp;#xf2;</td><td>&amp;#242;</td><td>&ograve;</td></tr>
+<tr><td>&amp;oacute;</td><td>&amp;#xf3;</td><td>&amp;#243;</td><td>&oacute;</td></tr>
+<tr><td>&amp;ocirc;</td><td>&amp;#xf4;</td><td>&amp;#244;</td><td>&ocirc;</td></tr>
+<tr><td>&amp;otilde;</td><td>&amp;#xf5;</td><td>&amp;#245;</td><td>&otilde;</td></tr>
+<tr><td>&amp;ouml;</td><td>&amp;#xf6;</td><td>&amp;#246;</td><td>&ouml;</td></tr>
+<tr><td>&amp;divide;</td><td>&amp;#xf7;</td><td>&amp;#247;</td><td>&divide;</td></tr>
+<tr><td>&amp;oslash;</td><td>&amp;#xf8;</td><td>&amp;#248;</td><td>&oslash;</td></tr>
+<tr><td>&amp;ugrave;</td><td>&amp;#xf9;</td><td>&amp;#249;</td><td>&ugrave;</td></tr>
+<tr><td>&amp;uacute;</td><td>&amp;#xfa;</td><td>&amp;#250;</td><td>&uacute;</td></tr>
+<tr><td>&amp;ucirc;</td><td>&amp;#xfb;</td><td>&amp;#251;</td><td>&ucirc;</td></tr>
+<tr><td>&amp;uuml;</td><td>&amp;#xfc;</td><td>&amp;#252;</td><td>&uuml;</td></tr>
+<tr><td>&amp;yacute;</td><td>&amp;#xfd;</td><td>&amp;#253;</td><td>&yacute;</td></tr>
+<tr><td>&amp;thorn;</td><td>&amp;#xfe;</td><td>&amp;#254;</td><td>&thorn;</td></tr>
+<tr><td>&amp;yuml;</td><td>&amp;#xff;</td><td>&amp;#255;</td><td>&yuml;</td></tr>
+</table>
+
+<table class="attributes">
+<caption>Special entities</caption>
+<tr><th>Mnemonic</th><th>Hexadecimal</th><th>Decimal</th><th>Output</th></tr>
+<tr><td>&amp;quot;</td><td>&amp;#x22;</td><td>&amp;#34;</td><td>&quot;</td></tr>
+<tr><td>&amp;amp;</td><td>&amp;#x26;</td><td>&amp;#38;</td><td>&amp;</td></tr>
+<tr><td>&amp;lt;</td><td>&amp;#x3c;</td><td>&amp;#60;</td><td>&lt;</td></tr>
+<tr><td>&amp;gt;</td><td>&amp;#x3e;</td><td>&amp;#62;</td><td>&gt;</td></tr>
+<tr><td>&amp;apos;</td><td>&amp;#x27;</td><td>&amp;#39;</td><td>&apos;</td></tr>
+<tr><td>&amp;OElig;</td><td>&amp;#x152;</td><td>&amp;#338;</td><td>&OElig;</td></tr>
+<tr><td>&amp;oelig;</td><td>&amp;#x153;</td><td>&amp;#339;</td><td>&oelig;</td></tr>
+<tr><td>&amp;Scaron;</td><td>&amp;#x160;</td><td>&amp;#352;</td><td>&Scaron;</td></tr>
+<tr><td>&amp;scaron;</td><td>&amp;#x161;</td><td>&amp;#353;</td><td>&scaron;</td></tr>
+<tr><td>&amp;Yuml;</td><td>&amp;#x178;</td><td>&amp;#376;</td><td>&Yuml;</td></tr>
+<tr><td>&amp;circ;</td><td>&amp;#x2c6;</td><td>&amp;#710;</td><td>&circ;</td></tr>
+<tr><td>&amp;tilde;</td><td>&amp;#x2dc;</td><td>&amp;#732;</td><td>&tilde;</td></tr>
+<tr><td>&amp;ensp;</td><td>&amp;#x2002;</td><td>&amp;#8194;</td><td>&ensp;</td></tr>
+<tr><td>&amp;emsp;</td><td>&amp;#x2003;</td><td>&amp;#8195;</td><td>&emsp;</td></tr>
+<tr><td>&amp;thinsp;</td><td>&amp;#x2009;</td><td>&amp;#8201;</td><td>&thinsp;</td></tr>
+<tr><td>&amp;zwnj;</td><td>&amp;#x200c;</td><td>&amp;#8204;</td><td>&zwnj;</td></tr>
+<tr><td>&amp;zwj;</td><td>&amp;#x200d;</td><td>&amp;#8205;</td><td>&zwj;</td></tr>
+<tr><td>&amp;lrm;</td><td>&amp;#x200e;</td><td>&amp;#8206;</td><td>&lrm;</td></tr>
+<tr><td>&amp;rlm;</td><td>&amp;#x200f;</td><td>&amp;#8207;</td><td>&rlm;</td></tr>
+<tr><td>&amp;ndash;</td><td>&amp;#x2013;</td><td>&amp;#8211;</td><td>&ndash;</td></tr>
+<tr><td>&amp;mdash;</td><td>&amp;#x2014;</td><td>&amp;#8212;</td><td>&mdash;</td></tr>
+<tr><td>&amp;lsquo;</td><td>&amp;#x2018;</td><td>&amp;#8216;</td><td>&lsquo;</td></tr>
+<tr><td>&amp;rsquo;</td><td>&amp;#x2019;</td><td>&amp;#8217;</td><td>&rsquo;</td></tr>
+<tr><td>&amp;sbquo;</td><td>&amp;#x201a;</td><td>&amp;#8218;</td><td>&sbquo;</td></tr>
+<tr><td>&amp;ldquo;</td><td>&amp;#x201c;</td><td>&amp;#8220;</td><td>&ldquo;</td></tr>
+<tr><td>&amp;rdquo;</td><td>&amp;#x201d;</td><td>&amp;#8221;</td><td>&rdquo;</td></tr>
+<tr><td>&amp;bdquo;</td><td>&amp;#x201e;</td><td>&amp;#8222;</td><td>&bdquo;</td></tr>
+<tr><td>&amp;dagger;</td><td>&amp;#x2020;</td><td>&amp;#8224;</td><td>&dagger;</td></tr>
+<tr><td>&amp;Dagger;</td><td>&amp;#x2021;</td><td>&amp;#8225;</td><td>&Dagger;</td></tr>
+<tr><td>&amp;permil;</td><td>&amp;#x2030;</td><td>&amp;#8240;</td><td>&permil;</td></tr>
+<tr><td>&amp;lsaquo;</td><td>&amp;#x2039;</td><td>&amp;#8249;</td><td>&lsaquo;</td></tr>
+<tr><td>&amp;rsaquo;</td><td>&amp;#x203a;</td><td>&amp;#8250;</td><td>&rsaquo;</td></tr>
+<tr><td>&amp;euro;</td><td>&amp;#x20ac;</td><td>&amp;#8364;</td><td>&euro;</td></tr>
+</table>
+
+<table class="attributes">
+<caption>Symbol entities</caption>
+<tr><th>Mnemonic</th><th>Hexadecimal</th><th>Decimal</th><th>Output</th></tr>
+<tr><td>&amp;fnof;</td><td>&amp;#x192;</td><td>&amp;#402;</td><td>&fnof;</td></tr>
+<tr><td>&amp;Alpha;</td><td>&amp;#x391;</td><td>&amp;#913;</td><td>&Alpha;</td></tr>
+<tr><td>&amp;Beta;</td><td>&amp;#x392;</td><td>&amp;#914;</td><td>&Beta;</td></tr>
+<tr><td>&amp;Gamma;</td><td>&amp;#x393;</td><td>&amp;#915;</td><td>&Gamma;</td></tr>
+<tr><td>&amp;Delta;</td><td>&amp;#x394;</td><td>&amp;#916;</td><td>&Delta;</td></tr>
+<tr><td>&amp;Epsilon;</td><td>&amp;#x395;</td><td>&amp;#917;</td><td>&Epsilon;</td></tr>
+<tr><td>&amp;Zeta;</td><td>&amp;#x396;</td><td>&amp;#918;</td><td>&Zeta;</td></tr>
+<tr><td>&amp;Eta;</td><td>&amp;#x397;</td><td>&amp;#919;</td><td>&Eta;</td></tr>
+<tr><td>&amp;Theta;</td><td>&amp;#x398;</td><td>&amp;#920;</td><td>&Theta;</td></tr>
+<tr><td>&amp;Iota;</td><td>&amp;#x399;</td><td>&amp;#921;</td><td>&Iota;</td></tr>
+<tr><td>&amp;Kappa;</td><td>&amp;#x39a;</td><td>&amp;#922;</td><td>&Kappa;</td></tr>
+<tr><td>&amp;Lambda;</td><td>&amp;#x39b;</td><td>&amp;#923;</td><td>&Lambda;</td></tr>
+<tr><td>&amp;Mu;</td><td>&amp;#x39c;</td><td>&amp;#924;</td><td>&Mu;</td></tr>
+<tr><td>&amp;Nu;</td><td>&amp;#x39d;</td><td>&amp;#925;</td><td>&Nu;</td></tr>
+<tr><td>&amp;Xi;</td><td>&amp;#x39e;</td><td>&amp;#926;</td><td>&Xi;</td></tr>
+<tr><td>&amp;Omicron;</td><td>&amp;#x39f;</td><td>&amp;#927;</td><td>&Omicron;</td></tr>
+<tr><td>&amp;Pi;</td><td>&amp;#x3a0;</td><td>&amp;#928;</td><td>&Pi;</td></tr>
+<tr><td>&amp;Rho;</td><td>&amp;#x3a1;</td><td>&amp;#929;</td><td>&Rho;</td></tr>
+<tr><td>&amp;Sigma;</td><td>&amp;#x3a3;</td><td>&amp;#931;</td><td>&Sigma;</td></tr>
+<tr><td>&amp;Tau;</td><td>&amp;#x3a4;</td><td>&amp;#932;</td><td>&Tau;</td></tr>
+<tr><td>&amp;Upsilon;</td><td>&amp;#x3a5;</td><td>&amp;#933;</td><td>&Upsilon;</td></tr>
+<tr><td>&amp;Phi;</td><td>&amp;#x3a6;</td><td>&amp;#934;</td><td>&Phi;</td></tr>
+<tr><td>&amp;Chi;</td><td>&amp;#x3a7;</td><td>&amp;#935;</td><td>&Chi;</td></tr>
+<tr><td>&amp;Psi;</td><td>&amp;#x3a8;</td><td>&amp;#936;</td><td>&Psi;</td></tr>
+<tr><td>&amp;Omega;</td><td>&amp;#x3a9;</td><td>&amp;#937;</td><td>&Omega;</td></tr>
+<tr><td>&amp;alpha;</td><td>&amp;#x3b1;</td><td>&amp;#945;</td><td>&alpha;</td></tr>
+<tr><td>&amp;beta;</td><td>&amp;#x3b2;</td><td>&amp;#946;</td><td>&beta;</td></tr>
+<tr><td>&amp;gamma;</td><td>&amp;#x3b3;</td><td>&amp;#947;</td><td>&gamma;</td></tr>
+<tr><td>&amp;delta;</td><td>&amp;#x3b4;</td><td>&amp;#948;</td><td>&delta;</td></tr>
+<tr><td>&amp;epsilon;</td><td>&amp;#x3b5;</td><td>&amp;#949;</td><td>&epsilon;</td></tr>
+<tr><td>&amp;zeta;</td><td>&amp;#x3b6;</td><td>&amp;#950;</td><td>&zeta;</td></tr>
+<tr><td>&amp;eta;</td><td>&amp;#x3b7;</td><td>&amp;#951;</td><td>&eta;</td></tr>
+<tr><td>&amp;theta;</td><td>&amp;#x3b8;</td><td>&amp;#952;</td><td>&theta;</td></tr>
+<tr><td>&amp;iota;</td><td>&amp;#x3b9;</td><td>&amp;#953;</td><td>&iota;</td></tr>
+<tr><td>&amp;kappa;</td><td>&amp;#x3ba;</td><td>&amp;#954;</td><td>&kappa;</td></tr>
+<tr><td>&amp;lambda;</td><td>&amp;#x3bb;</td><td>&amp;#955;</td><td>&lambda;</td></tr>
+<tr><td>&amp;mu;</td><td>&amp;#x3bc;</td><td>&amp;#956;</td><td>&mu;</td></tr>
+<tr><td>&amp;nu;</td><td>&amp;#x3bd;</td><td>&amp;#957;</td><td>&nu;</td></tr>
+<tr><td>&amp;xi;</td><td>&amp;#x3be;</td><td>&amp;#958;</td><td>&xi;</td></tr>
+<tr><td>&amp;omicron;</td><td>&amp;#x3bf;</td><td>&amp;#959;</td><td>&omicron;</td></tr>
+<tr><td>&amp;pi;</td><td>&amp;#x3c0;</td><td>&amp;#960;</td><td>&pi;</td></tr>
+<tr><td>&amp;rho;</td><td>&amp;#x3c1;</td><td>&amp;#961;</td><td>&rho;</td></tr>
+<tr><td>&amp;sigmaf;</td><td>&amp;#x3c2;</td><td>&amp;#962;</td><td>&sigmaf;</td></tr>
+<tr><td>&amp;sigma;</td><td>&amp;#x3c3;</td><td>&amp;#963;</td><td>&sigma;</td></tr>
+<tr><td>&amp;tau;</td><td>&amp;#x3c4;</td><td>&amp;#964;</td><td>&tau;</td></tr>
+<tr><td>&amp;upsilon;</td><td>&amp;#x3c5;</td><td>&amp;#965;</td><td>&upsilon;</td></tr>
+<tr><td>&amp;phi;</td><td>&amp;#x3c6;</td><td>&amp;#966;</td><td>&phi;</td></tr>
+<tr><td>&amp;chi;</td><td>&amp;#x3c7;</td><td>&amp;#967;</td><td>&chi;</td></tr>
+<tr><td>&amp;psi;</td><td>&amp;#x3c8;</td><td>&amp;#968;</td><td>&psi;</td></tr>
+<tr><td>&amp;omega;</td><td>&amp;#x3c9;</td><td>&amp;#969;</td><td>&omega;</td></tr>
+<tr><td>&amp;thetasym;</td><td>&amp;#x3d1;</td><td>&amp;#977;</td><td>&thetasym;</td></tr>
+<tr><td>&amp;upsih;</td><td>&amp;#x3d2;</td><td>&amp;#978;</td><td>&upsih;</td></tr>
+<tr><td>&amp;piv;</td><td>&amp;#x3d6;</td><td>&amp;#982;</td><td>&piv;</td></tr>
+<tr><td>&amp;bull;</td><td>&amp;#x2022;</td><td>&amp;#8226;</td><td>&bull;</td></tr>
+<tr><td>&amp;hellip;</td><td>&amp;#x2026;</td><td>&amp;#8230;</td><td>&hellip;</td></tr>
+<tr><td>&amp;prime;</td><td>&amp;#x2032;</td><td>&amp;#8242;</td><td>&prime;</td></tr>
+<tr><td>&amp;Prime;</td><td>&amp;#x2033;</td><td>&amp;#8243;</td><td>&Prime;</td></tr>
+<tr><td>&amp;oline;</td><td>&amp;#x203e;</td><td>&amp;#8254;</td><td>&oline;</td></tr>
+<tr><td>&amp;frasl;</td><td>&amp;#x2044;</td><td>&amp;#8260;</td><td>&frasl;</td></tr>
+<tr><td>&amp;weierp;</td><td>&amp;#x2118;</td><td>&amp;#8472;</td><td>&weierp;</td></tr>
+<tr><td>&amp;image;</td><td>&amp;#x2111;</td><td>&amp;#8465;</td><td>&image;</td></tr>
+<tr><td>&amp;real;</td><td>&amp;#x211c;</td><td>&amp;#8476;</td><td>&real;</td></tr>
+<tr><td>&amp;trade;</td><td>&amp;#x2122;</td><td>&amp;#8482;</td><td>&trade;</td></tr>
+<tr><td>&amp;alefsym;</td><td>&amp;#x2135;</td><td>&amp;#8501;</td><td>&alefsym;</td></tr>
+<tr><td>&amp;larr;</td><td>&amp;#x2190;</td><td>&amp;#8592;</td><td>&larr;</td></tr>
+<tr><td>&amp;uarr;</td><td>&amp;#x2191;</td><td>&amp;#8593;</td><td>&uarr;</td></tr>
+<tr><td>&amp;rarr;</td><td>&amp;#x2192;</td><td>&amp;#8594;</td><td>&rarr;</td></tr>
+<tr><td>&amp;darr;</td><td>&amp;#x2193;</td><td>&amp;#8595;</td><td>&darr;</td></tr>
+<tr><td>&amp;harr;</td><td>&amp;#x2194;</td><td>&amp;#8596;</td><td>&harr;</td></tr>
+<tr><td>&amp;crarr;</td><td>&amp;#x21b5;</td><td>&amp;#8629;</td><td>&crarr;</td></tr>
+<tr><td>&amp;lArr;</td><td>&amp;#x21d0;</td><td>&amp;#8656;</td><td>&lArr;</td></tr>
+<tr><td>&amp;uArr;</td><td>&amp;#x21d1;</td><td>&amp;#8657;</td><td>&uArr;</td></tr>
+<tr><td>&amp;rArr;</td><td>&amp;#x21d2;</td><td>&amp;#8658;</td><td>&rArr;</td></tr>
+<tr><td>&amp;dArr;</td><td>&amp;#x21d3;</td><td>&amp;#8659;</td><td>&dArr;</td></tr>
+<tr><td>&amp;hArr;</td><td>&amp;#x21d4;</td><td>&amp;#8660;</td><td>&hArr;</td></tr>
+<tr><td>&amp;forall;</td><td>&amp;#x2200;</td><td>&amp;#8704;</td><td>&forall;</td></tr>
+<tr><td>&amp;part;</td><td>&amp;#x2202;</td><td>&amp;#8706;</td><td>&part;</td></tr>
+<tr><td>&amp;exist;</td><td>&amp;#x2203;</td><td>&amp;#8707;</td><td>&exist;</td></tr>
+<tr><td>&amp;empty;</td><td>&amp;#x2205;</td><td>&amp;#8709;</td><td>&empty;</td></tr>
+<tr><td>&amp;nabla;</td><td>&amp;#x2207;</td><td>&amp;#8711;</td><td>&nabla;</td></tr>
+<tr><td>&amp;isin;</td><td>&amp;#x2208;</td><td>&amp;#8712;</td><td>&isin;</td></tr>
+<tr><td>&amp;notin;</td><td>&amp;#x2209;</td><td>&amp;#8713;</td><td>&notin;</td></tr>
+<tr><td>&amp;ni;</td><td>&amp;#x220b;</td><td>&amp;#8715;</td><td>&ni;</td></tr>
+<tr><td>&amp;prod;</td><td>&amp;#x220f;</td><td>&amp;#8719;</td><td>&prod;</td></tr>
+<tr><td>&amp;sum;</td><td>&amp;#x2211;</td><td>&amp;#8721;</td><td>&sum;</td></tr>
+<tr><td>&amp;minus;</td><td>&amp;#x2212;</td><td>&amp;#8722;</td><td>&minus;</td></tr>
+<tr><td>&amp;lowast;</td><td>&amp;#x2217;</td><td>&amp;#8727;</td><td>&lowast;</td></tr>
+<tr><td>&amp;radic;</td><td>&amp;#x221a;</td><td>&amp;#8730;</td><td>&radic;</td></tr>
+<tr><td>&amp;prop;</td><td>&amp;#x221d;</td><td>&amp;#8733;</td><td>&prop;</td></tr>
+<tr><td>&amp;infin;</td><td>&amp;#x221e;</td><td>&amp;#8734;</td><td>&infin;</td></tr>
+<tr><td>&amp;ang;</td><td>&amp;#x2220;</td><td>&amp;#8736;</td><td>&ang;</td></tr>
+<tr><td>&amp;and;</td><td>&amp;#x2227;</td><td>&amp;#8743;</td><td>&and;</td></tr>
+<tr><td>&amp;or;</td><td>&amp;#x2228;</td><td>&amp;#8744;</td><td>&or;</td></tr>
+<tr><td>&amp;cap;</td><td>&amp;#x2229;</td><td>&amp;#8745;</td><td>&cap;</td></tr>
+<tr><td>&amp;cup;</td><td>&amp;#x222a;</td><td>&amp;#8746;</td><td>&cup;</td></tr>
+<tr><td>&amp;int;</td><td>&amp;#x222b;</td><td>&amp;#8747;</td><td>&int;</td></tr>
+<tr><td>&amp;there4;</td><td>&amp;#x2234;</td><td>&amp;#8756;</td><td>&there4;</td></tr>
+<tr><td>&amp;sim;</td><td>&amp;#x223c;</td><td>&amp;#8764;</td><td>&sim;</td></tr>
+<tr><td>&amp;cong;</td><td>&amp;#x2245;</td><td>&amp;#8773;</td><td>&cong;</td></tr>
+<tr><td>&amp;asymp;</td><td>&amp;#x2248;</td><td>&amp;#8776;</td><td>&asymp;</td></tr>
+<tr><td>&amp;ne;</td><td>&amp;#x2260;</td><td>&amp;#8800;</td><td>&ne;</td></tr>
+<tr><td>&amp;equiv;</td><td>&amp;#x2261;</td><td>&amp;#8801;</td><td>&equiv;</td></tr>
+<tr><td>&amp;le;</td><td>&amp;#x2264;</td><td>&amp;#8804;</td><td>&le;</td></tr>
+<tr><td>&amp;ge;</td><td>&amp;#x2265;</td><td>&amp;#8805;</td><td>&ge;</td></tr>
+<tr><td>&amp;sub;</td><td>&amp;#x2282;</td><td>&amp;#8834;</td><td>&sub;</td></tr>
+<tr><td>&amp;sup;</td><td>&amp;#x2283;</td><td>&amp;#8835;</td><td>&sup;</td></tr>
+<tr><td>&amp;nsub;</td><td>&amp;#x2284;</td><td>&amp;#8836;</td><td>&nsub;</td></tr>
+<tr><td>&amp;sube;</td><td>&amp;#x2286;</td><td>&amp;#8838;</td><td>&sube;</td></tr>
+<tr><td>&amp;supe;</td><td>&amp;#x2287;</td><td>&amp;#8839;</td><td>&supe;</td></tr>
+<tr><td>&amp;oplus;</td><td>&amp;#x2295;</td><td>&amp;#8853;</td><td>&oplus;</td></tr>
+<tr><td>&amp;otimes;</td><td>&amp;#x2297;</td><td>&amp;#8855;</td><td>&otimes;</td></tr>
+<tr><td>&amp;perp;</td><td>&amp;#x22a5;</td><td>&amp;#8869;</td><td>&perp;</td></tr>
+<tr><td>&amp;sdot;</td><td>&amp;#x22c5;</td><td>&amp;#8901;</td><td>&sdot;</td></tr>
+<tr><td>&amp;lceil;</td><td>&amp;#x2308;</td><td>&amp;#8968;</td><td>&lceil;</td></tr>
+<tr><td>&amp;rceil;</td><td>&amp;#x2309;</td><td>&amp;#8969;</td><td>&rceil;</td></tr>
+<tr><td>&amp;lfloor;</td><td>&amp;#x230a;</td><td>&amp;#8970;</td><td>&lfloor;</td></tr>
+<tr><td>&amp;rfloor;</td><td>&amp;#x230b;</td><td>&amp;#8971;</td><td>&rfloor;</td></tr>
+<tr><td>&amp;lang;</td><td>&amp;#x2329;</td><td>&amp;#9001;</td><td>&lang;</td></tr>
+<tr><td>&amp;rang;</td><td>&amp;#x232a;</td><td>&amp;#9002;</td><td>&rang;</td></tr>
+<tr><td>&amp;loz;</td><td>&amp;#x25ca;</td><td>&amp;#9674;</td><td>&loz;</td></tr>
+<tr><td>&amp;spades;</td><td>&amp;#x2660;</td><td>&amp;#9824;</td><td>&spades;</td></tr>
+<tr><td>&amp;clubs;</td><td>&amp;#x2663;</td><td>&amp;#9827;</td><td>&clubs;</td></tr>
+<tr><td>&amp;hearts;</td><td>&amp;#x2665;</td><td>&amp;#9829;</td><td>&hearts;</td></tr>
+<tr><td>&amp;diams;</td><td>&amp;#x2666;</td><td>&amp;#9830;</td><td>&diams;</td></tr>
+</table>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="xhtml3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="xhtml5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>XHTML 1.0 crib sheet</h3>
+    <div>Previous: <a href="xhtml3.html">3. XHTML 1.0 element by element</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="xhtml5.html">5. Between past and future</a>
+    </div>
+  </div>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

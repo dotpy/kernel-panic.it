@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,web,XHTML,XML,HTML,CSS,browser,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>XHTML 1.0 crib sheet - XHTML 1.0 document structure</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="xhtml1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="xhtml3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>XHTML 1.0 crib sheet</h3>
+    <div>Previous: <a href="xhtml1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="xhtml3.html">3. XHTML 1.0 element by element</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. XHTML 1.0 document structure</h2>
+
+<p>Before going through the overall structure of an XHTML document, let's briefly define some of the terms we will most often encounter.</p>
+
+<dl>
+  <dt>DTD</dt>
+  <dd>A <dfn>DTD</dfn> (<dfn>Document Type Definition</dfn>), is a collection of XML markup declarations that, as a collection, defines the legal structure, elements, and attributes that are available for use in a document that complies to the DTD.</dd>
+  <dt>Document</dt>
+  <dd>A <dfn>document</dfn> is a stream of data that, after being combined with any other streams it references, is structured such that it holds information contained within elements that are organized as defined in the associated DTD.</dd>
+  <dt>Element</dt>
+  <dd>An <dfn>element</dfn> is a document structuring unit declared in the DTD. It is delimited by a <dfn>start</dfn> and an <dfn>end tag</dfn>. The start tag is made up of an <dfn>element name</dfn> enclosed in angle brackets (&quot;<tt>&lt;</tt>&quot; and &quot;<tt>&gt;</tt>&quot;, e.g. <code>&lt;h1&gt;</code>) as well as any attributes. The end tag, instead, doesn't contain any attribute and precedes the element name with a forward slash (&quot;<tt>/</tt>&quot;, e.g. <code>&lt;/h1&gt;</code>). XHTML is case sensitive and all element names are lower-case. The <dfn>content</dfn> of an element is everything between the start and end tags; it can be made up of other elements, text or both.</dd>
+  <dt>Attribute</dt>
+  <dd>An <dfn>attribute</dfn> is a parameter (key-value pair) to an element declared in the DTD and provides additional information about the element it belongs to. An attribute's type and value range, including a possible default value, are defined in the DTD.</dd>
+</dl>
+
+<h3><a id="xhtml-2.1" name="xhtml-2.1"></a>2.1 Strictly Conforming Documents</h3>
+
+<p>The first element of an XHTML document is the XML declaration. It is not required (though strongly recommended by the <a href="http://www.w3.org/TR/xhtml1/">W3C recommendation</a>) if the character encoding is the default (UTF-8 or UTF-16) or was determined by a higher-level protocol. In all other cases, it is mandatory:</p>
+
+<div class="code">
+  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</pre>
+</div>
+
+<p><em>Note</em>: though recommended, the XML declaration may have odd &quot;side effects&quot; in Internet Explorer. Therefore, if you need absolute control over the page layout, don't use it.</p>
+<p>After the XML declaration, there must be the DOCTYPE declaration, which must reference one of the three legal DTDs using the respective Formal Public Identifier. Legal DTDs are the following (they are identical to HTML 4 DTDs except for changes due to the differences between XML and SGML):</p>
+
+<dl>
+  <dt><a href="http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">Strict DTD</a></dt>
+  <dd>It defines all the elements that are not deprecated in the HTML 4 standard and that don't belong to the Frameset DTD (see below); it allows for very clean documents, relying on CSS presentational hints. The document type declaration to use is:
+
+<div class="code">
+<pre>
+&lt;!DOCTYPE html 
+ PUBLIC &quot;-//W3C//DTD XHTML 1.0 Strict//EN&quot;
+ &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd&quot;&gt;
+</pre>
+</div></dd>
+
+  <dt><a href="http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">Transitional DTD</a></dt>
+  <dd>Besides all strict elements, it defines the HTML 4 deprecated attributes and elements. It makes source code look more cluttered but allows you to take advantage of HTML's presentational features and support non-CSS-compliant browsers. The document type declaration to use is:
+
+<div class="code">
+<pre>
+&lt;!DOCTYPE html 
+   PUBLIC &quot;-//W3C//DTD XHTML 1.0 Transitional//EN&quot;
+   &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
+</pre>
+</div></dd>
+
+  <dt><a href="http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">Frameset DTD</a></dt>
+  <dd>It supports all transitional elements plus frames. The document type declaration to use is:
+
+<div class="code">
+<pre>
+&lt;!DOCTYPE html 
+   PUBLIC &quot;-//W3C//DTD XHTML 1.0 Frameset//EN&quot;
+   &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd&quot;&gt;
+</pre>
+</div></dd>
+</dl>
+
+<p>Finally, the last requisites of a strictly conforming document are:</p>
+
+<ul>
+  <li>its root element must be <code>html</code>;</li>
+  <li>the root element must contain an <code>xmlns</code> declaration for the XHTML namespace;</li>
+  <li>the namespace for XHTML is defined to be <code>http://www.w3.org/1999/xhtml</code>.</li>
+</ul>
+
+<p>Therefore, the root element of the document looks like:</p>
+
+<div class="code">
+<pre>
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;
+  [...]
+&lt;/html&gt;
+</pre>
+</div>
+
+<p>So, to recap, the overall structure of an XHTML 1.0 document looks like:</p>
+
+<div class="code">
+<pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE html 
+ PUBLIC &quot;-//W3C//DTD XHTML 1.0 Strict//EN&quot;
+ &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd&quot;&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    <i>&lt;!-- Headers --&gt;</i>
+  &lt;/head&gt;
+  &lt;body&gt;
+    <i>&lt;!-- Document body --&gt;</i>
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="xhtml1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="xhtml3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>XHTML 1.0 crib sheet</h3>
+    <div>Previous: <a href="xhtml1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="xhtml3.html">3. XHTML 1.0 element by element</a>
+    </div>
+  </div>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

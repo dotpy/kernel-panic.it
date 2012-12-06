@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="it" lang="it">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,Amavisd,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a mail server - Content filtering</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="mail5.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail7.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Previous: <a href="mail5.html">5. Courier-IMAP</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="mail7.html">7. Advanced Postfix configuration</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>6. Content filtering</h2>
+
+<p>Now we have a fully-functional mail server, able to send and receive email and providing remote access to users' mailboxes. However, if we don't want our server to become an immune carrier of computer viruses or to be drowned under a sea of spam, we need to install all the necessary content-filtering tools.</p>
+<p>Though Postfix natively supports multiple <a href="http://www.postfix.org/BUILTIN_FILTER_README.html">content inspection mechanisms</a>, the <a href="http://www.postfix.org/CONTENT_INSPECTION_README.html">documentation</a> itself <q>encourages the use of external filters and standard protocols because this allows you to choose the best MTA and the best content inspection software for your purpose</q>. Therefore, we will rely on third-party software for content filtering; in particular, we will use <a href="mail6.html#mail-6.1">SpamAssassin</a> to filter spam, <a href="mail6.html#mail-6.2">ClamAV</a> to check emails for viruses and <a href="mail6.html#mail-6.3">Amavisd-new</a> to coordinate it all. Below is the chart of the whole architecture:</p>
+<div class="block-img">
+  <img src="mailfilter.png" alt="Filtering architecture" width="376" height="258" />
+</div>
+
+<h3><a id="mail-6.1" name="mail-6.1"></a>6.1 SpamAssassin</h3>
+
+<p><a href="http://wiki.apache.org/spamassassin/">SpamAssassin</a> is a <q>mature, widely-deployed open source project that serves as a mail filter to identify Spam. SpamAssassin uses a variety of mechanisms including header and text analysis, Bayesian filtering, DNS blocklists, and collaborative filtering databases</q>.</p>
+<p>There are quite a few packages we need to install:</p>
+
+<ul>
+  <li>p5-Socket6-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-IO-INET6-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-HTML-Tagset-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-HTML-Parser-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Net-IP-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Digest-SHA1-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Digest-HMAC-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Net-DNS-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-URI-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Net-SSLeay-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-IO-Socket-SSL-<var>x</var>.<var>x</var>.tgz</li>
+  <li>libghttp-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-HTTP-GHTTP-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-libwww-<var>x</var>.<var>x</var>.tgz</li>
+  <li>curl-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>gnupg-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>re2c-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Crypt-OpenSSL-Random-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Crypt-OpenSSL-Bignum-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Crypt-OpenSSL-RSA-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Time-TimeDate-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Mail-Tools-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Mail-DKIM-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-NetAddr-IP-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Mail-SpamAssassin-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+</ul>
+
+<p>After the packages installation, you will find the main SpamAssassin configuration file (<tt>local.cf</tt>) in the fresh new <tt>/etc/mail/spamassassin</tt> directory. The configuration phase can be very complex and goes beyond the scope of this document; anyway, you can find all the details in the man page (<tt><a href="http://spamassassin.apache.org/full/3.1.x/dist/doc/Mail_SpamAssassin_Conf.html">Mail::SpamAssassin::Conf</a></tt>).</p>
+<p>Like Postfix, SpamAssassin has a lot of configuration parameters, although, in most cases, default values can be preserved and only a few parameters need to be overridden:</p>
+
+<div class="code">
+  <div>/etc/mail/spamassassin/local.cf</div>
+<pre>
+rewrite_header	Subject	***** SPAM *****
+report_safe	1
+lock_method	flock
+required_score	8.0
+</pre>
+</div>
+
+<h3><a id="mail-6.2" name="mail-6.2"></a>6.2 ClamAV</h3>
+
+<p><a href="http://www.clamav.net/">ClamAV</a> is an <q>open source (GPL) anti-virus toolkit for UNIX</q>; the main purpose of this software is the integration with mail servers (i.e. attachment scanning). All the antivirus tasks are handled by three processes:</p>
+
+<dl>
+  <dt><tt>freshclam</tt></dt>
+  <dd>which automatically updates the virus definitions, by connecting to one of the ClamAV <a href="http://www.clamav.net/mirrors.html">mirrors</a>; its configuration file is <tt>/etc/freshclam.conf</tt>;</dd>
+  <dt><tt>clamd</tt></dt>
+  <dd>a flexible and scalable multi-threaded antivirus daemon; its configuration file is <tt>/etc/clamd.conf</tt>;</dd>
+  <dt><tt>clamscan</tt></dt>
+  <dd>a command line antivirus scanner.</dd>
+</dl>
+
+<p>The required packages are:</p>
+
+<ul>
+  <li>arc-<var>x</var>.<var>x</var>.tgz</li>
+  <li>lha-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>unzip-<var>x</var>.<var>x</var>.tgz</li>
+  <li>zoo-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>unarj-<var>x</var>.<var>x</var> (from the ports)</li>
+  <li>unrar-<var>x</var>.<var>x</var> (from the ports)</li>
+  <li>clamav-<var>x</var>.<var>x</var>.tgz</li>
+</ul>
+
+<p>The <tt>freshclam.conf</tt> configuration file requires only a few parameters:</p>
+
+<div class="code">
+  <div>/etc/freshclam.conf</div>
+<pre>
+DatabaseDirectory	/var/db/clamav
+DatabaseOwner		_clamav
+DNSDatabaseInfo		current.cvd.clamav.net
+DatabaseMirror		db.<var>it</var>.clamav.net
+DatabaseMirror		database.clamav.net
+MaxAttempts		3
+checks			24
+</pre>
+</div>
+
+<p>Now we can update the virus definition database by running the <tt>freshclam</tt> command. Please make sure you have installed the latest release of ClamAV, or you'll get warning messages about reduced functionality, like the following:</p>
+
+<div class="code">
+<pre>
+# <kbd>freshclam</kbd>
+ClamAV update process started at Tue Dec 18 00:35:25 2007
+WARNING: Your ClamAV installation is OUTDATED!
+WARNING: Local version: 0.90.3 Recommended version: 0.92
+DON'T PANIC! Read http://www.clamav.net/support/faq
+Downloading main.cvd [100%]
+main.cvd updated (version: 45, sigs: 169676, f-level: 21, builder: sven)
+WARNING: Your ClamAV installation is OUTDATED!
+WARNING: Current functionality level = 16, recommended = 21
+DON'T PANIC! Read http://www.clamav.net/support/faq
+Downloading daily.cvd [100%]
+daily.cvd updated (version: 5160, sigs: 8698, f-level: 21, builder: sven)
+WARNING: Your ClamAV installation is OUTDATED!
+WARNING: Current functionality level = 16, recommended = 21
+DON'T PANIC! Read http://www.clamav.net/support/faq
+Database updated (178374 signatures) from db.it.clamav.net (IP: 193.206.139.37)
+#
+</pre>
+</div>
+
+<p>The reduced &quot;functionality level&quot; means that you may not be able to use all the available virus signatures and, consequently, fail to detect the latest viruses. To automatically update the database, we simply have to schedule <tt>freshclam</tt> in crontab every hour (preferably not on the hour, just to avoid traffic peaks):</p>
+
+<div class="code">
+<pre>
+16 * * * * /usr/local/bin/freshclam &gt;/dev/null 2&gt;&amp;1
+</pre>
+</div>
+
+<p>Also the <tt>/etc/clamd.conf</tt> configuration file needs editing only very few parameters:</p>
+
+<div class="code">
+  <div>/etc/clamd.conf</div>
+<pre>
+DatabaseDirectory	/var/db/clamav
+LocalSocket		/var/clamav/clamd.sock
+User			_clamav
+[...]
+</pre>
+</div>
+
+<p>Now we can run <tt>clamd</tt>:</p>
+
+<div class="code">
+<pre>
+# <kbd>touch /var/log/clamd.log</kbd>
+# <kbd>chown _clamav /var/log/clamd.log</kbd>
+# <kbd>clamd</kbd>
+</pre>
+</div>
+
+<p>and add the following lines to <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8"><tt>/etc/rc.local(8)</tt></a> to start it on system boot:</p>
+
+<div class="code">
+  <div>/etc/rc.local</div>
+<pre>
+if [ -x /usr/local/sbin/clamd ]; then
+    echo -n ' clamd'
+    [ -S /var/clamav/clamd.sock ] &amp;&amp; rm -f /var/clamav/clamd.sock
+    /usr/local/sbin/clamd &gt;/dev/null 2&gt;&amp;1
+fi
+</pre>
+</div>
+
+
+<h3><a id="mail-6.3" name="mail-6.3"></a>6.3 Amavisd-new</h3>
+
+<p><a href="http://www.ijs.si/software/amavisd/">Amavisd-new</a> is a <q>high-performance interface between mailer (MTA) and content checkers</q>. We will configure it to bind to port 10024 on the loopback interface, where Postfix will forward all incoming e-mails. If the e-mail successfully passes all the checks, it will be forwarded back to Postfix, listening on localhost port 10025; otherwise, mails may be deleted or quarantined and the administrator and recepients may be notified.</p>
+<p>The following is the list of the required packages:</p>
+
+<ul>
+  <li>cabextract-<var>x</var>.<var>x</var>.tgz</li>
+  <li>freeze-<var>x</var>.<var>x</var> (from the ports)</li>
+  <li>lzop-<var>x</var>.<var>x</var>.tgz</li>
+  <li>lzo-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Archive-Zip-<var>x</var>.<var>x</var>.tgz</li>
+  <li>ripole-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Convert-BinHex-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-IO-stringy-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Mail-Tools-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Time-TimeDate-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-MIME-tools-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Convert-TNEF-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Convert-UUlib-<var>x</var>.<var>x</var>.tgz</li>
+  <li>rpm2cpio-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Net-Server-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Unix-Syslog-<var>x</var>.<var>x</var>.tgz</li>
+  <li>amavisd-new-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+</ul>
+
+<p>The installation procedure creates a new user and group called <tt>_vscan</tt>; however, the easiest way to get Amavisd-new to cooperate with <a href="#mail-6.2">ClamAV</a>, is to run them both under the same user (<tt>_clamav</tt>). The configuration file is <tt>/etc/amavisd.conf</tt>, which is actually a perl script (so pay attention to the semi-colons at the end of the lines!); below are the options you will most likely want to tweak:</p>
+
+<div class="code">
+  <div>/etc/amavisd.conf</div>
+<pre>
+<i># COMMONLY ADJUSTED SETTINGS:</i>
+
+$max_servers = 2;
+$daemon_user  = '_clamav';     <i># Run under the same user as ClamAV</i>
+$daemon_group = '_clamav';     <i># Run under the same group as ClamAV</i>
+
+$mydomain = '<var>kernel-panic.it</var>';
+
+$MYHOME   = '/var/amavisd';
+$TEMPBASE = &quot;$MYHOME/tmp&quot;;   <i># Working directory, needs to be created manually</i>
+$ENV{TMPDIR} = $TEMPBASE;
+$QUARANTINEDIR = '/var/clamav/quarantine';
+
+[...]
+
+<i># Leave only ClamAV uncommented</i>
+@av_scanners = (
+  ['ClamAV-clamd',
+    \&amp;ask_daemon, [&quot;CONTSCAN {}\n&quot;, &quot;/var/clamav/clamd.sock&quot;],
+    qr/\bOK$/, qr/\bFOUND$/,
+    qr/^.*?: (?!Infected Archive)(.*) FOUND$/ ],
+);
+
+[...]
+
+<i># Leave only ClamAV uncommented</i>
+@av_scanners_backup = (
+  ['ClamAV-clamscan', 'clamscan',
+    &quot;--stdout --disable-summary -r --tempdir=$TEMPBASE {}&quot;, [0], [1],
+    qr/^.*?: (?!Infected Archive)(.*) FOUND$/ ],
+);
+
+1;
+</pre>
+</div>
+
+<p>After manually creating Amavisd-new's working directory (<tt>/var/amavisd/tmp</tt>), we can start the daemon in <tt>debug</tt> mode (i.e. in foreground), just to check any errors:</p>
+
+<div class="code">
+<pre>
+# <kbd>mkdir /var/amavisd/tmp</kbd>
+# <kbd>chown -R _clamav:_clamav /var/amavisd/</kbd>
+# <kbd>/usr/local/sbin/amavisd debug</kbd>
+Dec 18 22:07:11 mail.kernel-panic.it /usr/local/sbin/amavisd[24429]: starting.
+/usr/local/sbin/amavisd at mail.kernel-panic.it amavisd-new-2.3.2 (20050629), Unicode aware
+Dec 18 22:07:11 mail.kernel-panic.it /usr/local/sbin/amavisd[24429]: user=,
+EUID: 0 (0);  group=, EGID: 0 31 20 5 4 3 2 0 (0 31 20 5 4 3 2 0)
+Dec 18 22:07:11 mail.kernel-panic.it /usr/local/sbin/amavisd[24429]: Perl version               5.008008
+[...]
+</pre>
+</div>
+
+<p>Now we can configure the system to start Amavisd-new on boot:</p>
+
+<div class="code">
+  <div>/etc/rc.local</div>
+<pre>
+if [ -x /usr/local/sbin/amavisd ]; then
+    echo -n ' amavisd'
+    /usr/local/sbin/amavisd &gt;/dev/null 2&gt;&amp;1
+fi
+</pre>
+</div>
+
+<p>The last step is to update Postfix <a href="mail3.html#mail-3.1">configuration</a> to enable interfacing between Postfix and Amavisd-new. To achieve this, we have to add a couple of services to the <tt><a href="http://www.postfix.org/master.5.html">/etc/postfix/master.cf(5)</a></tt> configuration file: one to forward all incoming emails to Amavid-new, and the other to get emails back again:</p>
+
+<div class="code">
+  <div>/etc/postfix/master.cf</div>
+<pre>
+smtp-amavis unix -	-	-	-	2  smtp
+    -o smtp_data_done_timeout=1200
+    -o smtp_send_xforward_command=yes
+    -o disable_dns_lookups=yes
+    -o max_use=20
+
+127.0.0.1:10025 inet n	-	-	-	-  smtpd
+    -o content_filter=
+    -o local_recipient_maps=
+    -o relay_recipient_maps=
+    -o smtpd_restriction_classes=
+    -o smtpd_delay_reject=no
+    -o smtpd_client_restrictions=permit_mynetworks,reject
+    -o smtpd_helo_restrictions=
+    -o smtpd_sender_restrictions=
+    -o smtpd_recipient_restrictions=permit_mynetworks,reject
+    -o mynetworks_style=host
+    -o mynetworks=127.0.0.0/8
+    -o strict_rfc821_envelopes=yes
+    -o smtpd_error_sleep_time=0
+    -o smtpd_soft_error_limit=1001
+    -o smtpd_hard_error_limit=1000
+    -o smtpd_client_connection_count_limit=0
+    -o smtpd_client_connection_rate_limit=0
+    -o receive_override_options=no_header_body_checks,no_unknown_recipient_checks
+</pre>
+</div>
+
+<p>Finally, we need to tell Postfix to start forwarding all the emails it receives to amavisd-new for content inspection and reload the configuration.</p>
+
+<div class="code">
+<pre>
+# <kbd>postconf -e 'content_filter=smtp-amavis:[127.0.0.1]:10024'</kbd>
+# <kbd>postfix reload</kbd>
+postfix/postfix-script: refreshing the Postfix mail system
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="mail5.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail7.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Previous: <a href="mail5.html">5. Courier-IMAP</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="mail7.html">7. Advanced Postfix configuration</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

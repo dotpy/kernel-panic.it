@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,AMD64,64-bit,Assembly,Linux,OpenBSD,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+
+  <title>64-bit Assembly programming for Linux and OpenBSD - ELF sections</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="asm64_1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../programming.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="asm64_3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>64-bit Assembly programming for Linux and OpenBSD</h3>
+    <div>Previous: <a href="asm64_1.html">1. Introduction</a>&nbsp;
+         Up: <a href="../../programming.html">Programming</a>&nbsp;
+         Next: <a href="asm64_3.html">3. CPU registers</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. ELF sections</h2>
+
+<p></p>
+
+<!--
+Linux e *BSD usano il formato ELF come formato di default per binari e shared libraries.
+E' un formato flessibile ede estendibile ... (vd wikipedia)
+Layout di un file ELF
+Le sezioni standard sono: ...
+tools (readelf)
+
+vd. anche http://en.wikipedia.org/wiki/Executable_and_Linkable_Format
+
+http://www.openwatcom.com/ftp/devel/docs/elf-64-gen.pdf:
+An ELF object file consists of the following parts:
+• File header, which must appear at the beginning of the file.
+• Section table, required for relocatable files, and optional for loadable files.
+• Program header table, required for loadable files, and optional for
+relocatable files. This table describes the loadable segments and other
+data structures required for loading a program or dynamically-linked
+library in preparation for execution.
+• Contents of the sections or segments, including loadable data, relocations,
+and string and symbol tables.
+
+I file ELF contengono varie sezioni (vd. [1] e [3]); le principali sezioni standard sono:
+ 
+section .text    progbits  alloc   exec    nowrite  align=16                    Executable code
+section .rodata  progbits  alloc   noexec  nowrite  align=4                     read-only data (constants and literals)
+section .lrodata progbits  alloc   noexec  nowrite  align=4                     read-only data; a differenza di .rodata, può contentere
+                                                                                  più di 2GB (SHF_X86_64_LARGE impostato in sh_flag) (vd. sez. 4.2 di [2])
+section .data    progbits  alloc   noexec  write    align=4                     initialized data (> di 2GB, vd. sopra)
+section .ldata   progbits  alloc   noexec  write    align=4                     initialized data
+section .bss     nobits    alloc   noexec  write    align=4                     uninitialized data
+section .lbss    nobits    alloc   noexec  write    align=4                     uninitialized data (> di 2GB, vd. sopra)
+section .tdata   progbits  alloc   noexec  write    align=4    tls  (thread specific?)
+section .tbss    nobits    alloc   noexec  write    align=4    tls  (thread specific?)
+section .comment progbits  noalloc noexec  nowrite  align=1                     Version control information
+section other    progbits  alloc   noexec  nowrite  align=1                     Default params for sections other than default ones
+ 
+.bss Contiene le variabili non inizializzate. Il program loader alloca la memoria per la sezione
+bss al caricamento del programma, inizializzando a zero le variabili di tipo aritmetico e a null
+i puntatori (vd. [a] p.95).
+ 
+[2] dice:
+"""Like the Intel386 architecture, the AMD64 architecture in general does not require
+all data accesses to be properly aligned. Misaligned data accesses are slower
+than aligned accesses but otherwise behave identically. The only exceptions are
+that __m128 and __m256 must always be aligned properly."""
+Quindi la sezione data va allineata a 16 con "align 16"? Vale la pena? Dipende dal tipo di dati?
+ 
+-->
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="asm64_1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../programming.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="asm64_3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>64-bit Assembly programming for Linux and OpenBSD</h3>
+    <div>Previous: <a href="asm64_1.html">1. Introduction</a>&nbsp;
+         Up: <a href="../../programming.html">Programming</a>&nbsp;
+         Next: <a href="asm64_3.html">3. CPU registers</a>
+    </div>
+  </div>
+
+</body>
+</html>

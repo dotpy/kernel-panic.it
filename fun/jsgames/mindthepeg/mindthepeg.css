@@ -1,0 +1,73 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                        "Mind the peg" game styles                          *
+ ******************************************************************************/
+
+#gameboard {
+  width: 200px;
+  border: 1px solid #000;
+  background-color: #c96;
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+  text-align: center;
+  font-size: 10%;  /* On certain borwsers, large fonts screw the table up */
+}
+
+#gameboard span {
+  font-size: 12pt;
+}
+
+img.small-hole {
+  height: 10px;
+  width: 10px;
+}
+
+img.small-sep {
+  height: 2px;
+  width: 20px;
+}
+
+#rules {
+  padding: 5px;
+  font-size: 80%;
+  text-align: left;
+}
+
+#rules img {
+  height: 10px;
+  width: 10px;
+  padding-right: 3px;
+}
+
+a.colour {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+a.colour span {
+  display: none;
+}
+
+#red a { background: transparent url('images/red.gif') no-repeat center; }
+#red a:hover { background: transparent url('images/red_over.gif') no-repeat center; }
+
+#green a { background: transparent url('images/green.gif') no-repeat center; }
+#green a:hover { background: transparent url('images/green_over.gif') no-repeat center; }
+
+#yellow a { background: transparent url('images/yellow.gif') no-repeat center; }
+#yellow a:hover { background: transparent url('images/yellow_over.gif') no-repeat center; }
+
+#blue a { background: transparent url('images/blue.gif') no-repeat center; }
+#blue a:hover { background: transparent url('images/blue_over.gif') no-repeat center; }
+
+#white a { background: transparent url('images/white.gif') no-repeat center; }
+#white a:hover { background: transparent url('images/white_over.gif') no-repeat center; }
+
+#purple a { background: transparent url('images/purple.gif') no-repeat center; }
+#purple a:hover { background: transparent url('images/purple_over.gif') no-repeat center; }
+
+hr {
+  width: 80%;
+}
+

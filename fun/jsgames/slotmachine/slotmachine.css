@@ -1,0 +1,94 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                         SlotMachine game styles                            *
+ ******************************************************************************/
+
+#slotmachine {
+  border-collapse: collapse;
+  padding: 0;
+  margin: 0;
+  text-align: center;
+}
+
+#slotmachine td {
+  padding: 0;
+  margin: 0;
+}
+
+#slotmachine img {
+  float: left;
+}
+
+#payoff {
+  background: #f9e054 url('images/payoff.gif') repeat-y top left;
+  font-size: 10pt;
+  font-weight: bold;
+  color: #c33;
+}
+
+td.score {
+  height: 40px;
+  background: #000 url('images/score.gif') no-repeat;
+  color: #f00;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
+td.shinymetal {
+  background: #aaa url('images/shinymetal.gif') repeat-y top left;
+  text-align: center;
+}
+
+td.bets {
+  background: #aaa url('images/shinymetal.gif') repeat-y top left;
+}
+
+table.wheels {
+  border-collapse: collapse;
+  border: 1px solid #000;
+  padding: 3px;
+  margin: 4px;
+}
+
+a.btn {
+  width: 45px;
+  height: 25px;
+  display: block;
+}
+
+a.btn span {
+  display: none;
+}
+
+#bet5 { background: transparent url('images/5_over.gif') no-repeat center; }
+#bet5 a { background: transparent url('images/5.gif') no-repeat center; }
+#bet5 a:hover { background: transparent url('images/5_over.gif') no-repeat center; }
+
+#bet10 { background: transparent url('images/10_over.gif') no-repeat; }
+#bet10 a { background: transparent url('images/10.gif') no-repeat; }
+#bet10 a:hover { background: transparent url('images/10_over.gif') no-repeat; }
+
+#bet20 { background: transparent url('images/20_over.gif') no-repeat; }
+#bet20 a { background: transparent url('images/20.gif') no-repeat; }
+#bet20 a:hover { background: transparent url('images/20_over.gif') no-repeat; }
+
+#bet {
+  width: 20px;
+  border: 2px ridge #fff;
+  background-color: #000;
+  font-size: 12pt;
+  color: #f00;
+  float: right;
+  display: inline;
+}
+
+#hdr {
+  position: absolute;
+  right: 20px;
+}
+
+#close a {
+  position: relative;
+  bottom: -70px;
+}
+

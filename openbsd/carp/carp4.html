@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+
+  <title>Redundant firewalls with OpenBSD, CARP and pfsync - The CARP protocol</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="carp3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="carp5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Redundant firewalls with OpenBSD, CARP and pfsync</h3>
+    <div>Previous: <a href="carp3.html">3. Base configuration</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="carp5.html">5. The pfsync protocol</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>4. The CARP protocol</h2>
+
+<p>CARP (<dfn>Common Address Redundancy Protocol</dfn>) is the protocol that achieves system redundancy, by having a group of hosts on the same network segment (<dfn>redundancy group</dfn>) to share an IP address, so that, should a machine fail, another host in the redundancy group can respond in its place. CARP also allows a degree of <a href="#carp-4.1.2">load sharing</a> between systems.</p>
+<p>Although creating redundant firewalls is one of its most common uses, CARP isn't a firewall-specific protocol. It can be used to ensure service continuity and/or load sharing to a number of network services.</p>
+<p>Initially, the OpenBSD team wanted to produce a free implementation of the IETF standard protocols, VRRP (<dfn>Virtual Router Redundancy Protocol</dfn>), defined in [<a href="http://www.faqs.org/rfcs/rfc3768.html">RFC3768</a>], and HSRP (<dfn>Hot Standby Router Protocol</dfn>), defined in [<a href="http://www.faqs.org/rfcs/rfc2281.html">RFC2281</a>]; but Cisco, claiming patent rights on it, <q>firmly informed the OpenBSD community that Cisco would defend its patents for VRRP implementation</q> (see [<a href="http://www.openbsd.org/lyrics.html#35">CARP</a>] for more details), thus forcing the OpenBSD developers to create a new, competing protocol designed to be fundamentally different from VRRP.</p>
+<p>CARP is a multicast protocol, grouping several physical computers together under one or more virtual addresses. Of these, one system is the <dfn>master</dfn> and responds to all packets destined for the group; the other systems (<dfn>backups</dfn>) just stand by, waiting for any problem to take its place (as it happens between co-workers...).</p>
+<p>At configurable intervals, the master advertises its operation on IP protocol number 112. If the master goes offline, the other hosts in the redundancy group begin to advertise. The host that's able to advertise most frequently becomes the new master. When the main system comes back up, it becomes a backup host by default, although it can be configured to try to become master again.</p>
+<p>As you can see, CARP only creates and manages the virtual network interface; it's up to the system administrator to synchronize data between applications, using <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a> (which we'll discuss in the <a href="carp5.html">next chapter</a>), <a href="http://rsync.samba.org/">rsync</a> or whatever protocol is appropriate for the specific application.</p>
+
+<h3><a id="carp-4.1" name="carp-4.1"></a>4.1 Configuration parameters</h3>
+
+<p>CARP configuration is done via the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl&amp;sektion=8">sysctl(8)</a></tt> and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt> commands. There are three relevant <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl&amp;sektion=3">sysctl(3)</a></tt> variables:</p>
+
+<dl>
+  <dt><tt>net.inet.carp.allow</tt></dt>
+  <dd>it defines whether the host handles CARP packets or not. It is enabled by default;</dd>
+  <dt><tt>net.inet.carp.log</tt></dt>
+  <dd>it defines whether to log CARP errors or not. It may be a value between 0 and 7, corresponding to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslog&amp;sektion=3">syslog(3)</a></tt> priorities, and defaults to 2 (i.e. only CARP state changes are logged);</dd>
+  <dt><tt>net.inet.carp.preempt</tt></dt>
+  <dd>if set to 0 (default), the host won't try to become master if it receives CARP advertisements from another master. Otherwise, it will try to become master if it is able to advertise more frequently than the current master. This option also enables failing over all interfaces in the event that one interface goes down. In fact, if one physical CARP-enabled interface goes down, CARP will increase by 1 the demotion counter (see <a href="#carp-4.1.1">below</a>) for all groups that the interface belongs to, thus allowing the election of new masters on all subnets.</dd>
+</dl>
+
+<p>The syntax for configuring CARP with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt> is:</p>
+
+<div class="code">
+<pre>
+    ifconfig carp<var>N</var> create
+
+    ifconfig carp<var>N</var> [advbase <var>n</var>] [advskew <var>n</var>] [balancing <var>mode</var>]   \
+    [carpnodes <var>vhid:advskew</var>,<var>vhid:advskew</var>,...] [carpdev <var>iface</var>] \
+    [[-]carppeer <var>peer_address</var>] [pass <var>passphrase</var>] [state <var>state</var>] [vhid <var>host-id</var>]
+</pre>
+</div>
+
+<dl>
+  <dt><tt>carpN</tt></dt>
+  <dd>the name of the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> virtual interface.</dd>
+  <dt><tt>advbase</tt>, <tt>advskew</tt></dt>
+  <dd>these values determine the interval between two consecutive CARP advertisements. This interval (in seconds) is given by the formula <tt>(advbase + (advskew / 255))</tt>; increasing <tt>advbase</tt> (the default value is 1 second) will decrease network traffic but increase the delay in electing the new master. Small <tt>advskew</tt> values allow a host to advertise more frequently, increasing its probability to become master. <tt>advbase</tt> must be a value between 1 and 255, <tt>advskew</tt> between 0 (the default) and 254;</dd>
+  <dt><tt>balancing</tt></dt>
+  <dd>sets the load balancing mode (which will be discussed <a href="#carp-4.1.2">later</a>); valid modes are <tt>arp</tt>, <tt>ip</tt>, <tt>ip-stealth</tt> and <tt>ip-unicast</tt>;</dd>
+  <dt><tt>carpnodes</tt></dt>
+  <dd>a comma-separated list of <tt>vhid:advskew</tt> pairs to actually define how the load should be shared among the configured carp nodes (see <a href="#carp-4.1.2">below</a> for further details);</dd>
+  <dt><tt>carpdev</tt></dt>
+  <dd>specifies the physical interface that belongs to this redundancy group. By default, CARP uses the physical interface that belongs to the same subnet as the virtual interface;</dd>
+  <dt><tt>carppeer</tt></dt>
+  <dd>allows you to specify the IP address of the other CARP peer(s), instead of using the default multicast group;</dd>
+  <dt><tt>pass</tt></dt>
+  <dd>the authentication password to use when talking to other CARP-enabled hosts in the redundancy group. This must be the same on all members of the group;</dd>
+  <dt><tt>state</tt></dt>
+  <dd>force a <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> interface into a specific state (<tt>init</tt>, <tt>backup</tt> or <tt>master</tt>);</dd>
+  <dt><tt>vhid</tt></dt>
+  <dd>the Virtual Host ID. This is a unique number (between 1 and 255) that is used to identify the redundancy group to the other nodes on the network.</dd>
+</dl>
+
+<h4><a id="carp-4.1.1" name="carp-4.1.1"></a>4.1.1 The demotion counter</h4>
+
+<p>Besides basic configuration, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt> command also allows you to tweak the CARP <dfn>demotion counter</dfn>, which is <q>a measure of how &quot;ready&quot; a host is to become master of a CARP group</q> (the higher the counter, the less ready the host). Let's see it in more detail.</p>
+<p>CARP interfaces are divided in <dfn>groups</dfn> (by default all <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> interfaces are members of the &quot;<tt>carp</tt>&quot; interface group) and each group is assigned a demotion counter, whose value can be viewed by running the following command:</p>
+
+<div class="code">
+<pre>
+$ <kbd>ifconfig -g carp</kbd>
+carp: carp demote count 0
+</pre>
+</div>
+
+<p>The demotion counter comes in handy mainly when:</p>
+
+<ul>
+  <li>you want to momentarily prevent a host from becoming master: for instance, at boot time, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">rc(8)</a></tt> script increases the demotion counter by 128 before starting the network and decreases it by the same amount once all interfaces have been initialized and all network daemons have been started (the demotion counter can't be set to an absolute value, but only increased or decreased by a certain amount):
+
+<div class="code">
+  <div>/etc/rc</div>
+<pre>
+ifconfig -g carp carpdemote 128
+[ ... ]
+ifconfig -g carp -carpdemote 128
+</pre>
+</div>
+  </li>
+  <li>you want to gracefully failover only a limited number of a host's <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> interfaces (not all of them, as it happens when an interface goes down and <tt>preempt</tt> is enabled). In the following example, we will failover the <tt>carp1</tt> and <tt> carp2</tt> interfaces and leave the state of the others unchanged:
+
+<div class="code">
+<pre>
+# <kbd>ifconfig carp1 group morituri</kbd>
+# <kbd>ifconfig carp2 group morituri</kbd>
+# <kbd>ifconfig morituri</kbd>
+carp1: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+        carp: MASTER carpdev sis0 vhid 1 advbase 1 advskew 100
+        groups: carp morituri
+        inet 1.2.3.4 netmask 0xffffff00 broadcast 1.2.3.255
+carp2: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+        carp: MASTER carpdev sis1 vhid 2 advbase 1 advskew 100
+        groups: carp morituri
+        inet 2.3.4.5 netmask 0xffffff00 broadcast 2.3.4.255 
+# <kbd>ifconfig -g morituri</kbd>
+morituri: carp demote count 0
+# <kbd>ifconfig -g morituri carpdemote 50</kbd>
+# <kbd>ifconfig -g morituri</kbd>
+morituri: carp demote count 50
+</pre>
+</div>
+
+  </li>
+</ul>
+
+<p>For further details on the CARP demotion counter, please refer to [<a href="http://openbsd.org/faq/pf/carp.html#forcefail">PFFAQ</a>].</p>
+
+<h4><a id="carp-4.1.2" name="carp-4.1.2"></a>4.1.2 Load balancing</h4>
+
+<p>CARP provides two different methods for load balancing incoming network traffic among a set of CARP-enabled hosts: ARP balancing and IP balancing.</p>
+<p>Both methods require that you first create a load balancing group by configuring, on each balanced <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> interface, as many VHIDs as hosts in the balancing group; the <tt>advskew</tt> on each VHID will be configured so that each host will be the master on a separate VHID (see <a href="#carp-4.2.2">below</a> for a practical example).</p>
+<p>ARP balancing works by applying a hash function to the source MAC address of ARP requests to determine which VHID should handle the request. The ARP request will be answered solely by the host whose <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> interface is master for that VHID. ARP load balancing can be enabled through <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt> by setting the value of the <tt>balancing</tt> option to &quot;<tt>arp</tt>&quot; on all hosts; for instance:</p>
+
+<div class="code">
+<pre>
+# <kbd>ifconfig carp0 balancing arp carpnodes 1:0,2:100</kbd>
+</pre>
+</div>
+
+<p>IP load balancing works in a very similar manner to ARP balancing, but uses the hash of the source and destination addresses of the IP packet to determine which VHID (and therefore which host) should accept the packet.</p>
+<p>IP balancing requires that traffic destined to the CARP address be received by all CARP hosts. It can be enabled using <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt>, by setting the <tt>balancing</tt> option to &quot;<tt>ip</tt>&quot;; this will cause CARP to use a multicast MAC address, forcing the switch to send incoming traffic to all nodes in the redundancy group. For example:</p>
+
+<div class="code">
+<pre>
+# <kbd>ifconfig carp0 balancing ip carpnodes 1:0,2:100</kbd>
+</pre>
+</div>
+
+<p>Alternatively, you can set the <tt>balancing</tt> option to &quot;<tt>ip-stealth</tt>&quot; (<dfn>stealth mode</dfn>), in order to prevent hosts from sending packets with their virtual MAC address as source; this will prevent the switch from learning the virtual MAC address, forcing it to flood the traffic to all its ports. Last, if you're using a hub or a switch that supports some kind of monitoring mode, you can set <tt>balancing</tt> to &quot;<tt>ip-unicast</tt>&quot;.</p>
+<p>The choice between the two load balancing mechanisms mostly depends on the network environment in which the systems will be placed: ARP balancing only works for clients in the local network and cannot balance traffic that crosses a router, as routed traffic always contains the MAC address of the router as its source address. Therefore, if clients are on remote networks, IP balancing is the only option; the only drawback of IP balancing is that traffic destined towards the load balanced IP addresses must be received by all CARP-enabled hosts, resulting in a higher network load.</p>
+
+<h3><a id="carp-4.2" name="carp-4.2"></a>4.2 Parameters configuration</h3>
+
+<p>Now it's time to configure CARP on our firewalls. To examine two slightly different CARP configurations, we will set up the two internal firewalls (<dfn>Mickey</dfn> and <dfn>Minnie</dfn>, between LAN and DMZ) in active/stand-by mode, with only one system filtering the whole network traffic and the other one acting as a hot spare; the two external firewalls (<dfn>Donald</dfn> and <dfn>Daisy</dfn>, separating the DMZ from the internet), instead, will be in active/active mode, sharing the traffic load.</p>
+<p>So let's recap the firewalls adresses, as we have seen them in the <a href="carp2.html#net">network diagram</a>:</p>
+
+<table class="compact">
+  <tr>
+    <td class="blank"></td>
+    <th>Mickey</th>
+    <th>Minnie</th>
+    <th>Virtual address</th>
+  </tr>
+  <tr>
+    <th>LAN</th>
+    <td>172.16.0.200</td>
+    <td>172.16.0.201</td>
+    <td>172.16.0.202</td>
+  </tr>
+  <tr>
+    <th>DMZ</th>
+    <td>172.16.240.200</td>
+    <td>172.16.240.201</td>
+    <td>172.16.240.202</td>
+  </tr>
+  <tr>
+    <th>pfsync</th>
+    <td>192.168.2.200</td>
+    <td>192.168.2.201</td>
+    <td class="blank"></td>
+  </tr>
+ <tr>
+    <td class="blank"></td>
+    <th>Donald</th>
+    <th>Daisy</th>
+    <th>Virtual address</th>
+  </tr>
+  <tr>
+    <th>DMZ</th>
+    <td>172.16.240.100</td>
+    <td>172.16.240.101</td>
+    <td>172.16.240.102</td>
+  </tr>
+  <tr>
+    <th>&nbsp;Internet&nbsp;</th>
+    <td>172.16.250.100</td>
+    <td>172.16.250.101</td>
+    <td>172.16.250.102</td>
+  </tr>
+  <tr>
+    <th>pfsync</th>
+    <td>192.168.1.100</td>
+    <td>192.168.1.101</td>
+    <td class="blank"></td>
+  </tr>
+</table>
+
+<h4><a id="carp-4.2.1" name="carp-4.2.1"></a>4.2.1 Active/standby configuration</h4>
+
+<p>Let's start with Mickey and Minnie: first, we need to create the <tt>carp*</tt> devices and configure them with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt>:</p>
+
+<div class="code">
+<pre>
+mickey# <kbd>ifconfig carp0 172.16.0.202/24 vhid 1 pass password1 advbase 1 advskew 0</kbd>
+mickey# <kbd>ifconfig carp1 172.16.240.202/24 vhid 2 pass password2 advbase 1 advskew 0</kbd>
+</pre>
+</div>
+
+<div class="code">
+<pre>
+minnie# <kbd>ifconfig carp0 172.16.0.202/24 vhid 1 pass password1 advbase 1 advskew 100</kbd>
+minnie# <kbd>ifconfig carp1 172.16.240.202/24 vhid 2 pass password2 advbase 1 advskew 100</kbd>
+</pre>
+</div>
+
+<p>We have just created the interfaces, assigned them an IP address, a virtual host ID (1 on the LAN, 2 on the DMZ) and a password (probably not the most secure...) for authentication. We also decided that, whenever possible, Mickey will be the master; this is done by giving Minnie a higher <tt>advskew</tt> value (100), thus making the interval between its advertisements (1 + 100 / 255) higher than the interval between Mickey's advertisements (1 + 0 / 255). And, as we've seen <a href="#carp-4.1">above</a>, the host that's able to advertise most frequently becomes master.</p>
+<p>Furthermore, by setting <tt>net.inet.carp.preempt</tt> to &quot;<tt>1</tt>&quot; on Mickey, we ensure that Mickey will always try to become the master:</p>
+
+<div class="code">
+<pre>
+mickey# <kbd>sysctl net.inet.carp.preempt=1</kbd>
+net.inet.carp.preempt: 0 -&gt; 1
+</pre>
+</div>
+
+<p>To make these settings permanent after reboot, we just need to edit the <tt>/etc/hostname.carp*</tt> and <tt>/etc/sysctl.conf</tt> files on Mickey:</p>
+
+<div class="code">
+  <div>/etc/hostname.carp0</div>
+<pre>
+inet 172.16.0.202 255.255.255.0 172.16.0.255 vhid 1 pass password1 advbase 1 advskew 0
+</pre>
+</div>
+
+<div class="code">
+  <div>/etc/hostname.carp1</div>
+<pre>
+inet 172.16.240.202 255.255.255.0 172.16.240.255 vhid 2 pass password2 advbase 1 advskew 0
+</pre>
+</div>
+
+<div class="code">
+  <div>/etc/sysctl.conf</div>
+<pre>
+[...]
+net.inet.carp.preempt=1
+</pre>
+</div>
+
+<p>and on Minnie:</p>
+
+<div class="code">
+  <div>/etc/hostname.carp0</div>
+<pre>
+inet 172.16.0.202 255.255.255.0 172.16.0.255 vhid 1 pass password1 advbase 1 advskew 100
+</pre>
+</div>
+
+<div class="code">
+  <div>/etc/hostname.carp1</div>
+<pre>
+inet 172.16.240.202 255.255.255.0 172.16.240.255 vhid 2 pass password2 advbase 1 advskew 100
+</pre>
+</div>
+
+<p><em>Note</em>: to make the adoption of CARP easier on pre-existing networks, CARP allows using the physical address of a host as the virtual address of the whole redundancy group.</p>
+
+<h4><a id="carp-4.2.2" name="carp-4.2.2"></a>4.2.2 Active/active configuration</h4>
+
+<p>Now let's get on to Donald and Daisy and start by configuring their DMZ interfaces. As before, we will create the <tt>carp0</tt> device on each machine, but this time, to enable load balancing, we will use the <tt>carpnodes</tt> option to assign two different Virtual Host IDs to the interface (VHIDs 3 and 4).</p>
+<p>On VHID 3, we will set the <tt>advskew</tt> of Donald and Daisy to <tt>0</tt> and <tt>100</tt> respectively: this will ensure that Donald becomes master for that VHID; on VHID 4, instead, we will do the opposite, by setting the <tt>advskew</tt> of Donald and Daisy to <tt>100</tt> and <tt>0</tt> respectively, in order to force Daisy to become master for VHID 4:</p>
+
+<div class="code">
+<pre>
+donald# <kbd>ifconfig carp0 172.16.240.102/24 balancing ip carpnodes 3:0,4:100 \</kbd>
+&gt; <kbd>pass password3</kbd>
+donald# <kbd>sysctl net.inet.carp.preempt=1</kbd>
+net.inet.carp.preempt: 0 -&gt; 1
+</pre>
+</div>
+
+<div class="code">
+<pre>
+daisy# <kbd>ifconfig carp0 172.16.240.102/24 balancing ip carpnodes 3:100,4:0 \</kbd>
+&gt; <kbd>pass password3</kbd>
+daisy# <kbd>sysctl net.inet.carp.preempt=1</kbd>
+net.inet.carp.preempt: 0 -&gt; 1
+</pre>
+</div>
+
+<p>We now have two redundancy groups with the same IP address, but each with a different master:</p>
+
+<div class="code">
+<pre>
+donald# <kbd>ifconfig carp0</kbd>
+carp0: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+        lladdr 01:00:5e:00:01:01
+        carp: carpdev rl1 advbase 1 balancing ip
+                state MASTER vhid 3 advskew 0
+                state BACKUP vhid 4 advskew 100
+        groups: carp
+        inet 172.16.240.102 netmask 0xffffff00 broadcast 172.16.240.255
+        inet6 fe80::2c0:a8ff:fe8e:b112%carp0 prefixlen 64 scopeid 0x5
+</pre>
+</div>
+
+<div class="code">
+<pre>
+daisy# <kbd>ifconfig carp0</kbd>
+carp0: flags=8843&lt;UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST&gt; mtu 1500
+        lladdr 01:00:5e:00:01:01
+        carp: carpdev rl1 advbase 1 balancing ip
+                state BACKUP vhid 3 advskew 100
+                state MASTER vhid 4 advskew 0
+        groups: carp
+        inet 172.16.240.102 netmask 0xffffff00 broadcast 172.16.240.255
+        inet6 fe80::219:d2ff:fe02:6469%carp0 prefixlen 64 scopeid 0x5
+</pre>
+</div>
+
+<p>To make these settings permanent across reboots, we need to edit the startup files on Donald:</p>
+
+<div class="code">
+  <div>/etc/hostname.carp0</div>
+<pre>
+inet 172.16.240.102 255.255.255.0 172.16.240.255 balancing ip carpnodes 3:0,4:100 pass password3
+</pre>
+</div>
+
+<div class="code">
+  <div>/etc/sysctl.conf</div>
+<pre>
+[...]
+net.inet.carp.preempt=1
+</pre>
+</div>
+
+<p>and Daisy:</p>
+
+<div class="code">
+  <div>/etc/hostname.carp0</div>
+<pre>
+inet 172.16.240.102 255.255.255.0 172.16.240.255 balancing ip carpnodes 3:100,4:0 pass password3
+</pre>
+</div>
+
+<div class="code">
+  <div>/etc/sysctl.conf</div>
+<pre>
+[...]
+net.inet.carp.preempt=1
+</pre>
+</div>
+
+<p>Now we just have to do the same on the external network interfaces, with another two Virtual Host IDs (VHIDs 5 and 6):</p>
+
+<div class="code">
+<pre>
+donald# <kbd>ifconfig carp1 172.16.250.102/24 balancing ip carpnodes 5:0,6:100 \</kbd>
+&gt; <kbd>pass password5</kbd>
+</pre>
+</div>
+
+<div class="code">
+<pre>
+daisy# <kbd>ifconfig carp1 172.16.250.102/24 balancing ip carpnodes 5:100,6:0 \</kbd>
+&gt; <kbd>pass password5</kbd>
+</pre>
+</div>
+
+<p>and edit the startup files on Donald:</p>
+
+<div class="code">
+  <div>/etc/hostname.carp1</div>
+<pre>
+inet 172.16.250.102 255.255.255.0 172.16.250.255 balancing ip carpnodes 5:0,6:100 pass password5
+</pre>
+</div>
+
+<p>and Daisy:</p>
+
+<div class="code">
+  <div>/etc/hostname.carp1</div>
+<pre>
+inet 172.16.250.102 255.255.255.0 172.16.250.255 balancing ip carpnodes 5:100,6:0 pass password5
+</pre>
+</div>
+
+<p>Though the above configuration involves only a couple of machines, it can be easily extended to up to 32 hosts. <em>One last note</em>: load sharing won't probably achieve a perfect 50/50 distribution between the two machines, since CARP uses a hash of the source and destination IP addresses to determine which system should accept a packet, not the actual load.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="carp3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="carp5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Redundant firewalls with OpenBSD, CARP and pfsync</h3>
+    <div>Previous: <a href="carp3.html">3. Base configuration</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="carp5.html">5. The pfsync protocol</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

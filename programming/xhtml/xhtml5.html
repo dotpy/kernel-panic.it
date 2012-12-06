@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,web,XHTML,XML,HTML,CSS,browser,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>XHTML 1.0 crib sheet - Between past and future</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="css/xhtml.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="xhtml4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="xhtml6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>XHTML 1.0 crib sheet</h3>
+    <div>Previous: <a href="xhtml4.html">4. Entities</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="xhtml6.html">6. Appendix</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>5. Between past and future</h2>
+
+<p>XHTML 1.0 is a transition language, with the purpose of porting HTML 4 documents to XML. So, let's take a look at the few steps to convert HTML 4 documents to XHTML 1.0. Though it may make this migration a little more boring, we will always keep in mind the direction taken by XHTML 1.1: this will allow us to save a lot of time during later migrations.</p>
+
+
+<h3><a id="xhtml-5.1" name="xhtml-5.1"></a>5.1 Migrating from HTML 4</h3>
+
+<dl class="bold-term">
+  <dt>Strictly conforming documents</dt>
+  <dd>The overall structure of an XHTML 1.0 and an HTML 4 document are almost identical. We have already pointed out the main differences:
+
+    <ul>
+      <li>the starting XML declaration (sometimes not required, but always recommended);</li>
+      <li>the DOCTYPE to use (though forward compatibility is assured only by the <a href="http://www.w3.org/TR/html4/strict.dtd">Strict DTD</a>);</li>
+      <li>the root element of the document (<code>&lt;html&gt;</code>) must contain the declaration for the XHTML namespace.</li>
+    </ul>
+
+    Therefore the structure of the document becomes:
+
+<div class="code">
+<pre>
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE html 
+     PUBLIC &quot;-//W3C//DTD XHTML 1.0 Strict//EN&quot;
+    &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd&quot;&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    <i>&lt;!-- Headers --&gt;</i>
+  &lt;/head&gt;
+  &lt;body&gt;
+    <i>&lt;!-- Document body --&gt;</i>
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</div>
+
+    Due to the starting XML declaration, some old browsers may handle XHTML documents as generic XML and display them unpredictably. To keep backward compatibility with those user agents, you can remove the XML declaration, but you will be bound to use the default <code>UTF-8</code> or <code>UTF-16</code> character encodings (by the way, Internet Explorer handles the very same document differently if you write the XML declaration).<br />XML and XHTML specify the character encoding differently: the former, as we have seen, specifies it inside the XML declaration, the latter inside the <code>Content-Type</code> HTTP header or a <code>meta</code> element. Therefore, if you want documents with non-default character encodings to be portable and you can't make sure the web server provides the right HTTP headers, you need to include both the XML declaration and the corresponding <code>meta http-equiv</code> element; e.g.:
+
+<div class="code">
+<pre>
+&lt;meta&nbsp;http-equiv=&quot;Content-type&quot; content=&quot;text/html; charset=EUC-JP&quot; /&gt;
+</pre>
+</div></dd>
+
+  <dt>Correct nesting</dt>
+  <dd>Elements must nest properly; overlapping is illegal in SGML too (and consequently in HTML), but it is widely tolerated in existing browsers.</dd>
+
+  <dt>Element and attribute names must be in lower case</dt>
+  <dd>Unlike HTML, XML is case-sensitive and all element and attribute names defined in XHTML are lower case.</dd>
+
+  <dt>End tags</dt>
+  <dd>In HTML 4 certain elements were permitted to omit the end tag (e.g. the <code>&lt;p&gt;</code> element). In XHTML 1.0, instead, all non-EMPTY elements must have an end tag. EMPTY elements must either have an end tag or a slash before the closing angle bracket. E.g.:
+
+<div class="code">
+<pre>
+&lt;hr&gt;&lt;/hr&gt;
+&lt;hr /&gt;
+</pre>
+</div>
+
+    The first syntax may give uncertain results in many existing user agents. Therefore, the second is to be preferred; the (optional) space before the trailing slash is recommended for compatibility with HTML browsers<br />
+    The second syntax <em>cannot</em> apply to non-EMPTY elements,even if their content is empty. Writing an empty paragraph like this would be uncorrect:
+
+<div class="code">
+<pre>
+&lt;p /&gt;
+</pre>
+</div></dd>
+
+  <dt>Quoting</dt>
+  <dd>Attribute values must always be quoted, even those which appear to be numeric.</dd>
+
+  <dt>Attribute Minimization</dt>
+  <dd>XML doesn't support attributes with no value (like, for instance, <code>compact</code> or <code>checked</code> in HTML). The correct syntax is:
+
+<div class="code">
+<pre>
+&lt;input type=&quot;checkbox&quot; checked=&quot;checked&quot;&gt;
+</pre>
+</div></dd>
+
+  <dt>White Space handling in attribute values</dt>
+  <dd>When user agents process attributes, they strip leading and trailing white space and they map sequences of one or more white space characters (including line breaks) to a single inter-word space. That's the theory. In practice, you'd better avoid line breaks and multiple white space characters within attribute values, because user agents handle them inconsistently.</dd>
+
+  <dt><code>script</code> and <code>style</code> elements</dt>
+  <dd>In XHTML, the <code>script</code> and <code>style</code> elements are declared as having <code>#PCDATA</code> content. As a result, <code>&lt;</code> and <code>&amp;</code> will be treated as the start of markup, and entities, such as <code>&amp;lt;</code> and <code>&amp;amp;</code>, will be expanded to the corresponding characters. You can avoid this by wrapping the content of the <code>script</code> and <code>style</code> elements within a <code>#CDATA</code> marked section:
+
+<div class="code">
+<pre>
+&lt;script type=&quot;text/javascript&quot;&gt;
+&lt;![CDATA[
+[...]
+]]&gt;
+&lt;/script&gt;
+</pre>
+</div>
+
+    or by using external script and style documents. Also keep in mind that XML parsers may remove comments. Therefore, the good old habit to &quot;hide&quot; scripts and styles inside comments may not work in future XML-based user agents.</dd>
+
+  <dt>Elements with <code>id</code> and <code>name</code> attributes</dt> 
+  <dd>In HTML 4, some elements (<code>a</code>, <code>applet</code>, <code>form</code>, <code>frame</code>, <code>iframe</code>, <code>img</code> and <code>map</code>) can use two different attributes as fragment identifiers: <code>name</code> and <code>id</code>. In XHTML 1.0, instead, only the <tt>id</tt> attribute is a legal fragment identifier, while the <code>name</code> attribute is formally deprecated and will be removed in XHTML 1.1.<br />
+    In handling URI-references that end with fragment identifiers (e.g. &quot;<code>#foo</code>&quot;), XML and HTML differ: the former requires elements with an <code>id</code> attribute, the latter elements with a <code>name</code> attribute. Therefore, to ensure maximum forward and backward compatibility, identical values may be supplied for both of these attributes: 
+
+<div class="code">
+<pre>
+&lt;a id=&quot;foo&quot; name=&quot;foo&quot;&gt;
+</pre>
+</div>
+
+    When defining fragment identifiers to be backward-compatible, only strings matching the pattern <code>[A-Za-z][A-Za-z0-9:_.-]*</code> should be used.</dd>
+
+  <dt>Attributes with pre-defined value sets</dt>
+  <dd>Some attributes, called <dfn>enumerated attributes</dfn> in XML and SGML, have pre-defined and limited sets of values (e.g. the <code>type</code> attribute of an <code>input</code> element). In XHTML 1.0, the interpretation of these values is case-sensitive and all values are lower-case.</dd>
+
+  <dt>Entity references as hex values</dt>
+  <dd>SGML and XML both permit references to characters by using hexadecimal values. In SGML, these references could be made by using either the <tt>&amp;#X<var>nn</var>;</tt> or the <tt>&amp;#x<var>nn</var>;</tt> notation. In XML documents, instead, the only option is the lower-case version (i.e. <tt>&amp;#x<var>nn</var>;</tt>).</dd>
+
+  <dt><code>isindex</code></dt>
+  <dd>You can't include more than one <code>isindex</code> element in the document <code>head</code>. In any case, the <code>isindex</code> element is deprecated in favor of the <tt>input</tt> element.</dd>
+
+  <dt>The <code>lang</code> and <code>xml:lang</code> attributes</dt>
+  <dd>To ensure maximum compatibility, it is recommended to use both these attributes to specify the language of an element. Anyway, the value of the <code>xml:lang</code> attribute takes precedence.</dd>
+
+  <dt>Ampersand</dt>
+  <dd>In both SGML and XML, the ampersand character (&quot;<code>&amp;</code>&quot;) always declares the beginning of an entity reference. Therefore, all ampersands used in a document that are to be treated as literal characters must be expressed themselves as an entity reference (i.e. <code>&quot;&amp;amp;&quot;</code>), including ampersands inside the <code>href</code> attribute of an <code>a</code> element; e.g.:
+
+<div class="code">
+<pre>
+&lt;a href=&quot;http://www.kernel-panic.it/myscript.php?id=123456&amp;amp;name=user&quot;&gt;
+</pre>
+</div></dd>
+
+  <dt>CSS2 and XHTML</dt>
+  <dd>CSS2 apply to both HTML and XML documents, though differences in parsing may produce different visual or aural results. A few hints will help you to decrease this risk:
+    <ul>
+      <li>CSS style sheets for XHTML should use lower case element and attribute names;</li>
+      <li>in tables, the <code>tbody</code> element will be inferred by the parser of an HTML user agent, but not by the parser of an XML user agent. Therefore, you should always explicitly add a <tt>tbody</tt> element if it is referred to in a CSS selector.</li>
+      <li>CSS defines different conformance rules for HTML and XML documents; be aware that the HTML rules apply to XHTML documents delivered as HTML and the XML rules apply to XHTML documents delivered as XML.</li>
+    </ul>
+  </dd>
+
+  <dt><code>style</code> elements</dt>
+  <dd>In HTML 4 and XHTML, the <code>style</code> element can be used to define document-internal style rules; XML, instead, uses an XML stylesheet declaration. In order to be compatible with this convention, <code>style</code> elements should have their fragment identifier set using the <code>id</code> attribute, and an XML stylesheet declaration should reference this fragment. E.g.:
+
+<div class="code">
+<pre>
+&lt;?xml-stylesheet href=&quot;/css/mystyle.css&quot; type=&quot;text/css&quot;?&gt;
+&lt;?xml-stylesheet href=&quot;#pageStyle&quot; type=&quot;text/css&quot;?&gt;
+&lt;!DOCTYPE html 
+     PUBLIC &quot;-//W3C//DTD XHTML 1.0 Strict//EN&quot;
+     &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd&quot;&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;en&quot; lang=&quot;en&quot;&gt;
+&lt;head&gt;
+&lt;title&gt;An internal stylesheet example&lt;/title&gt;
+&lt;style type=&quot;text/css&quot; id=&quot;pageStyle&quot;&gt;
+  p {
+    color: blue;
+    font-weight: bold;
+  }
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;p&gt;
+  Paragrafo blu e in grassetto.
+&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</div></dd>
+
+  <dt>Illegal Characters</dt>
+  <dd>Some characters that are legal in HTML, are illegal in XML, e.g. the &quot;formfeed&quot; character (U+000C). On the other hand, the <code>&amp;apos;</code> entity (the apostrophe, U+0027), was introduced in XML 1.0 but does not appear in HTML (to ensure compatibility, you should use <code>&amp;#39;</code>).</dd>
+</dl>
+
+<h3><a id="xhtml-5.2" name="xhtml-5.2"></a>5.2 What does future hold: XHTML 1.1</h3>
+
+<p>XHTML 1.1 has removed all the features that were deprecated in HTML 4 and XHTML 1.0: therefore, the Transitional and Frameset document types are no longer available in XHTML 1.1. In general, the strategy of XHTML 1.1 is to define a markup language that is rich in structural functionality, but relies upon style sheets for presentation. The main differences can be summarized as follows:</p>
+
+<ul>
+  <li>of course the DOCTYPE has changed:
+
+<div class="code">
+<pre>
+&lt;!DOCTYPE
+ html PUBLIC &quot;-//W3C//DTD XHTML 1.1//EN&quot;
+ &quot;http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd&quot;&gt;
+</pre>
+</div></li>
+  <li>the <code>lang</code> attribute has been completely removed in favour of the <code>xml:lang</code> attribute;</li>
+  <li>on the <code>a</code> and <code>map</code> elements, the <code>name</code> attribute has been removed in favour of the <code>id</code> attribute;</li>
+  <li>the &quot;<code>ruby</code>&quot; collection of elements has been added.</li>
+</ul>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="xhtml4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="xhtml6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>XHTML 1.0 crib sheet</h3>
+    <div>Previous: <a href="xhtml4.html">4. Entities</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="xhtml6.html">6. Appendix</a>
+    </div>
+  </div>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>

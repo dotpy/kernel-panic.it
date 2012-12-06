@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,web,XHTML,XML,HTML,CSS,browser,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title></title>
+
+  <link rel="stylesheet" type="text/css" href="../../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../css/xhtml.css" />
+
+</head>
+
+<body>
+
+<h2>&lt;input&gt;</h2>
+
+<p>Defines an element that allows the user to enter data.</p>
+
+<h3>Attributes</h3>
+
+  <table class="attributes">
+    <tr>
+      <th>Attributes</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Notes</th>
+    </tr>
+    <tr>
+      <td>lang</td>
+      <td>%LanguageCode;</td>
+      <td></td>
+      <td>Backwards compatible. Removed in XHTML 1.1.</td>
+    </tr>
+    <tr>
+      <td>xml:lang</td>
+      <td>%LanguageCode;</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="border">
+      <td class="sep">dir</td>
+      <td class="sep">(ltr|rtl)</td>
+      <td class="sep">ltr</td>
+      <td class="sep">Base directionality (left-to-right or right-to-left) of text.</td>
+    </tr>
+    <tr>
+      <td>id</td>
+      <td>ID</td>
+      <td></td>
+      <td>Fragment identifier (unique within the scope of the document).</td>
+    </tr>
+    <tr>
+      <td>class</td>
+      <td>CDATA</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>style</td>
+      <td>%StyleSheet;</td>
+      <td></td>
+      <td>An inline style definition.</td>
+    </tr>
+    <tr>
+      <td class="sep">title</td>
+      <td class="sep">%Text;</td>
+      <td class="sep"></td>
+      <td class="sep">A text to display in a tool tip.</td>
+    </tr>
+    <tr>
+      <td>onclick</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on mouse click.</td>
+    </tr>
+    <tr>
+      <td>ondblclick</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on mouse double-click.</td>
+    </tr>
+    <tr>
+      <td>onmousedown</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on pressing mouse button.</td>
+    </tr>
+    <tr>
+      <td>onmouseup</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on releasing mouse button.</td>
+    </tr>
+    <tr>
+      <td>onmousemove</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the mouse pointer moves over the element.</td>
+    </tr>
+    <tr>
+      <td>onmouseout</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the mouse pointer moves out of the element.</td>
+    </tr>
+    <tr>
+      <td>onkeypress</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on a key pressed and released.</td>
+    </tr>
+    <tr>
+      <td>onkeydown</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on a key pressed.</td>
+    </tr>
+    <tr>
+      <td class="sep">onkeyup</td>
+      <td class="sep">%Script;</td>
+      <td class="sep"></td>
+      <td class="sep">Script to run on a key released.</td>
+    </tr>
+   <tr>
+      <td>accesskey</td>
+      <td>%Character;</td>
+      <td></td>
+      <td>Sets a keyboard shortcut to access an element.</td>
+    </tr>
+    <tr>
+      <td>tabindex</td>
+      <td>%Number;</td>
+      <td></td>
+      <td>Sets the tab order of an element</td>
+    </tr>
+    <tr>
+      <td>onfocus</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the element gets focus.</td>
+    </tr>
+    <tr>
+      <td class="sep">onblur</td>
+      <td class="sep">%Script;</td>
+      <td class="sep"></td>
+      <td class="sep">Script to run when the element loses focus.</td>
+    </tr>
+    <tr>
+      <td>type</td>
+      <td>(text|password|checkbox|radio|file|<br />submit|reset|hidden|image|button)</td>
+      <td>text</td>
+      <td>Type of input element.</td>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>CDATA</td>
+      <td></td>
+      <td>Unique name for the element. It is mandatory when the <code>type</code> is <code>button</code>, <code>checkbox</code>, <code>file</code>, <code>hidden</code>, <code>image</code>, <code>password</code>, <code>text</code> or <code>radio</code>.</td>
+    </tr>
+    <tr>
+      <td>value</td>
+      <td>CDATA</td>
+      <td></td>
+      <td>Defines:
+        <ul style="margin:0; padding-left:20px;">
+          <li>the text to display on <code>buttons</code>;</li>
+          <li>the (mandatory) value to send for checkboxes and radio buttons on form submit;</li>
+          <li>the default value for <code>hidden</code>, <code>password</code> and <code>text</code> elements;</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td>checked</td>
+      <td>checked</td>
+      <td></td>
+      <td>Specifies the <code>radio</code> button or <code>checkbox</code> selected by default.</td>
+    </tr>
+    <tr>
+      <td>disabled</td>
+      <td>disabled</td>
+      <td></td>
+      <td>Disables the input field (doesn't apply to <code>hidden</code> fields).</td>
+    </tr>
+    <tr>
+      <td>readonly</td>
+      <td>readonly</td>
+      <td></td>
+      <td>The element value can't be modified by the user (applies only to <code>text</code> fields).</td>
+    </tr>
+    <tr>
+      <td>size</td>
+      <td>CDATA</td>
+      <td></td>
+      <td>Element size (doesn't apply to <code>hidden</code> fields).</td>
+    </tr>
+    <tr>
+      <td>maxlength</td>
+      <td>%Number;</td>
+      <td></td>
+      <td>Maximum number of characters allowed in a <code>text</code> field.</td>
+    </tr>
+    <tr>
+      <td>src</td>
+      <td>%URI;</td>
+      <td></td>
+      <td>Image URL (applies only to type <code>image</code>).</td>
+    </tr>
+    <tr>
+      <td>alt</td>
+      <td>CDATA</td>
+      <td></td>
+      <td>Short description of the image for non-visual browsers.</td>
+    </tr>
+    <tr>
+      <td>usemap</td>
+      <td>%URI;</td>
+      <td></td>
+      <td>Defines the image as a client-side image map.</td>
+    </tr>
+    <tr>
+      <td>onselect</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to execute on element selection.</td>
+    </tr>
+    <tr>
+      <td>onchange</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on element value change.</td>
+    </tr>
+    <tr>
+      <td>accept</td>
+      <td>%ContentTypes;</td>
+      <td></td>
+      <td>Comma-separated list of MIME types accepted for file transfer (applies only to type <code>file</code>).</td>
+    </tr>
+  </table>
+
+<h3>Example</h3>
+
+<table class="example">
+  <tr>
+    <th>Code</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td class="code">
+<pre>
+&lt;form action=&quot;page.php&quot; method=&quot;post&quot;&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;Login&lt;/legend&gt;
+    Username: &lt;input type=&quot;text&quot; size=&quot;8&quot /;&gt;
+    Password: &lt;input type=&quot;password&quot; size=&quot;8&quot /;&gt;
+    &lt;br /&gt;
+    &lt;input type=&quot;submit&quot; value=&quot;Submit&quot; /&gt;
+    &lt;input type=&quot;reset&quot; value=&quot;Reset&quot; /&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;
+</pre>
+    </td>
+    <td class="output">
+      <form action="page.php" method="post">
+        <fieldset>
+          <legend>Login</legend>
+          Username: <input type="text" size="8" />
+          Password: <input type="password" size="8" />
+          <br />
+          <input type="submit" value="Submit" />
+          <input type="reset" value="Reset" />
+        </fieldset>
+      </form>
+    </td>
+  </tr>
+</table>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+
+</html>
+

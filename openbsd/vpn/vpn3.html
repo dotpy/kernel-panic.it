@@ -1,0 +1,446 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,virtual,private,network,VPN,OpenSSH,OpenVPN,IPsec,AH,ESP,IKE,isakmpd,PF,CARP,sasyncd" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>Building VPNs on OpenBSD - IPsec on OpenBSD</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="vpn2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="vpn4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Building VPNs on OpenBSD</h3>
+    <div>Previous: <a href="vpn2.html">2. IPsec overview</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="vpn4.html">4. OpenVPN</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>3. IPsec on OpenBSD</h2>
+
+<p>Now that we have an adequate working knowledge of the IPsec architecture and protocols, we are finally ready to move from theory to practice and start having some fun with OpenBSD!</p>
+<p>OpenBSD ships by default with full IPsec support in the stock kernel and provides a set of user-space daemons and tools for managing IPsec configuration, dynamic key exchange and high availability; and the great thing is that, as you'll see, setting up an IPsec VPN on OpenBSD is an incredibly simple and fast task, especially compared to most other IPsec implementations out there.</p>
+<p>But before proceeding to edit configuration files and run system commands, let's take a brief look at the basic network topology of the VPN that we are going to set up in this document; it's a very simple <a href="vpn1.html">site-to-site VPN</a>, with a couple of multi-homed security gateways (VPN1 and VPN2) linking two remote private networks (172.16.0.0/24 and 192.168.0.0/24).</p>
+
+<div class="block-img"><a id="vpn" name="vpn"></a><img src="vpn.png" alt="VPN topology" width="760" height="220" /></div>
+
+<p>In this chapter, we will set up the VPN using IPsec: to be more precise, we will configure it in <a href="vpn2.html#vpn-2.1">tunnel mode</a> (the only option for network-to-network VPNs) and use the <a href="vpn2.html#vpn-2.1">ESP protocol</a> in order to encrypt the VPN traffic as it traverses the Internet; we will also consider the case of <a href="#vpn-3.5">redundant IPsec gateways</a> with <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a>. Then, in the next chapters, we will see how the same VPN can be implemented using alternative solutions, in particular <a href="vpn4.html">OpenVPN</a> and <a href="vpn5.html">OpenSSH</a>.</p>
+
+<h3><a id="vpn-3.1" name="vpn-3.1"></a>3.1 Preliminary steps</h3>
+
+<p>Before proceeding to configure IPsec, we have to perform a few preliminary steps to make sure the systems are correctly set up for IPsec to work properly. The IPsec protocols are enabled or disabled in the OS's TCP/IP stack via two <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl&amp;sektion=3">sysctl(3)</a></tt> variables: <tt>net.inet.esp.enable</tt> and <tt>net.inet.ah.enable</tt>, both enabled by default; you can check this by running the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl&amp;sektion=8">sysctl(8)</a></tt> command:</p>
+
+<div class="code">
+<pre>
+# <kbd>sysctl net.inet.esp.enable</kbd>
+net.inet.esp.enable=1
+# <kbd>sysctl net.inet.ah.enable</kbd>
+net.inet.ah.enable=1
+</pre>
+</div>
+
+<p>Since our VPN gateways will have to perform traffic routing, we also need to enable IP forwarding, which is turned off by default. This is done, again, with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl&amp;sektion=8">sysctl(8)</a></tt>, by setting the value of the <tt>net.inet.ip.forwarding</tt> variable to &quot;<tt>1</tt>&quot; if you want any kind of traffic to be forwarded or &quot;<tt>2</tt>&quot; if you want to restrict forwarding to only IPsec-processed traffic:</p>
+
+<div class="code">
+<pre>
+# <kbd>sysctl net.inet.ip.forwarding=1</kbd>
+net.inet.ip.forwarding: 0 -&gt; 1
+</pre>
+</div>
+
+<p><em>Optionally</em>, you may also want to enable the IP Payload Compression Protocol (IPComp) to reduce the size of IP datagrams for higher VPN throughput; however, bear in mind that the reduction of bandwidth usage comes at the expense of a higher computational overhead (see [<a href="http://tools.ietf.org/html/rfc3173">RFC3173</a>] for further details):</p>
+
+<div class="code">
+<pre>
+# <kbd>sysctl net.inet.ipcomp.enable=1</kbd>
+net.inet.ipcomp.enable: 0 -&gt; 1
+</pre>
+</div>
+
+<p>To make these settings permanent across reboots, add the following variables to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl.conf&amp;sektion=5">/etc/sysctl.conf(5)</a></tt> file:</p>
+
+<div class="code">
+  <div>/etc/sysctl.conf</div>
+<pre>
+[ ... ]
+net.inet.esp.enable=1     <i># Enable the ESP IPsec protocol</i>
+net.inet.ah.enable=1      <i># Enable the AH IPsec protocol</i>
+net.inet.ip.forwarding=1  <i># Enable IP forwarding for the host. Set it to '2' to</i>
+                          <i>#   forward only IPsec traffic</i>
+net.inet.ipcomp.enable=1  <i># Optional: compress IP datagrams</i>
+</pre>
+</div>
+
+<p>Finally, we need to bring up the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a></tt> virtual network interface. This interface allows you to inspect outgoing IPsec traffic before it is encapsulated and incoming IPsec traffic after it is decapsulated; this is primarily useful for <a href="#vpn-3.4">filtering IPsec traffic</a> with <acronym title="Packet Filter">PF</acronym> and for debugging purposes.</p>
+
+<div class="code">
+<pre>
+# <kbd>ifconfig enc0 up</kbd>
+</pre>
+</div>
+
+<p>To make the system automatically bring up the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a></tt> interface at boot, create the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hostname.if&amp;sektion=5">/etc/hostname.enc0</a></tt> configuration file:</p>
+
+<div class="code">
+  <div>/etc/hostname.enc0</div>
+<pre>
+up
+</pre>
+</div>
+
+<h3><a id="vpn-3.2" name="vpn-3.2"></a>3.2 Setting up the PKI</h3>
+
+<p>OpenBSD's <a href="vpn2.html#vpn-2.2">IKE</a> key management daemon, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt>, relies on public key certificates for authentication and therefore requires that you first set up a Public Key Infrastructure (PKI) for managing digital certificates.</p>
+<p>The first step in setting up the PKI is the creation of the root <acronym title="Certificate Authority">CA</acronym> certificate (<tt>/etc/ssl/ca.crt</tt>) and private key (<tt>/etc/ssl/private/ca.key</tt>) on the signing machine (which doesn't have to be necessarily one of the VPN gateways) using <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=openssl&amp;sektion=1">openssl(1)</a></tt>; e.g.:</p>
+
+<div class="code">
+<pre>
+CA# <kbd>openssl req -x509 -days 365 -newkey rsa:1024 \</kbd>
+&gt; <kbd>-keyout /etc/ssl/private/ca.key \</kbd>
+&gt; <kbd>-out /etc/ssl/ca.crt</kbd>
+Generating a 1024 bit RSA private key
+........................................++++++
+......++++++
+writing new private key to '/etc/ssl/private/ca.key'
+Enter PEM pass phrase: <var><kbd>&lt;passphrase&gt;</kbd></var>
+Verifying - Enter PEM pass phrase: <var><kbd>&lt;passphrase&gt;</kbd></var>
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) []: <var><kbd>IT</kbd></var>
+State or Province Name (full name) []: <var><kbd>Italy</kbd></var>
+Locality Name (eg, city) []: <var><kbd>Milan</kbd></var>
+Organization Name (eg, company) []: <var><kbd>Kernel Panic Inc.</kbd></var>
+Organizational Unit Name (eg, section) []: <var><kbd>IPsec</kbd></var>
+Common Name (eg, fully qualified host name) []: <var><kbd>CA.kernel-panic.it</kbd></var>
+Email Address []: <var><kbd>danix@kernel-panic.it</kbd></var>
+CA#
+</pre>
+</div>
+
+<p>The next step is the creation of a Certificate Signing Request (CSR) on each of the IKE peers; for instance, the following command will generate the CSR (<tt>/etc/isakmpd/private/1.2.3.4.csr</tt>) for the VPN1 machine (the IP address, in this case &quot;1.2.3.4&quot;, is used as unique ID):</p>
+
+<div class="code">
+<pre>
+VPN1# <kbd>openssl req -new -key /etc/isakmpd/private/local.key \</kbd>
+&gt;  <kbd>-out /etc/isakmpd/private/1.2.3.4.csr</kbd>
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) []: <var><kbd>IT</kbd></var>
+State or Province Name (full name) []: <var><kbd>Italy</kbd></var>
+Locality Name (eg, city) []: <var><kbd>Milan</kbd></var>
+Organization Name (eg, company) []: <var><kbd>Kernel Panic Inc.</kbd></var>
+Organizational Unit Name (eg, section) []: <var><kbd>IPsec</kbd></var>
+Common Name (eg, fully qualified host name) []: <var><kbd>1.2.3.4</kbd></var>
+Email Address []: <var><kbd>danix@kernel-panic.it</kbd></var>
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []: <kbd>&lt;enter&gt;</kbd>
+An optional company name []: <kbd>&lt;enter&gt;</kbd>
+VPN1#
+</pre>
+</div>
+
+<p>Next, the CSRs must be sent to the CA, which will generate the signed certificates out of the certificate requests. For instance, assuming the CSR file is in the current directory:</p>
+
+<div class="code">
+<pre>
+CA# <kbd>env CERTIP=1.2.3.4 openssl x509 -req \</kbd>
+&gt;  <kbd>-days 365 -in 1.2.3.4.csr -out 1.2.3.4.crt \</kbd>
+&gt;  <kbd>-CA /etc/ssl/ca.crt -CAkey /etc/ssl/private/ca.key \</kbd>
+&gt;  <kbd>-CAcreateserial -extfile /etc/ssl/x509v3.cnf -extensions x509v3_IPAddr</kbd>
+Signature ok
+subject=/C=IT/ST=Italy/L=Milan/O=Kernel Panic Inc./OU=IPsec/CN=1.2.3.4/emailAddress=danix@kernel-panic.it
+Getting CA Private Key
+Enter pass phrase for /etc/ssl/private/ca.key: <var><kbd>&lt;passphrase&gt;</kbd></var>
+CA#
+</pre>
+</div>
+
+<p>Finally, you need to copy the newly-generated certificates (the files ending in <tt>.crt</tt>) to the respective machines in the <tt>/etc/isakmpd/certs/</tt> directory, as well as the CA certificate (<tt>/etc/ssl/ca.crt</tt>) in <tt>/etc/isakmpd/ca/</tt>.</p>
+
+<h3><a id="vpn-3.3" name="vpn-3.3"></a>3.3 Configuration</h3>
+
+<p>So we have conveniently set up the system for IPsec use and generated all the required certificates for IKE peer authentication; now we're finally ready to configure our VPN connection. On OpenBSD, all the configuration for IPsec takes place in a single file, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">/etc/ipsec.conf(5)</a></tt>, which uses a very compact syntax, similar to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>, to define almost every characteristic of the VPN; the basic format of the file is as follows:</p>
+
+<ul>
+  <li>comment lines begin with a hash character (&quot;<tt>#</tt>&quot;) and extend to the end of the line;</li>
+  <li>rules may span across multiple lines using the backslash character (&quot;<tt>\</tt>&quot;);</li>
+  <li>network addresses can be specified in <acronym title="Classless Inter-Domain Routing">CIDR</acronym> notation, as symbolic host names, interface names, or interface group names;</li>
+  <li>to simplify the configuration file, macros can be used; macro names must start with a letter, may contain letters, numbers and underscores and must not be reserved words;</li>
+  <li>certain parameters (such as IP addresses) can be expressed as lists; lists are comma-separated and enclosed in curly braces.</li>
+</ul>
+
+<p>There are different types of <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">ipsec.conf(5)</a></tt> rules, depending on whether you want IPsec flows and SAs to be set up automatically (using <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt>) or manually; we will only consider the former case (which is usually what you want), so please refer to the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">documentation</a> for further details on manual setups. The syntax is as follows:</p>
+
+<div class="code">
+<pre>
+ike [<var>mode</var>] [<var>encap</var>] [<var>tmode</var>] [proto <var>protocol</var>] \
+    from <var>src</var> [port <var>sport</var>] [(<var>srcnat</var>)] to <var>dst</var> [port <var>dport</var>] \
+    [local <var>localip</var>] [peer <var>remote</var>] \
+    [<var>mode</var> auth <var>algorithm</var> enc <var>algorithm</var> group <var>group</var>] \
+    [quick auth <var>algorithm</var> enc <var>algorithm</var> group <var>group</var>] \
+    [srcid <var>string</var>] [dstid <var>string</var>] \
+    [psk <var>string</var>] [tag <var>string</var>]
+</pre>
+</div>
+
+<p>Though it may look rather complex at first, actual rules are usually very short and simple because most of the parameters can be omitted, in which case the default values are used. But let's examine the rule syntax in detail:</p>
+
+<dl>
+  <dt><tt>ike [<var>mode</var>] [<var>encap</var>] [<var>tmode</var>]</tt></dt>
+  <dd>the <tt>ike</tt> keyword specifies that <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> must be used to automatically establish the Security Associations for this flow; <tt>mode</tt> can be either &quot;<tt>active</tt>&quot; (<tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> will immediately start negotiation of this tunnel), &quot;<tt>passive</tt>&quot; (to wait for an incoming request from the remote peer to start negotiation) or &quot;<tt>dynamic</tt>&quot; (to be used for hosts with dynamic IP addresses) and defaults to &quot;<tt>active</tt>&quot;; <tt>encap</tt> specifies the <a href="vpn2.html#vpn-2.1">encapsulation protocol</a> and can be either &quot;<tt>esp</tt>&quot; (default) or &quot;<tt>ah</tt>&quot;; <tt>tmode</tt> is the <a href="vpn2.html#vpn-2.1">transport mode</a> to use, i.e. &quot;<tt>tunnel</tt>&quot; (default) or &quot;<tt>transport</tt>&quot;.</dd>
+  <dt><tt>proto <var>protocol</var></tt></dt>
+  <dd>Restrict the flow to a specific IP protocol (e.g. TCP, UDP, ICMP); by default all protocols are allowed.</dd>
+  <dt><tt>from <var>src</var> [port <var>sport</var>] [(<var>srcnat</var>)] to <var>dst</var> [port <var>dport</var>]</tt></dt>
+  <dd>Specify the source and destination addresses of the packets that this rule applies to; you may also specify source and/or destination ports, but only in conjunction with the TCP or UDP protocols. The <tt>srcnat</tt> parameter can be used to specify the actual source address in outgoing NAT/BINAT scenarios.</dd>
+  <dt><tt>local <var>localip</var> peer <var>remote</var></tt></dt>
+  <dd>Specify the local and remote endpoints of the VPN; the local endpoint is required only if the machine has multiple addresses; the remote endpoint can be omitted if it corresponds to the <tt>dst</tt> parameter.</dd>
+  <dt><tt><var>mode</var> auth <var>algorithm</var> enc <var>algorithm</var> group <var>group</var></tt></dt>
+  <dd>Specify the mode (&quot;<tt>main</tt>&quot; or &quot;<tt>aggressive</tt>&quot;) and cryptographic transforms to be used for <a href="vpn2.html#vpn-2.2">IKE phase 1 negotiation</a>; please refer to the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">documentation</a> for a complete list of the possible values and their defaults.</dd>
+  <dt><tt>quick auth <var>algorithm</var> enc <var>algorithm</var> group <var>group</var></tt></dt>
+  <dd>Specify the cryptographic transforms to be used for <a href="vpn2.html#vpn-2.2">IKE phase 2 negotiation</a>; please refer to the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">documentation</a> for a complete list of the possible values and their defaults.</dd>
+  <dt><tt>srcid <var>string</var> dstid <var>string</var></tt></dt>
+  <dd>Define the unique ID that <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> will use as the identity of the local (<tt>srcid</tt>) and remote (<tt>dstid</tt>) peer; if omitted, the IP address is used.</dd>
+  <dt><tt>psk <var>string</var></tt></dt>
+  <dd>Use a pre-shared key for authentication instead of <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt>.</dd>
+  <dt><tt>tag <var>string</var></tt></dt>
+  <dd>Add a <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a> tag to IPsec packets matching this rule.</dd>
+</dl>
+
+<p>So let's write the configuration files for the <a href="#vpn">site-to-site VPN</a> we're setting up; as you'll see, it's a really trivial task and a few rules will do. On the VPN1 host, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">/etc/ipsec.conf(5)</a></tt> file will look like this:</p>
+
+<div class="code">
+  <div>/etc/ipsec.conf</div>
+<pre>
+<i># Macros</i>
+ext_if      = &quot;rl0&quot;                               <i># External interface (1.2.3.4)</i>
+local_net   = &quot;172.16.0.0/24&quot;                     <i># Local private network</i>
+remote_gw   = &quot;5.6.7.8&quot;                           <i># Remote IPsec gateway</i>
+remote_nets = &quot;{192.168.0.0/24, 192.168.1.0/24}&quot;  <i># Remote private networks</i>
+
+<i># Set up the VPN between the gateway machines</i>
+ike esp from $ext_if to $remote_gw
+<i># Between local gateway and remote networks</i>
+ike esp from $ext_if to $remote_nets peer $remote_gw
+<i># Between the networks</i>
+ike esp from $local_net to $remote_nets peer $remote_gw
+</pre>
+</div>
+
+<p>and on VPN2:</p>
+
+<div class="code">
+  <div>/etc/ipsec.conf</div>
+<pre>
+<i># Macros</i>
+ext_if     = &quot;rl0&quot;                               <i># External interface (5.6.7.8)</i>
+local_nets = &quot;{192.168.0.0/24, 192.168.1.0/24}&quot;  <i># Local private networks</i>
+remote_gw  = &quot;1.2.3.4&quot;                           <i># Remote IPsec gateway</i>
+remote_net = &quot;172.16.0.0/24&quot;                     <i># Remote private network</i>
+
+<i># Set up the VPN between the gateway machines</i>
+ike esp from $ext_if to $remote_gw
+<i># Between local gateway and remote network</i>
+ike passive esp from $ext_if to $remote_net peer $remote_gw
+<i># Between the networks</i>
+ike esp from $local_nets to $remote_net peer $remote_gw
+</pre>
+</div>
+
+<p>Now we are ready to start the <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> daemon on both gateways; we will make it run in the foreground (&quot;<tt>-d</tt>&quot; option) in order to easily notice any errors:</p>
+
+<div class="code">
+<pre>
+# <kbd>isakmpd -K -d</kbd>
+
+</pre>
+</div>
+
+<p>Then, again on both gateways, we can parse <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">ipsec.conf(5)</a></tt> rules (&quot;<tt>-n</tt>&quot; option of <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsecctl&amp;sektion=8">ipsecctl(8)</a></tt>) and, if no errors show up, load them:</p>
+
+<div class="code">
+<pre>
+# <kbd>ipsecctl -n -f /etc/ipsec.conf</kbd>
+# <kbd>ipsecctl -f /etc/ipsec.conf</kbd>
+</pre>
+</div>
+
+<p>You can check that IPsec flows and SAs have been correctly set up by running <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsecctl&amp;sektion=8">ipsecctl(8)</a></tt> with the &quot;<tt>-s all</tt>&quot; option; for example:</p>
+
+<div class="code">
+<pre>
+VPN1# <kbd>ipsecctl -s all</kbd>
+FLOWS:
+flow esp in from 192.168.0.0/24 to 1.2.3.4 peer 5.6.7.8 srcid 1.2.3.4/32 dstid 5.6.7.8/32 type use
+flow esp out from 1.2.3.4 to 192.168.0.0/24 peer 5.6.7.8 srcid 1.2.3.4/32 dstid 5.6.7.8/32 type require
+flow esp in from 192.168.1.0/24 to 1.2.3.4 peer 5.6.7.8 srcid 1.2.3.4/32 dstid 5.6.7.8/32 type use
+flow esp out from 1.2.3.4 to 192.168.1.0/24 peer 5.6.7.8 srcid 1.2.3.4/32 dstid 5.6.7.8/32 type require
+[ ... ]
+
+SAD:
+esp tunnel from 5.6.7.8 to 1.2.3.4 spi 0x027fa231 auth hmac-sha2-256 enc aes
+esp tunnel from 1.2.3.4 to 5.6.7.8 spi 0x13ebc203 auth hmac-sha2-256 enc aes
+esp tunnel from 1.2.3.4 to 5.6.7.8 spi 0x25da85ac auth hmac-sha2-256 enc aes
+esp tunnel from 5.6.7.8 to 1.2.3.4 spi 0x891aa39b auth hmac-sha2-256 enc aes
+[ ... ]
+VPN1#
+</pre>
+</div>
+
+<p>Well, since everything seems to be working fine, we can configure the system to automatically start the VPN at boot by adding the following variables in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> on both security gateways:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+isakmpd_flags=&quot;-K&quot;    <i># Avoid <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=keynote&amp;sektion=4">keynote(4)</a> policy checking</i>
+ipsec=YES             <i># Load <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">ipsec.conf(5)</a></tt> rules</i>
+</pre>
+</div>
+
+<h3><a id="vpn-3.4" name="vpn-3.4"></a>3.4 Packet filtering</h3>
+
+<p>IPsec traffic can be filtered on the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a></tt> interface, where it appears unencrypted before encapsualtion and after decapsulation. The following are the main points to keep in mind for filtering IPsec traffic:</p>
+
+<ul>
+  <li><a href="vpn2.html#vpn-2.1">IPsec protocols</a> (AH and/or ESP) must be explicitely allowed on the external interface; e.g.:
+    <div class="code">
+<pre>
+<i># Allow ESP encapsulated IPsec traffic on the external interface</i>
+pass in  on $ext_if proto esp from $remote_gw to $ext_if
+pass out on $ext_if proto esp from $ext_if to $remote_gw
+</pre>
+    </div>
+  </li>
+  <li><tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> requires that UDP traffic on ports 500 (<tt>isakmp</tt>) and 4500 (<tt>ipsec-nat-t</tt>) be allowed on the external interface; e.g.:
+    <div class="code">
+<pre>
+<i># Allow <a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a> traffic on the external interface</i>
+pass in  on $ext_if proto udp from $remote_gw to $ext_if port {isakmp, ipsec-nat-t}
+pass out on $ext_if proto udp from $ext_if to $remote_gw port {isakmp, ipsec-nat-t}
+</pre>
+    </div>
+  </li>
+  <li>if the VPN is in <a href="vpn2.html#vpn-2.1">tunnel mode</a>, IP-in-IP traffic between the two gateways must be allowed on the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a></tt> interface: e.g.:
+    <div class="code">
+<pre>
+<i># Allow IP-in-IP traffic between the gateways on the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a> interface</i>
+pass in  on enc0 proto ipencap from $remote_gw to $ext_if keep state (if-bound)
+pass out on enc0 proto ipencap from $ext_if to $remote_gw keep state (if-bound)
+</pre>
+    </div>
+  </li>
+  <li>as stated before, IPsec traffic filtering is done on the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a></tt> interface, where it appears unencrypted. State on the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a></tt> interface should be <a href="http://www.openbsd.org/faq/pf/options.html#state-policy">interface bound</a>; e.g.:
+    <div class="code">
+<pre>
+<i># Filter unencrypted VPN traffic on the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=enc&amp;sektion=4">enc(4)</a> interface</i>
+pass in  on enc0 from $remote_nets to $int_if:network keep state (if-bound)
+pass out on enc0 from $int_if:network to $remote_nets keep state (if-bound)
+</pre>
+    </div>
+  </li>
+</ul>
+
+<h3><a id="vpn-3.5" name="vpn-3.5"></a>3.5 Redundant VPNs with sasyncd(8)</h3>
+
+<p>One of the most interesting features of OpenBSD's implementation of the IPsec protocol is the possibility to set up multiple VPN gateways in a redundant configuration, allowing for transparent failover of VPN connections without any loss of connectivity.</p>
+<p>Typically, in OpenBSD, redundancy at the network level is achieved through the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> protocol, which allows multiple hosts on the same local network to share a common IP address. Redundancy at the logical VPN layer, instead, is provided by the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> daemon, which allows the synchronization of IPsec <a href="vpn2.html#vpn-2.2">SA</a> and <a href="vpn2.html#vpn-2.2">SPD</a> information between multiple IPsec gateways.</p>
+<p>We have already covered the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> protocol in a <a href="../carp/index.html">previous document</a> about redundant firewalls, so we won't come back to this topic now; therefore, I assume that you already have a working <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> setup and that you have modified your configuration accordingly (in particular the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsec.conf&amp;sektion=5">ipsec.conf(5)</a></tt> and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> files).</p>
+<p>Please note that, as stated in the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">documentation</a>, <q>for SAs with replay protection enabled, such as those created by <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt>, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> hosts must have <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> enabled to synchronize the in-kernel SA replay counters</q> (for a detailed discussion of the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> protocol, please refer to [<a href="../carp/carp5.html">CARP</a>]).</p>
+<p>The <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> daemon is configured through the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd.conf&amp;sektion=5">/etc/sasyncd.conf(5)</a></tt> file, which has a rather self-explanatory syntax; below is a sample configuration file:</p>
+
+<div class="code">
+  <div>/etc/sasyncd.conf</div>
+<pre>
+<i># <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a> interface to track state changes on</i>
+interface carp0
+<i># Interface group to use to suppress <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a> preemption during boot</i>
+group     carp
+<i># <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a> peer IP address or hostname. Multiple 'peer' statements are allowed</i>
+peer      172.16.0.253
+<i># Shared AES key used to encrypt messages between <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a> hosts. It can be
+# generated with the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=openssl&amp;sektion=1">openssl(1)</a> command 'openssl rand -hex 32'</i>
+sharedkey 0x115c413529ba5ac96b208d83a50473b3e6ade60e66c59a10a944ad3d273148dd
+</pre>
+</div>
+
+<p>Since <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd.conf&amp;sektion=5">sasyncd.conf(5)</a></tt> contains the shared secret key used to encrypt data between the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> hosts, it should have restrictive permissions (<tt>600</tt>) and belong to the &quot;root&quot; or &quot;_isakmpd&quot; user:</p>
+
+<div class="code">
+<pre>
+# <kbd>chown root /etc/sasyncd.conf</kbd>
+# <kbd>chmod 600 /etc/sasyncd.conf</kbd>
+</pre>
+</div>
+
+<p>Well, now we're ready to run the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> daemon on the redundant gateways; but first we need to restart <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> with the &quot;<tt>-S</tt>&quot; option, which is mandatory on redundant setups (remember to add it also to <tt>isakmpd_flags</tt> in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt>):</p>
+
+<div class="code">
+<pre>
+# <kbd>pkill isakmpd</kbd>
+# <kbd>isakmpd -S -K</kbd>
+# <kbd>sasyncd</kbd>
+</pre>
+</div>
+
+<p>You can use  <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ipsecctl&amp;sektion=8">ipsecctl(8)</a></tt> to verify that SAs are correctly synchronized between the IPsec gateways. Finally, if everything is working fine, we only have to add the following variable to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> file to automatically start <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> on boot.</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+sasyncd_flags=&quot;&quot;
+</pre>
+</div>
+
+<p><em>Note</em>: <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sasyncd&amp;sektion=8">sasyncd(8)</a></tt> must be manually restarted every time <tt><a href="/cgi-bin/man.cgi?query=isakmpd&amp;sektion=8">isakmpd(8)</a></tt> is restarted.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="vpn2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="vpn4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Building VPNs on OpenBSD</h3>
+    <div>Previous: <a href="vpn2.html">2. IPsec overview</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="vpn4.html">4. OpenVPN</a>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,primary,domain,controller,file,server,Samba,OpenLDAP,smbldap,samba-vscan,ClamAV,CUPS" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a Primary Domain Controller - Keeping viruses away with Samba-vscan</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc4.html">4. The IDX-smbldap-tools</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc6.html">6. Sharing printers with CUPS</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>5. Keeping viruses away with Samba-vscan</h2>
+
+<p>So we have a fully functional file server and primary domain controller now. However, you may want to add some nice additional features to it, such as antivirus support to detect and quarantine viruses in real time.</p>
+<p><a href="http://www.openantivirus.org/projects.php#samba-vscan">Samba-vscan</a> is a <q>proof-of-concept module for Samba, which uses the VFS (virtual file system) features of Samba 2.2.x/3.0 to provide an on-access Samba anti-virus</q>. Samba-vscan currently supports several antivirus softwares, including <a href="http://www.clamav.net/">ClamAV</a>, which we will use as the backend antivirus engine.</p>
+<p>We already discussed <a href="../mail/mail6.html#mail-6.2">ClamAV</a> installation and configuration in a <a href="../mail/">previous document</a>, so we won't dwell upon it now and I assume you already have a <tt>clamd</tt> daemon up and running on the file server itself or on another machine.</p>
+<p>Compiling Samba-vscan requires the prior installation of the following packages:</p>
+
+<ul>
+  <li>autoconf-2.61p3.tgz</li>
+  <li>libmagic-<var>x</var>.<var>x</var>.tgz</li>
+  <li>gmake-<var>x</var>.<var>x</var>.tgz</li>
+  <li>bzip2-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+</ul>
+
+<p>As a preliminary step, we will also need to &quot;<tt>make proto</tt>&quot; the Samba port; therefore, go to the <tt>/usr/ports/obj/samba/w-samba-<var>x</var>.<var>x</var>.<var>x</var>-cups-ldap/samba-<var>x</var>.<var>x</var>.<var>x</var>/source/</tt> directory and edit the <tt>autogen.sh</tt> file, by replacing the first lines after the initial comments with:</p>
+
+<div class="code">
+  <div>/usr/ports/obj/samba/w-samba-<var>x</var>.<var>x</var>.<var>x</var>-cups-ldap/samba-<var>x</var>.<var>x</var>.<var>x</var>/source/autogen.sh</div>
+<pre>
+TESTAUTOHEADER=&quot;autoheader-2.61&quot;
+TESTAUTOCONF=&quot;autoconf-2.61&quot;
+</pre>
+</div>
+
+<p>Then, still from within that directory, run:</p>
+
+<div class="code">
+<pre>
+# <kbd>./autogen.sh</kbd>
+[ ... ]
+# <kbd>./configure</kbd>
+[ ... ]
+# <kbd>make proto</kbd>
+[ ... ]
+</pre>
+</div>
+
+<p>Now we are ready to <a href="http://www.openantivirus.org/projects.php">download</a>, extract and compile Samba-vscan:</p>
+
+<div class="code">
+<pre>
+# <kbd>tar -zxvf samba-vscan-<var>x</var>.<var>x</var>.<var>x</var>.tar.gz</kbd>
+[ ... ]
+# <kbd>cd samba-vscan-<var>x</var>.<var>x</var>.<var>x</var>/</kbd>
+# <kbd>env LDFLAGS=-L/usr/local/lib/ CPPFLAGS=-I/usr/local/include/ ./configure \
+&gt;   --with-samba-source=/usr/ports/obj/samba/w-samba-<var>x</var>.<var>x</var>.<var>x</var>-cups-ldap/samba-<var>x</var>.<var>x</var>.<var>x</var>/source/</kbd>
+[ ... ]
+# <kbd>gmake clamav</kbd>
+[ ... ]
+# <kbd>cp vscan-clamav.so /usr/local/lib/samba/vfs/</kbd>
+# <kbd>cp clamav/vscan-clamav.conf /etc/samba/</kbd>
+</pre>
+</div>
+
+<p>The configuration file for Samba-vscan (with ClamAV support) is named <tt>/etc/samba/vscan-clamav.conf</tt>:</p>
+
+<div class="code">
+  <div>/etc/samba/vscan-clamav.conf</div>
+<pre>
+[samba-vscan]
+max file size = 10485760
+verbose file logging = no
+
+scan on open = yes
+scan on close = yes
+
+deny access on error = no
+deny access on minor error = no
+
+send warning message = yes
+infected file action = nothing
+quarantine directory  = /var/clamav/quarantine/
+quarantine prefix = vir-
+
+max lru files entries = 100
+lru file entry lifetime = 5
+exclude file types =
+scan archives = yes
+
+clamd socket name = /var/clamav/clamd.sock
+libclamav max files in archive = 1000
+libclamav max archived file size = 10485760
+libclamav max recursion level = 5
+</pre>
+</div>
+
+<p>The last step is updating Samba configuration to include antivirus support by adding the following lines in each section corresponding to a share you want to protect against viruses, or in the <tt>[global]</tt> section if you want to protect all of your shares.</p>
+
+<div class="code">
+  <div>/etc/samba/smb.conf</div>
+<pre>
+    vfs object = vscan-clamav
+    vscan-clamav: config-file = /etc/samba/vscan-clamav.conf
+</pre>
+</div>
+
+<p>and reload Samba configuration:</p>
+
+<div class="code">
+<pre>
+# <kbd>pkill -HUP smbd</kbd>
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc4.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc6.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc4.html">4. The IDX-smbldap-tools</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc6.html">6. Sharing printers with CUPS</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

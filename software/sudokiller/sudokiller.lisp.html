@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,open,source,programming,sudoku,solver,sudokiller,lisp" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>Sudokiller.lisp - A Sudoku Solver in Lisp</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/code.css" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.js.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.py.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.lisp</h3>
+    <div>Previous: <a href="sudokiller.js.html">sudokiller.js</a>
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.py.html">sudokiller.py</a>
+    </div>
+  </div>
+
+  <hr />
+
+<pre>
+<span class="cmt">;;; Sudokiller.lisp -- A Lisp sudoku solver
+
+;; Name: sudokiller.lisp
+;; Version: 1.0
+;; Created: 29 Sep 2005
+;; Last Update: 30 Sep 2005
+;; Author: Daniele Mazzocchio
+
+;;; Commentary:
+
+;; Fill the 'board' array with the SuDoku table, replacing the empty cells
+;; with zeroes, and run this script.
+;;
+;; <a href="sudokiller.tar.gz">Download sources</a>
+
+;;; Code:
+
+;; This is the game board. Fill it with the puzzle you want to solve</span>
+(<span class="kw">defvar</span> board #2a((0 6 0 1 0 4 0 5 0)
+                  (0 0 8 3 0 5 6 0 0)
+                  (2 0 0 0 0 0 0 0 1)
+                  (8 0 0 4 0 7 0 0 6)
+                  (0 0 6 0 0 0 3 0 0)
+                  (7 0 0 9 0 1 0 0 4)
+                  (5 0 0 0 0 0 0 0 2)
+                  (0 0 7 2 0 6 9 0 0)
+                  (0 4 0 5 0 8 0 7 0)))
+
+(<span class="kw">defconstant</span> board-size 9   <span class="cmt">&quot;Width and Height of the SuDoku board&quot;</span>)
+(<span class="kw">defconstant</span> box-size   3   <span class="cmt">&quot;Width and height of the 3x3 box&quot;</span>)
+(<span class="kw">defconstant</span> empty      0   <span class="cmt">&quot;Empty cell marker&quot;</span>)
+
+(<span class="kw">defun</span> <span class="func">guess</span> (index)
+  <span class="cmt">&quot;Test all candidate numbers for current cell until board is complete&quot;</span>
+  (<span class="kw">let</span> ((row (<span class="kw">truncate</span> (/ index board-size)))
+        (col (<span class="kw">mod</span> index board-size)))
+    (<span class="kw">if</span> (<span class="kw">not</span> (<span class="kw">array-in-bounds-p</span> board row col))
+        <span class="kw">t</span>
+        (<span class="kw">if</span> (/= (<span class="kw">aref</span> board row col) empty)
+            (guess (1+ index))
+            <span class="cmt">;; Test all numbers from 1 to 9</span>
+            (<span class="kw">loop</span> <span class="kw">for</span> i <span class="kw">from</span> 1 <span class="kw">to</span> board-size
+              <span class="kw">do</span> (<span class="kw">and</span> (check i row col)
+                      (<span class="kw">progn</span>
+                        (<span class="kw">setf</span> (<span class="kw">aref</span> board row col) i)
+                        (<span class="kw">and</span> (guess (1+ index)) (<span class="kw">return</span> <span class="kw">t</span>))))
+              <span class="kw">finally</span> (<span class="kw">progn</span>
+                        (<span class="kw">setf</span> (<span class="kw">aref</span> board row col) empty)
+                        (<span class="kw">return</span> <span class="kw">nil</span>)))))))
+
+(<span class="kw">defun</span> <span class="func">check</span> (num row col)
+  <span class="cmt">&quot;Check if a number is, according to the Sudoku rules, a legal candidate for
+   the cell identified by its row and column indexes&quot;</span>
+  <span class="cmt">;; Get the top left corner indexes of the cell's 3x3 box</span>
+  (<span class="kw">let</span> ((r (* (<span class="kw">truncate</span> (/ row box-size)) box-size))
+        (c (* (<span class="kw">truncate</span> (/ col box-size)) box-size)))
+    (<span class="kw">dotimes</span> (i board-size <span class="kw">t</span>)
+      (<span class="kw">and</span> (<span class="kw">or</span> (= num (<span class="kw">aref</span> board row i))                  <span class="cmt">; Row check</span>
+               (= num (<span class="kw">aref</span> board i col))                  <span class="cmt">; Column check</span>
+               (= num (<span class="kw">aref</span> board (+ r (<span class="kw">mod</span> i box-size))   <span class="cmt">; Box check</span>
+                                  (+ c (<span class="kw">truncate</span> (/ i box-size))))))
+           (<span class="kw">return</span> <span class="kw">nil</span>)))))
+
+(<span class="kw">defun</span> <span class="func">print-board</span> ()
+  <span class="cmt">&quot;Print the resulting board&quot;</span>
+  (<span class="kw">dotimes</span> (r board-size)
+    (<span class="kw">format</span> <span class="kw">t</span> <span class="str">&quot;~%+---+---+---+---+---+---+---+---+---+~%|&quot;</span>)
+    (<span class="kw">dotimes</span> (c board-size)
+      (<span class="kw">format</span> <span class="kw">t</span> <span class="str">&quot; ~A |&quot;</span> (<span class="kw">aref</span> board r c))))
+  (<span class="kw">format</span> <span class="kw">t</span> <span class="str">&quot;~%+---+---+---+---+---+---+---+---+---+~%~%&quot;</span>))
+
+
+(<span class="kw">and</span> (<span class="kw">or</span> (guess 0) (<span class="kw">format</span> <span class="kw">t</span> <span class="str">&quot;Sorry, solution not found...&quot;</span>))
+     (print-board))
+
+</pre>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="sudokiller.js.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="../../software.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="sudokiller.py.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>sudokiller.lisp</h3>
+    <div>Previous: <a href="sudokiller.js.html">sudokiller.js</a>
+         Up: <a href="../../software.html">Software</a>&nbsp;
+         Next: <a href="sudokiller.py.html">sudokiller.py</a>
+    </div>
+  </div>
+
+  <script type="text/javascript"> var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

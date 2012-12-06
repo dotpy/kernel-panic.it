@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,primary,domain,controller,file,server,Samba,OpenLDAP,smbldap,samba-vscan,ClamAV,CUPS" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a Primary Domain Controller - OpenLDAP</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc3.html">3. A bit of Samba</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. OpenLDAP</h2>
+
+<p><a href="http://www.openldap.org/">OpenLDAP</a> is <q>an open source implementation of the <a href="#pdc-2.1">Lightweight Directory Access Protocol</a></q>. It will allow us to create a central repository for information about domain users, groups and computers, and make this information available to Samba (and any other LDAP-aware services) for authentication, authorization and management purposes.</p>
+
+<h3><a id="pdc-2.1" name="pdc-2.1"></a>2.1 The LDAP protocol</h3>
+
+<p>The <dfn>Lightweight Directory Access Protocol</dfn> (LDAP) is a networking protocol for accessing X.500-based directory services. A <dfn>directory</dfn> is <q>a specialized database optimized for reading, browsing and searching</q> and supports <q>sophisticated filtering capabilities</q> ([<a href="http://www.openldap.org/doc/admin23/intro.html#What%20is%20a%20directory%20service">OLDAP</a>]).</p>
+<p>Similarly to the Unix file system or the <a href="../dns/dns2.html">Domain Name System</a>, the structure of this database is a hierarchical inverted tree, with the root at the top; for example:</p>
+
+<div class="block-img">
+  <img src="pdc1.png" alt="The LDAP database structure" height="260" width="640" />
+</div>
+
+<p>As in the above picture, the topmost levels of the LDAP tree are often arranged based upon domain names, thus allowing for directory services to be located using the Domain Name System.</p>
+<p>Each node in the LDAP tree is called an <dfn>entry</dfn> and is uniquely identified by its <dfn>Distinguished Name</dfn> (DN), which is made up of the name of the entry itself (called the <dfn>Relative Distinguished Name</dfn>, RDN, usually derived from some attribute in the entry), comma-concatenated to the names of its parent entries. For instance, the DN of the entry highlighted in the following picture:</p>
+
+<div class="block-img">
+  <img src="pdc2.png" alt="Distinguished Name" height="260" width="450" />
+</div>
+
+<p>is made up of the sequence &quot;<tt>uid=Danix</tt>&quot;, &quot;<tt>ou=Users</tt>&quot;, &quot;<tt>dc=kernel-panic</tt>&quot; and &quot;<tt>dc=it</tt>&quot;, and is therefore written as &quot;<tt>uid=Danix,ou=Users,dc=kernel-panic,dc=it</tt>&quot; (see [<a href="http://www.ietf.org/rfc/rfc4514.txt">RFC4514</a>] for a full description of the DN format).</p>
+<p>An entry consists of a set of <dfn>attributes</dfn>; each attribute has a <dfn>name</dfn> (or <dfn>type</dfn>) and one or more <dfn>values</dfn>. The name is typically a mnemonic string, like &quot;<tt>dc</tt>&quot; for &quot;Domain Component&quot; or &quot;<tt>cn</tt>&quot; for &quot;Common Name&quot;, and determines the syntax of the corresponding value. <dfn>ObjectClasses</dfn> define the attribute structure of an LDAP entry, i.e. which attributes <em>must</em> and which <em>may</em> be present in a specific LDAP entry. Both ObjectClasses and Attributes are defined within <dfn>Schemas</dfn>.</p>
+<p>Though LDAP is a binary protocol, entries can be represented in a human-readable format by using the <acronym title="LDAP Data Interchange Format">LDIF</acronym> format; for example:</p>
+
+<div class="code">
+<pre>
+dn: uid=danix,ou=Users,dc=kernel-panic,dc=it
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+objectClass: sambaSamAccount
+cn: Daniele Mazzocchio
+sn: Mazzocchio
+givenName: Daniele
+uid: Danix
+uidNumber: 2000
+gidNumber: 513
+homeDirectory: /home/danix
+loginShell: /bin/ksh
+gecos: Daniele Mazzocchio
+structuralObjectClass: inetOrgPerson
+[ ... ]
+</pre>
+</div>
+
+<p>LDAP queries can be represented by means of <acronym title="Uniform Resource Locator">URL</acronym>s, which allow you to specify the scope of the search and the search query, and to select which attibutes to return. The syntax of an LDAP URL is:</p>
+
+<div class="code">
+<pre>
+ldap://[<var>host</var>[:<var>port</var>]]/[<var>DN</var>[?[<var>attributes</var>][?[<var>scope</var>][?[<var>filter</var>][?<var>extensions</var>]]]]]
+</pre>
+</div>
+
+<p>Most of the URL components are optional:</p>
+
+<ul>
+  <li><tt>host</tt> is the name or address of the LDAP server to query;</li>
+  <li><tt>port</tt> is the network port the LDAP server is listening on (default is TCP port 389);</li>
+  <li><tt>DN</tt> is the Distinguished Name to use as the base object of the LDAP search (default is the root DN);</li>
+  <li><tt>attributes</tt> specifies which attributes should be returned from the entries (default is all attributes);</li>
+  <li><tt>scope</tt> is the scope of the search to perform. Available scopes are &quot;base&quot; (default) for a base object search, &quot;one&quot; for a one-level search, or &quot;sub&quot; for a subtree search;</li>
+  <li><tt>filter</tt> is the search filter to apply to entries within the specified scope during the search (default is &quot;(objectClass=*)&quot;);</li>
+  <li><tt>extensions</tt> are extensions to the LDAP URL format (default is no extensions).</li>
+</ul>
+
+<p>For example, the following URL:</p>
+
+<div class="code">
+<pre>
+ldap://ldap.kernel-panic.it/uid=Danix,ou=Users,dc=kernel-panic,dc=it
+</pre>
+</div>
+
+<p>refers to all attributes in a specific user entry, and an URL like:</p>
+
+<div class="code">
+<pre>
+ldap:///dc=kernel-panic,dc=it?sn?sub?(givenName=Daniele)
+</pre>
+</div>
+
+<p>refers to the <tt>sn</tt> (surname) attribute of all entries with a <tt>givenName</tt> of &quot;Daniele&quot;. For further details, please refer to [<a href="http://www.ietf.org/rfc/rfc4516.txt">RFC4516</a>].</p>
+
+<h3><a id="pdc-2.2" name="pdc-2.2"></a>2.2 Installation and configuration</h3>
+
+<p>Enough with the theory for now, and on to practice! OpenLDAP is available through OpenBSD's <a href="http://www.openbsd.org/faq/faq15.html">packages and ports system</a> (<em>note</em>: unfortunately, the <tt>bdb</tt> flavor, providing support for the bdb and hdb backends, is marked as broken since OpenBSD 4.3); the following is the list of packages to be installed:</p>
+
+<ul>
+  <li>cyrus-sasl-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>openldap-client-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>openldap-server-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+</ul>
+
+<p>And the installation is over! OpenLDAP configuration files are stored in <tt>/etc/openldap</tt>. Client-side configuration is contained in the <tt><a href="http://www.openldap.org/software/man.cgi?query=ldap.conf&amp;format=html">ldap.conf(5)</a></tt> file; below is a sample configuration file:</p>
+
+<div class="code">
+  <div>/etc/openldap/ldap.conf</div>
+<pre>
+<i># URI of the LDAP server to which the LDAP library should connect</i>
+URI             ldap://ldap.kernel-panic.it
+<i># The default base DN to use when performing LDAP operations</i>
+BASE            dc=kernel-panic,dc=it
+
+<i># Size limit to use when performing searches</i>
+SIZELIMIT       12
+<i># Time limit to use when performing searches</i>
+TIMELIMIT       15
+<i># Never derefernce aliases</i>
+DEREF           never
+</pre>
+</div>
+
+<p>The <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd.conf&amp;format=html">slapd.conf(5)</a></tt> file provides configuration information for the Standalone LDAP Daemon, <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/openldap/slapd.conf</div>
+<pre>
+<i># Include the necessary schema files. core.schema is required by default, the
+# other ones are needed for sambaSamAccount. The samba.schema file can be found
+# <a href="samba.schema">here</a> and must be copied in /etc/openldap/schema/.</i>
+include         /etc/openldap/schema/core.schema
+include         /etc/openldap/schema/cosine.schema
+include         /etc/openldap/schema/inetorgperson.schema
+include         /etc/openldap/schema/nis.schema
+include         /etc/openldap/schema/samba.schema
+
+<i># Absolute path to the PID file</i>
+pidfile         /var/run/openldap/slapd.pid
+<i># Absolute path to the file that will hold slapd's command line options</i>
+argsfile        /var/run/openldap/slapd.args
+
+<i># Type of database backend</i>
+database        ldbm
+<i># DN suffix of queries that will be passed to this backend database</i>
+suffix          &quot;dc=kernel-panic,dc=it&quot;
+<i># Database directory</i>
+directory       /var/openldap-data
+
+<i># The Distinguished Name of the administrator of this database</i>
+rootdn          &quot;cn=Manager,dc=kernel-panic,dc=it&quot;
+<i># Password (or password hash) for the rootdn. Clear-text passwords are allowed
+# but strongly discouraged; the password hash can be generated using the
+# <a href="http://www.openldap.org/software/man.cgi?query=slappasswd&amp;format=html">slappasswd(8C)</a> command; e.g.:
+# # slappasswd
+# New password: &lt;password&gt;
+# Re-enter new password: &lt;password&gt;
+# {SSHA}d1bjQZEA43NFKNL7g48XjaNv/W6DG0fY</i>
+rootpw          {SSHA}d1bjQZEA43NFKNL7g48XjaNv/W6DG0fY
+
+<i># Maintain indices on the most useful attributes to speed up searches made on
+# the sambaSamAccount, posixAccount and posixGroup objectClasses</i>
+index   objectClass             eq
+index   cn                      pres,sub,eq
+index   sn                      pres,sub,eq
+index   uid                     pres,sub,eq
+index   displayName             pres,sub,eq
+index   uidNumber               eq
+index   gidNumber               eq
+index   memberUid               eq
+index   sambaSID                eq
+index   sambaPrimaryGroupSID    eq
+index   sambaDomainName         eq
+index   default                 sub
+
+<i># Access control configuration. The rootdn can always read and write everything</i>
+access to attrs=userpassword,sambaLMPassword,sambaNTPassword
+    by anonymous auth
+    by self write
+    by * none
+
+access to *
+    by self write
+    by * read
+</pre>
+</div>
+
+<p>We can use the <tt><a href="http://www.openldap.org/software/man.cgi?query=slaptest&amp;format=html">slaptest(8C)</a></tt> command to check the validity of our <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd.conf&amp;format=html">slapd.conf(5)</a></tt> file:</p>
+
+<div class="code">
+<pre>
+# <kbd>install -d -o _openldap /var/run/openldap</kbd>
+# <kbd>slaptest -u</kbd>
+config file testing succeeded
+#
+</pre>
+</div>
+
+<p>The <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd.conf&amp;format=html">slapd.conf(5)</a></tt> file, containing the <tt>rootpw</tt> password, should have restrictive permissions:</p>
+
+<div class="code">
+<pre>
+# <kbd>chgrp _openldap /etc/openldap/slapd.conf</kbd>
+# <kbd>chmod 640 /etc/openldap/slapd.conf</kbd>
+</pre>
+</div>
+
+<p>Ok, now everything should be ready for starting <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt>. The first time you may want to invoke it with the &quot;<tt>-d</tt>&quot; option to turn on debugging and keep the daemon in the foreground, to immediately notice any error:</p>
+
+<div class="code">
+<pre>
+# <kbd>/usr/local/libexec/slapd -4 -d 256 -u _openldap -g _openldap</kbd>
+[ ... ]
+slapd starting
+</pre>
+</div>
+
+<p>You can check that everything is running correctly by issuing the <tt><a href="http://www.openldap.org/software/man.cgi?query=ldapsearch&amp;format=html">ldapsearch(1)</a></tt> command:</p>
+
+<div class="code">
+<pre>
+# <kbd>ldapsearch -x -b '' -s base '(objectclass=*)' namingContexts</kbd>
+# extended LDIF
+#
+# LDAPv3
+# base &lt;&gt; with scope baseObject
+# filter: (objectclass=*)
+# requesting: namingContexts
+#
+
+#
+dn:
+namingContexts: dc=kernel-panic,dc=it
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 2
+# numEntries: 1
+#
+</pre>
+</div>
+
+<p>If everything is working fine, we can configure the system to start <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt> on boot, by adding the following line (containing the command line arguments) to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+slapd_flags=&quot;-4 -u _openldap -g _openldap&quot;
+</pre>
+</div>
+
+<p>and the following commands to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.local&amp;sektion=8">/etc/rc.local(8)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/rc.local</div>
+<pre>
+if [ &quot;$slapd_flags&quot; != &quot;NO&quot; -a -x /usr/local/libexec/slapd ]; then
+    echo -n ' slapd'
+    install -d -o _openldap /var/run/openldap
+    /usr/local/libexec/slapd $slapd_flags
+fi
+</pre>
+</div>
+
+<h3><a id="pdc-2.3" name="pdc-2.3"></a>2.3 LDAP over TLS/SSL</h3>
+
+<p>OpenLDAP comes with built-in support for the <acronym title="Transport Layer Security">TLS</acronym>/<acronym title="Secure Socket Layer">SSL</acronym> protocols to provide integrity and confidentiality to LDAP connections by means of public-key cryptography. Enabling TLS/SSL will prevent traffic from traveling in the clear over the network, thus protecting users' passwords from eavesdroppers.</p>
+
+<h4><a id="pdc-2.3.1" name="pdc-2.3.1"></a>2.3.1 Setting up the PKI</h4>
+
+<p>TLS relies on public key certificates for authentication and therefore requires that you first set up a basic Public Key Infrastructure (PKI) for managing digital certificates. As a preliminary step, we will create the directories where certificates will be stored:</p>
+
+<div class="code">
+<pre>
+# <kbd>install -m 700 -d /etc/openldap/ssl/private</kbd>
+</pre>
+</div>
+
+<p>The first step in setting up the PKI is the creation of the root <acronym title="Certificate Authority">CA</acronym> certificate (<tt>/etc/openldap/ssl/ca.crt</tt>) and private key (<tt>/etc/ssl/private/ca.key</tt>) using <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=openssl&amp;sektion=1">openssl(1)</a></tt>:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl req -days 3650 -nodes -new -x509 -keyout /etc/ssl/private/ca.key \</kbd>
+&gt; <kbd>-out /etc/openldap/ssl/ca.crt</kbd>
+[ ... ]
+Country Name (2 letter code) []: <kbd><var>IT</var></kbd>
+State or Province Name (full name) []: <kbd><var>Italy</var></kbd>
+Locality Name (eg, city) []: <kbd><var>Milan</var></kbd>
+Organization Name (eg, company) []: <kbd><var>Kernel Panic Inc.</var></kbd>
+Organizational Unit Name (eg, section) []: <kbd><var>LDAP CA</var></kbd>
+Common Name (eg, fully qualified host name) []: <kbd><var>ca.lan.kernel-panic.it</var></kbd>
+Email Address []: <kbd>&lt;enter&gt;</kbd>
+#
+</pre>
+</div>
+
+<p>The next step is the creation of the private key (<tt>/etc/openldap/ssl/private/server.key</tt>) and Certificate Signing Request (<tt>/etc/openldap/ssl/private/server.csr</tt>) for the server:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl req -days 3650 -nodes -new -keyout /etc/openldap/ssl/private/server.key \</kbd>
+&gt; <kbd>-out /etc/openldap/ssl/private/server.csr</kbd>
+[ ... ]
+Country Name (2 letter code) []: <kbd><var>IT</var></kbd>
+State or Province Name (full name) []: <kbd><var>Italy</var></kbd>
+Locality Name (eg, city) []: <kbd><var>Milan</var></kbd>
+Organization Name (eg, company) []: <kbd><var>KP Inc.</var></kbd>
+Organizational Unit Name (eg, section) []: <kbd><var>LDAP Server</var></kbd>
+Common Name (eg, fully qualified host name) []: <kbd><var>ldap.kernel-panic.it</var></kbd>
+Email Address []: <kbd>&lt;enter&gt;</kbd>
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []: <kbd>&lt;enter&gt;</kbd>
+An optional company name []: <kbd>&lt;enter&gt;</kbd>
+#
+</pre>
+</div>
+
+<p>Finally, the CA will generate the signed certificate out of the certificate request:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl x509 -req -days 3650 -in /etc/openldap/ssl/private/server.csr \</kbd>
+&gt; <kbd>-out /etc/openldap/ssl/server.crt -CA /etc/openldap/ssl/ca.crt \</kbd>
+&gt; <kbd>-CAkey /etc/ssl/private/ca.key -CAcreateserial</kbd>
+Signature ok
+subject=/C=IT/ST=Italy/L=Milan/O=Kernel Panic Inc./OU=LDAP Server/CN=ldap.kernel-panic.it
+Getting CA Private Key
+#
+</pre>
+</div>
+
+<p>You can generate the client certificate by repeating the last two steps:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl req -days 3650 -nodes -new -keyout /etc/openldap/ssl/private/client.key \</kbd>
+&gt; <kbd>-out /etc/openldap/ssl/private/client.csr</kbd>
+[ ... ]
+Country Name (2 letter code) []: <kbd><var>IT</var></kbd>
+State or Province Name (full name) []: <kbd><var>Italy</var></kbd>
+Locality Name (eg, city) []: <kbd><var>Milan</var></kbd>
+Organization Name (eg, company) []: <kbd><var>KP Inc.</var></kbd>
+Organizational Unit Name (eg, section) []: <kbd><var>LDAP Client</var></kbd>
+Common Name (eg, fully qualified host name) []: <kbd><var>ldap.kernel-panic.it</var></kbd>
+Email Address []: <kbd>&lt;enter&gt;</kbd>
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []: <kbd>&lt;enter&gt;</kbd>
+An optional company name []: <kbd>&lt;enter&gt;</kbd>
+# <kbd>openssl x509 -req -days 3650 -in /etc/openldap/ssl/private/client.csr \</kbd>
+&gt; <kbd>-out /etc/openldap/ssl/client.crt -CA /etc/openldap/ssl/ca.crt \</kbd>
+&gt; <kbd>-CAkey /etc/ssl/private/ca.key</kbd>
+Signature ok
+subject=/C=IT/ST=Italy/L=Milan/O=Kernel Panic Inc./OU=LDAP Client/CN=ldap.kernel-panic.it
+Getting CA Private Key
+#
+</pre>
+</div>
+
+<p>As a finishing touch, we need to assign restrictive permissions to the private keys, in order to prevent unauthorized access:</p>
+
+<div class="code">
+<pre>
+# <kbd>chown -R _openldap:_openldap /etc/openldap/ssl/private</kbd>
+# <kbd>chmod 600 /etc/openldap/ssl/private/*</kbd>
+</pre>
+</div>
+
+<h4><a id="pdc-2.3.2" name="pdc-2.3.2"></a>2.3.2 OpenLDAP configuration</h4>
+
+<p>Configuring the <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt> daemon for TLS operation simply requires that you add a few lines to <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd.conf&amp;format=html">slapd.conf(5)</a></tt>, right after the <tt>rootpw</tt> parameter, containing the cipher suites to accept and the paths to the certificates:</p>
+
+<div class="code">
+  <div>/etc/openldap/slapd.conf</div>
+<pre>
+<i># TLS configuration</i>
+TLSCipherSuite         HIGH:MEDIUM:+SSLv3
+TLSCACertificateFile   /etc/openldap/ssl/ca.crt
+TLSCertificateFile     /etc/openldap/ssl/server.crt
+TLSCertificateKeyFile  /etc/openldap/ssl/private/server.key
+</pre>
+</div>
+
+<p>In the client configuration file, <tt><a href="http://www.openldap.org/software/man.cgi?query=ldap.conf&amp;format=html">ldap.conf(5)</a></tt>, you have to change the <acronym title="Uniform Resource Identifier">URI</acronym> scheme to &quot;<tt>ldaps</tt>&quot; and specify the path to the CA certificate and the acceptable cipher suites:</p>
+
+<div class="code">
+  <div>/etc/openldap/ldap.conf</div>
+<pre>
+[ ... ]
+URI              ldaps://ldap.kernel-panic.it
+
+<i># TLS configuration</i>
+TLS_CACERT       /etc/openldap/ssl/ca.crt
+TLS_CIPHER_SUITE HIGH:MEDIUM:+SSLv3
+</pre>
+</div>
+
+<p>As a final step, add the &quot;<tt>-h ldaps:///</tt>&quot; option to the <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt> command line arguments to make the daemon listen only for LDAP over TLS on TCP port 636:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+<i># Only listen for LDAP over TLS (port 636)</i>
+slapd_flags=&quot;-4 -u _openldap -g _openldap -h ldaps:///&quot;
+</pre>
+</div>
+
+<p>and restart <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt>.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc3.html">3. A bit of Samba</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

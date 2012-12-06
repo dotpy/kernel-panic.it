@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a domain name server - The Domain Name System</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="dns1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Previous: <a href="dns1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="dns3.html">3. Base configuration</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. The Domain Name System</h2>
+
+<p><acronym title="Domain Name System">DNS</acronym> configuration is much easier if you have a good understanding of its fundamentals. Hence, before hurrying to <a href="dns3.html">edit</a> our zone data files, let's take a brief look at the overall architecture of the Domain Name System and its inner mechanisms.</p>
+
+<h3><a id="dns-2.1" name="dns-2.1"></a>2.1 A few definitions</h3>
+
+<p>The <dfn>Domain Name System</dfn> is a distributed database of <a href="#dns-2.4">resource records</a> (see [<a href="http://www.faqs.org/rfcs/rfc1034.html">RFC1034</a>]), associating many types of information (e.g. IP address, mail exchanger, etc.) with domain names. Similarly to the Unix file system, the structure of this database is a hierarchical inverted tree, with the root at the top. The whole tree is called the <dfn>Domain Name Space</dfn>.</p>
+
+<div class="block-img">
+  <img src="dns1.png" alt="DNS Namespace vs. Unix FileSystem" width="800" height="260" />
+</div>
+
+<p>Each node in the Domain Name Space has a text label (the root node has a special zero-length label, &quot;&quot;) and is uniquely identified by its <dfn>domain name</dfn>, i.e. the list of the labels on the path from the node to the root, separated by dots (Unix paths, on the contrary, start from the root and are separated by slashes).</p>
+<p>For instance, the domain name highlighted in the following picture is made up of the sequence &quot;www&quot;, &quot;kernel-panic&quot;, &quot;it&quot; and the root's null label, and is therefore written as &quot;www.kernel-panic.it.&quot;.</p>
+
+<div class="block-img">
+  <img src="dns2.png" alt="Domain Name" width="400" height="260" />
+</div>
+
+<p>Since the root node is usually written as a single dot, domain names ending with a trailing dot are considered absolute (similarly to Unix absolute pathnames, starting with a leading slash). An absolute domain name is also referred to as a <dfn>fully qualified domain name</dfn> (FQDN). Domain names with no trailing dot are considered relative to another domain, usually to the root itself. A relative domain name is also referred to as a <dfn>partially qualified domain name</dfn> (PQDN).</p>
+<p>A <dfn>domain</dfn> is a subtree of the domain name space and takes the domain name of its top node. Each domain may have its own subtrees, called <dfn>subdomains</dfn>. Domains may also be referred to by level: a <dfn>top-level</dfn> (or <dfn>first-level</dfn>) domain is a child of the root; a <dfn>second-level</dfn> domain is a child of a first-level domain; and so on.</p>
+
+<div class="block-img">
+  <img src="dns3.png" alt="Domains levels" width="700" height="260" />
+</div>
+
+<p>The hierarchical structure of the domain name system allows for the decentralization of its administration; in fact, an organization in charge of a domain can <dfn>delegate</dfn>, i.e. assign responsibility for, a subdomain to a different organization and only maintain information about the non-delegated part of the domain (called a <dfn>zone</dfn>).</p>
+<p>Programs that store information about a zone are called <dfn>domain name servers</dfn> and are said to have <dfn>authority</dfn> for that zone. There are two types of name servers:</p>
+
+<ul>
+  <li><dfn>primary master</dfn> name servers, which read the data for the zone from a local file (called <dfn>zone data file</dfn>);</li>
+  <li><dfn>secondary master</dfn> name servers (or <dfn>slaves</dfn>), which get data from another name server that is authoritative for the zone (called <dfn>master server</dfn>) through a <dfn>zone transfer</dfn>; usually, but not necessarily, the master server is the zone's primary master.</li>
+</ul>
+
+<p>Having two types of name servers makes administration easier, by providing a single point of configuration, while allowing for redundancy, load sharing and responsiveness by having multiple authoritative name servers for a zone.</p>
+
+<h3><a id="dns-2.2" name="dns-2.2"></a>2.2 The name resolution process</h3>
+
+<p>Clients that access name servers are called <dfn>resolvers</dfn>. In Bind, the resolver is just a library that must be linked by applications requiring name service. When an application needs information from the domain name space, it uses the resolver to perform a <dfn>query</dfn> against a DNS server (usually the corporate or the <acronym title="Internet Service Provider">ISP</acronym>'s server). If authoritative for the queried zone, the DNS server will reply immediately; otherwise, it will search through the domain name space to find the requested data. This process is called <dfn>name resolution</dfn>.</p>
+<p>There are two types of DNS queries:</p>
+
+<ul>
+  <li><dfn>iterative</dfn> (or <dfn>non-recursive</dfn>), which simply ask a DNS server the best answer it <em>already</em> knows;</li>
+  <li><dfn>recursive</dfn>, which ask the DNS server to fully answer the query, or give an error.</li>
+</ul>
+
+<p>Usually resolvers perform recursive queries, placing the burden of resolution on the queried name server; DNS servers, instead, perform a series of iterative queries, following any referrals, until they receive the answer they are looking for.</p>
+<p>Let's see how it all works by going through an example. Suppose you want to visit the &quot;<tt>www.kernel-panic.it</tt>&quot; web site; you type the <acronym title="Uniform Resource Locator">URL</acronym> in your browser, press &quot;<tt>Enter</tt>&quot; and this is what happens next:</p>
+
+<ol>
+  <li><img src="dns4.png" alt="The name resolution process" width="250" height="400" class="float-img" />the resolver performs a recursive query against your corporate DNS server, expecting the IP address of the &quot;<tt>www.kernel-panic.it</tt>&quot; web server (or an error) in return;</li>
+  <li>since the corporate DNS server isn't authoritative for the queried zone, it will send an iterative query for the address of the &quot;<tt>www.kernel-panic.it</tt>&quot; domain name to a <dfn>root name server</dfn>, i.e. one of the 13 worldwide DNS servers which know the name servers authoritative for each of the top-level zones;</li>
+  <li>the queried root name server won't probably know the full answer, but it will certainly know which name servers are authoritative for the &quot;<tt>it</tt>&quot; zone. Therefore, it will refer your corporate DNS server to those name servers;</li>
+  <li>your DNS server will choose one of the referred name servers and send it the same iterative query for the &quot;<tt>www.kernel-panic.it</tt>&quot; domain name;</li>
+  <li>the queried &quot;<tt>it</tt>&quot; name server won't probably know the full answer and therefore will refer your corporate DNS server to the list of name servers authoritative for the &quot;<tt>kernel-panic.it</tt>&quot; zone;</li>
+  <li>your DNS server has finally discovered the authoritative name servers for the &quot;<tt>kernel-panic.it</tt>&quot; zone and will send the same query to one of them;</li>
+  <li>the queried name server will return the address of the &quot;<tt>www.kernel-panic.it</tt>&quot; domain name;</li>
+  <li>your corporate name server is finally able to return the information to the resolver.</li>
+</ol>
+
+<p>As you can see, the resolution process may involve quite a few steps; but after each step, the name server learns a new piece of information about the domain name space. For instance, in the previous example, the corporate DNS server has learned which servers are authoritative for the &quot;<tt>it</tt>&quot; and &quot;<tt>kernel-panic.it</tt>&quot; zones. So what happens now if you want to connect to the &quot;<tt>ftp.kernel-panic.it</tt>&quot; machine? Your corporate name server already knows the authoritative servers for the &quot;<tt>kernel-panic.it</tt>&quot; zone; therefore it will send the query directly to one of them and get the answer in a single step, thus speeding up the resolution process. Storing learned data for future reference is called <dfn>caching</dfn>. Since version 4.9, Bind also keeps track of non-existing domains (<dfn>negative caching</dfn>), thus preventing the repeating of failed queries.</p>
+
+<h3><a id="dns-2.3" name="dns-2.3"></a>2.3 Reverse name resolution</h3>
+
+<p><dfn>Reverse name resolution</dfn> is the process of mapping an IP address back to a FQDN. Though this may seem to require an exhaustive search of the whole domain name space, it is, in matter of fact, as simple as name resolution because the developers of DNS have created a special &quot;<tt>in-addr.arpa</tt>&quot; domain that uses the dotted-octet representation of IP addresses as labels. </p>
+<p>In other words, the <tt>in-addr.arpa</tt> domain has (or could have, to be more precise) up to 256 third-level subdomains (numbered from 0 to 255), corresponding to the possible values of the first octet of an IP address; each of those 256 subdomains could have, in turn, up to 256 fourth-level subdomains, also numbered from 0 to 255, corresponding to the values of the second octet; and so on.</p>
+
+<div class="block-img">
+  <img src="dns5.png" alt="The in-addr.arpa domain" width="400" height="350" />
+</div>
+
+<p>Therefore, to look up the FQDN  associated with an IP address, the resolver simply has to query the name server for the <tt>PTR</tt> record (see <a href="#dns-2.4">below</a>) of the corresponding node in the <tt>in-addr.arpa</tt> domain. For example, to get the domain name for the <tt>62.149.140.23</tt> IP address, the resolver will query the DNS server for the <tt>PTR</tt> record of the &quot;<tt>23.140.149.62.in-addr.arpa</tt>&quot; domain name.</p>
+<p>As you can see, IP addresses appear reversed in the <tt>in-addr.arpa</tt> domain name. This is due to a basic difference between IP addresses and domain names: IP addresses get more specific from left to right, while domain names get more specific from right to left. Hence, naming nodes in the <tt>in-addr.arpa</tt> domain in this (seemingly odd) way actually allows IP addresses to correctly reflect the hierarchical structure of the domain name system.</p>
+
+<h3><a id="dns-2.4" name="dns-2.4"></a>2.4 Resource records</h3>
+
+<p>Each node in the domain name space has a set of resource information (which may be empty) associated to it, composed of separate <dfn>resource records</dfn> (RRs). This information is contained in text form within the zone data files, while queries and zone transfers represent it in binary form. A resource record is made up of five fields:</p>
+
+<dl>
+  <dt>Name</dt>
+  <dd>The domain name the resource record refers to</dd>
+  <dt>Type</dt>
+  <dd>The type of the resource record (see <a href="#RRtypes">below</a>)</dd>
+  <dt>TTL</dt>
+  <dd>The time to live of the RR, i.e. how long resolvers should keep it in cache before considering it outdated</dd>
+  <dt>Class</dt>
+  <dd>The type of network or software the record applies to; currently valid classes are Internet (IN), CHAOSnet (CH) and Hesiod (HS). We will discuss only the Internet class, which applies to all TCP/IP-based internets and is by far the most widespread</dd>
+  <dt>RDATA</dt>
+  <dd>The actual resource data associated with the domain name</dd>
+</dl>
+
+<p><a id="RRtypes" name="RRtypes"></a>The main DNS record types are the following (see [<a href="http://www.faqs.org/rfcs/rfc1035.html">RFC1035</a>]):</p>
+
+  <dl>
+    <dt><tt>A</tt> (Address)</dt>
+    <dd>A 32-bit host IP address</dd>
+    <dt><tt>AAAA</tt> (IPv6 Address)</dt>
+    <dd>A host address in IPv6 format</dd>
+    <dt><tt>CNAME</tt> (Canonical Name)</dt>
+    <dd>Specifies an alias for a domain name, i.e. a different FQDN that can be used to refer to the same host</dd>
+    <dt><tt>KEY</tt></dt>
+    <dd>The server's public key for TSIG and DNSSEC</dd>
+    <dt><tt>MX</tt> (Mail eXchanger)</dt>
+    <dd>Specifies a list of mail servers to which to send mail for that domain name</dd>
+    <dt><tt>NS</tt> (Name Server)</dt>
+    <dd>the authoritative name server for the domain</dd>
+    <dt><tt>PTR</tt> (Pointer)</dt>
+    <dd>A pointer to another location in the domain name space; it is mostly used to associate a domain name with an IP address in the &quot;<tt>in-addr.arpa</tt>&quot; domain for reverse name resolution</dd>
+    <dt><tt>SOA</tt> (Start Of Authority)</dt>
+    <dd>Identifies the start of a zone of authority</dd>
+    <dt><tt>TXT</tt> (Text)</dt>
+    <dd>a text string containing arbitrary data (up to 255 bytes) associated with a name</dd>
+  </dl>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="dns1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Previous: <a href="dns1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="dns3.html">3. Base configuration</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

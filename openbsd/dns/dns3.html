@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a domain name server - Base configuration</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="dns2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Previous: <a href="dns2.html">2. The domain name system</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="dns4.html">4. Further Bind configuration</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>3. Base configuration</h2>
+
+<p>Now that we have a working knowledge of the Domain Name System architecture, it's time to move from theory to practice and set up our first domain name server.</p>
+<p><a href="../carp/carp2.html#net">This</a> is the overall layout of the network in which our name servers will be placed. It is a very simple network, made up of:</p>
+
+<ul>
+  <li>a <acronym title="DeMilitarized Zone">DMZ</acronym> (172.16.240.0/24), containing the servers that access the Internet (e.g. mail, web and proxy servers);</li>
+  <li>a <acronym title="Local Area Network">LAN</acronym> (172.16.0.0/24), containing clients and servers not accessible from the public Internet (e.g. file server, <acronym title="Dynamic Host Configuration Protocol">DHCP</acronym> server);</li>
+  <li> a router, in a small subnet (172.16.250.0/24), connecting the DMZ to the Internet.</li>
+</ul>
+
+<p>All of our systems will belong to the &quot;<tt>kernel-panic.it</tt>&quot; zone and our first DNS server will be the primary master name server for that zone; it will reside in the DMZ and answer internal queries for Internet and DMZ servers' names.</p>
+
+<h3><a id="dns-3.1" name="dns-3.1"></a>3.1 The main configuration file</h3>
+
+<p>Bind configuration takes place in the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named.conf&amp;sektion=5">named.conf(5)</a></tt> file, which is, by default, located in <tt>/var/named/etc/</tt>. You can, however, specify an alternate path using the <tt>-c</tt> flag of the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named&amp;sektion=8">named(8)</a></tt> command.</p>
+<p>The configuration syntax is rather simple: it is a series of <dfn>statements</dfn> enclosed in curly braces and terminated with a semi-colon. Statements contain a variable number of semi-colon terminated <dfn>clauses</dfn>, in keyword/value form. Supported comment styles are:</p>
+
+<ul>
+  <li>C style (<tt>/* Multiline comment */</tt>);</li>
+  <li>C++ style (<tt>// Inline comment</tt>);</li>
+  <li>Shell style (<tt># Inline comment</tt>);</li>
+</ul>
+
+<p>The &quot;<tt>options</tt>&quot; statement sets up global options to be used by Bind. The &quot;<tt>directory</tt>&quot; clause specifies the directory against which subsequent relative paths should be resolved. The default values are retained for unspecified clauses. E.g.:</p>
+
+<div class="code">
+<pre>
+options {
+    <i># Bind runs chrooted to &quot;/var/named/&quot;, hence &quot;/&quot; actually is &quot;/var/named/&quot;</i>
+    directory       &quot;/&quot;;
+};
+</pre>
+</div>
+
+<p>The &quot;<tt>zone</tt>&quot; statements tell Bind what zones it is authoritative for; for each zone, the &quot;<tt>type</tt>&quot; clause specifies whether the server is a master or a slave for it and the &quot;<tt>file</tt>&quot; clause specifies the path to the corresponding zone data file. E.g.:</p>
+
+<div class="code">
+<pre>
+zone &quot;kernel-panic.it&quot; {
+    type            master;
+    file            &quot;master/db.kernel-panic.it&quot;;
+};
+</pre>
+</div>
+
+<p>The names of the zone data files are free-form, but it's highly recommended to follow a reasonable naming convention to make maintenance easier. For instance, zone data files are often called <tt>db.<var>domain</var></tt>.</p>
+<p>In order to allow for <a href="dns2.html#dns-2.3">reverse name resolution</a>, we also need to create zone data files for each network:</p>
+
+<div class="code">
+<pre>
+zone &quot;240.16.172.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.172.16.240&quot;;
+};
+
+zone &quot;250.16.172.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.172.16.250&quot;;
+};
+
+zone &quot;3.2.1.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.1.2.3&quot;;
+};
+</pre>
+</div>
+
+<p>The name server will also need to map the loopback address to a name. Therefore, we will have to create specific zone data files for the &quot;<tt>localhost</tt>&quot; zone and the <tt>127.0.0.0/8</tt> network:</p>
+
+<div class="code">
+<pre>
+zone &quot;localhost&quot; {
+    type            master;
+    file            &quot;master/db.localhost&quot;;
+};
+
+zone &quot;0.0.127.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.127.0.0&quot;;
+};
+</pre>
+</div>
+
+<p>[<a href="http://www.faqs.org/rfcs/rfc1912.html">RFC1912</a>] also recommends that the &quot;<tt>255.in-addr.arpa</tt>&quot; and &quot;<tt>0.in-addr.arpa</tt>&quot; zones always be present in nameserver configurations <q>to either provide nameservice for &quot;special&quot; addresses, or to help eliminate accidental queries for broadcast or local address to be sent off to the root nameservers</q>:</p>
+
+<div class="code">
+<pre>
+zone &quot;255.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.255&quot;;
+};
+
+zone &quot;0.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.0&quot;;
+};
+</pre>
+</div>
+
+<p>Finally, if the name server must be able to resolve Internet names, we have to give it the list of the root name servers, which is specified using a <tt>hint</tt> zone.</p>
+
+<div class="code">
+<pre>
+zone &quot;.&quot; {
+    type            hint;
+    file            &quot;master/root.hint&quot;;
+};
+</pre>
+</div>
+
+<p>You can find a copy of the <tt>root.hint</tt> file in the <tt>/var/named/etc</tt> directory.</p>
+
+<h3><a id="dns-3.2" name="dns-3.2"></a>3.2 The zone data files</h3>
+
+<p>Zone data files contain information about the zones the server is authoritative for, and, according to Bind <a href="#dns-3.1">configuration</a>, they will be placed in the <tt>/var/named/master/</tt> directory.</p>
+<p>Usually, the first line of a zone data file sets the default <acronym title="Time To Live">TTL</acronym> for the zone, i.e. how long other DNS servers and applications are allowed to cache the record.</p>
+
+<div class="code">
+<pre>
+$TTL   3h
+</pre>
+</div>
+
+<p>A zone data file may contain multiple <tt>$TTL</tt> statements: each applies to all subsequent records (that don't have an explicit TTL) until a new <tt>$TTL</tt> statement is found. You may want to tweak this value to find a good trade-off between bandwidth usage and data freshness.</p>
+<p>The next entry in a zone data file is the <tt>SOA</tt> record, which indicates that the name server is authoritative for that zone.</p>
+
+<div class="code">
+<pre>
+@ IN SOA dns1.kernel-panic.it. danix.kernel-panic.it. (
+    2007020601 <i>; serial</i>
+    3h         <i>; refresh after 3 hours</i>
+    1h         <i>; retry after 1 hour</i>
+    1w         <i>; expire after 1 week</i>
+    1h )       <i>; negative caching TTL of 1 hour</i>
+</pre>
+</div>
+
+<p>Let's examine it in detail. The &quot;<tt>@</tt>&quot; symbol represents the zone the server is authoritative for; well, to be more precise, it represents the <dfn>origin</dfn> of the data in the zone data file, which, by default, is the same as the zone's domain name. The origin is appended to all names in the zone data file that don't end with a trailing dot and can be modified with the <tt>$ORIGIN</tt> statement.</p>
+<p><tt>IN</tt> is the <a href="dns2.html#dns-2.4">class</a> of the record (Internet). <tt>SOA</tt> is the record type. &quot;<tt>dns1.kernel-panic.it.</tt>&quot; is the name of the primary master name server for this zone and &quot;<tt>danix.kernel-panic.it.</tt>&quot; is the mail address of the zone administrator, with the &quot;<tt>@</tt>&quot; replaced with a dot (therefore, the actual address would be &quot;<tt>danix@kernel-panic.it</tt>&quot;).</p>
+<p>Now we come to the numbers enclosed within brackets (brackets simply allow the record to span across multiple lines) (note that comments, in zone data files, start with a semicolon and finish at the end of the line). The <dfn>serial</dfn> number is a progressive number that must be increased whenever zone data is updated or slave name servers won't notice that data has changed (according to [<a href="http://www.faqs.org/rfcs/rfc1912.html">RFC1912</a>], the recommended format for the serial number is &quot;<tt><var>YYYYMMDDnn</var></tt>&quot;, where &quot;<tt><var>nn</var></tt>&quot; is the revision number). The <dfn>refresh</dfn> value sets how often slave name servers should check that their zone data is up to date. If the master is unreachable, the <dfn>retry</dfn> and <dfn>expire</dfn> values tell slaves at what interval to attempt to connect again and after how long to stop giving out data about the zone. The last value is the <dfn>time to live</dfn> for negative responses from the name servers authoritative for the zone.</p>
+<p>Next, every zone data file has one or more <tt>NS</tt> records, specifying the name servers authoritative for the zone.</p>
+
+<div class="code">
+<pre>
+kernel-panic.it.    IN NS       dns1.kernel-panic.it.
+kernel-panic.it.    IN NS       dns2.kernel-panic.it.
+</pre>
+</div>
+
+<p>The first field of a resource record is its <dfn>name</dfn> and must start on the first column; if omitted, it defaults to the previous one. Therefore, the above <tt>NS</tt> records can be shortened as:</p>
+
+<div class="code">
+<pre>
+                    IN NS       dns1.kernel-panic.it.
+                    IN NS       dns2.kernel-panic.it.
+</pre>
+</div>
+
+<p>The <tt>MX</tt> record allows you to specify the host that will manage mail for the domain name; this record has an extra parameter, a 16-bit number indicating the mail exchanger's priority (the lower the number, the higher the priority).</p>
+
+<div class="code">
+<pre>
+                    IN MX    0  mail.kernel-panic.it.
+                    IN MX   10  mail.provider.com.
+</pre>
+</div>
+
+<p>The next record, &quot;<tt>A</tt>&quot;, is specific to forward-mapping zone data files, since it associates domain names with their IP address.</p>
+
+<div class="code">
+<pre>
+mail                IN A        172.16.240.150
+proxy               IN A        172.16.240.151
+www1                IN A        172.16.240.152
+www2                IN A        172.16.240.153
+dns1                IN A        172.16.240.154
+dns2                IN A        172.16.240.155
+
+mickey              IN A        172.16.0.200
+                    IN A        172.16.240.200
+minnie              IN A        172.16.0.201
+                    IN A        172.16.240.201
+
+router              IN A        172.16.250.1
+                    IN A        1.2.3.4
+[...]
+</pre>
+</div>
+
+<p>The <tt>CNAME</tt> record maps an alias to its <dfn>canonical</dfn> name; in other words, it defines a domain name pointing to another node of the domain name space.</p>
+
+<div class="code">
+<pre>
+antivirus           IN CNAME    mail
+cache               IN CNAME    proxy
+</pre>
+</div>
+
+<p>Ok, we're done with forward-mapping; let's have a look at the reverse-mapping zone data files. The beginning is exactly the same: you set the default TTL and insert the <tt>SOA</tt> and <tt>NS</tt> records that we've seen before. Next come the <tt>PTR</tt> records, which map addresses to host names; well, to be more precise, they map names in the <tt>in-addr.arpa</tt> domain to names in the <tt>kernel-panic.it</tt> domain. Again, the origin is automatically appended to all domain names that don't end with a trailing dot, allowing you to specify only the last octet(s) of the IP addresses.</p>
+
+<div class="code">
+  <div>/var/named/master/db.172.16.240</div>
+<pre>
+$TTL 3h
+
+@ IN SOA dns1.kernel-panic.it. danix.kernel-panic.it. (
+    2007020601 <i>; serial</i>
+    3h         <i>; refresh after 3 hours</i>
+    1h         <i>; retry after 1 hour</i>
+    1w         <i>; expire after 1 week</i>
+    1h )       <i>; negative caching TTL of 1 hour</i>
+
+                    IN NS       dns1.kernel-panic.it.
+                    IN NS       dns2.kernel-panic.it.
+
+100                 IN PTR      donald.kernel-panic.it.
+101                 IN PTR      daisy.kernel-panic.it.
+102                 IN PTR      fw-ext.kernel-panic.it.
+150                 IN PTR      mail.kernel-panic.it.
+151                 IN PTR      proxy.kernel-panic.it.
+152                 IN PTR      www1.kernel-panic.it.
+153                 IN PTR      www2.kernel-panic.it.
+154                 IN PTR      dns1.kernel-panic.it.
+155                 IN PTR      dns2.kernel-panic.it.
+200                 IN PTR      mickey.kernel-panic.it.
+201                 IN PTR      minnie.kernel-panic.it.
+202                 IN PTR      fw-int.kernel-panic.it.
+</pre>
+</div>
+
+<p>To recap, <a href="dns5.html#dns-5.1">here</a> are the complete zone data files.</p>
+
+<h3><a id="dns-3.3" name="dns-3.3"></a>3.3 Starting Bind</h3>
+
+<p>Running Bind is as simple as typing &quot;<tt>named</tt>&quot;. The first time, you may want to run it with the <tt>-g</tt> flag, which runs the server in the foreground and forces all logging to stderr.</p>
+
+<div class="code">
+<pre>
+# <kbd>named -g</kbd>
+Starting privilege separation
+06-May-2009 01:09:29.771 starting BIND 9.4.2-P2 -g
+06-May-2009 01:09:29.827 loading configuration from '/etc/named.conf'
+[...]
+06-May-2009 01:09:29.991 running
+
+</pre>
+</div>
+
+<p>You will probably be warned that the name server couldn't find the <tt>/etc/rndc.key</tt> file: don't worry about this yet, we will discuss <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rndc&amp;sektion=8">rndc(8)</a></tt> <a href="dns4.html#dns-4.5">in a moment</a>. In case <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named&amp;sektion=8">named(8)</a></tt> complains about syntax errors, you can use the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named-checkconf&amp;sektion=8">named-checkconf(8)</a></tt> and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named-checkzone&amp;sektion=8">named-checkzone(8)</a></tt> commands to check the syntax of the Bind configuration file and the zone data files respectively.</p>
+<p>If everything looks alright, you can test your fresh new name server with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=nslookup&amp;sektion=1">nslookup(1)</a></tt> or <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=dig&amp;sektion=1">dig(1)</a></tt>.</p>
+
+<div class="code">
+<pre>
+$ <kbd>nslookup mail.kernel-panic.it 127.0.0.1</kbd>
+Server:         127.0.0.1
+Address:        127.0.0.1#53
+
+Name:   mail.kernel-panic.it
+Address: 172.16.240.150
+
+$
+</pre>
+</div>
+
+<p>To start Bind on system boot, simply add the following line to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> file:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+named_flags=&quot;&quot;
+</pre>
+</div>
+
+<h3><a id="dns-3.4" name="dns-3.4"></a>3.4 rndc(8)</h3>
+
+<p>The <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rndc&amp;sektion=8">rndc(8)</a></tt> utility allows you to communicate with the name server and send it authenticated commands over a TCP connection. It reads its configuration from the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rndc.conf&amp;sektion=5">rndc.conf(5)</a></tt> file (by default in <tt>/var/named/etc/</tt>), which has a syntax similar to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=namned.conf&amp;sektion=5">named.conf(5)</a></tt>. The following is a sample configuration file to connect to the server at localhost:</p>
+
+<div class="code">
+  <div>/var/named/etc/rndc.conf</div>
+<pre>
+options {
+    default-server  localhost;
+    default-port    953;
+    default-key     &quot;rndc-key&quot;;
+};
+
+server localhost {
+    key             &quot;rndc-key&quot;;
+};
+
+key &quot;rndc-key&quot; {
+    algorithm       hmac-md5;
+    secret          &quot;jIpKqniOSfP7Nr5GTTyDkw==&quot;;
+};
+</pre>
+</div>
+
+<p>To make the name server accept <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rndc&amp;sektion=8">rndc(8)</a></tt> connections, just add the following lines to your <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named.conf&amp;sektion=5">named.conf(5)</a></tt> file (adjusting the <tt>allow</tt> list as needed):</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+key &quot;rndc-key&quot; {
+    algorithm       hmac-md5;
+    secret          &quot;jIpKqniOSfP7Nr5GTTyDkw==&quot;;
+};
+
+controls {
+    inet            127.0.0.1 port 953
+                    allow { 127.0.0.1; }
+                    keys { &quot;rndc-key&quot;; };
+};
+</pre>
+</div>
+
+<p>If you like things simple, you can generate the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rndc&amp;sektion=8">rndc(8)</a></tt> configuration file automatically, by using the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rndc-confgen&amp;sektion=8">rndc-confgen(8)</a></tt> utility.</p>
+
+<h3><a id="dns-3.5" name="dns-3.5"></a>3.5 Adding a slave name server</h3>
+
+<p>Now that your primary master name server runs fine, you may want to set up a slave name server to allow for redundancy and load sharing. Bind configuration is quite similar:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+options {
+    directory       &quot;/&quot;;
+};
+
+zone &quot;kernel-panic.it&quot; {
+    type            slave;
+    masters         { 172.16.240.154; };
+    file            &quot;slave/bak.kernel-panic.it&quot;;
+};
+
+zone &quot;240.16.172.in-addr.arpa&quot; {
+    type            slave;
+    masters         { 172.16.240.154; };
+    file            &quot;slave/bak.172.16.240&quot;;
+};
+
+zone &quot;250.16.172.in-addr.arpa&quot; {
+    type            slave;
+    masters         { 172.16.240.154; };
+    file            &quot;slave/bak.172.16.250&quot;;
+};
+
+zone &quot;3.2.1.in-addr.arpa&quot; {
+    type            slave;
+    masters         { 172.16.240.154; };
+    file            &quot;slave/bak.1.2.3&quot;;
+};
+
+<i># Loopback address</i>
+zone &quot;localhost&quot; {
+    type            master;
+    file            &quot;master/db.localhost&quot;;
+};
+
+zone &quot;0.0.127.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.127.0.0&quot;;
+};
+
+<i># Special zones</i>
+zone &quot;255.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.255&quot;;
+};
+
+zone &quot;0.in-addr.arpa&quot; {
+    type            master;
+    file            &quot;master/db.0&quot;;
+};
+
+<i># Root zone</i>
+zone &quot;.&quot; {
+    type            hint;
+    file            &quot;master/db.cache&quot;;
+};
+</pre>
+</div>
+
+<p>For all the zones the slave name server is authoritative for (except for the loopback address and the &quot;special&quot; zones) <tt>type</tt> is now <tt>slave</tt>. We also had to add the <tt>masters</tt> clause to tell Bind the address of the primary master name server(s). The <tt>file</tt> specified in a <tt>slave</tt> zone is where Bind will store data transferred from the master; this allows Bind to have a local copy of the data in case the master name server is unreachable at startup.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="dns2.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns4.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Previous: <a href="dns2.html">2. The domain name system</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="dns4.html">4. Further Bind configuration</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

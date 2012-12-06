@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,web,XHTML,XML,HTML,CSS,browser,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title></title>
+
+  <link rel="stylesheet" type="text/css" href="../../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../css/xhtml.css" />
+
+</head>
+
+<body>
+
+<h2>&lt;object&gt;</h2>
+
+<p>Defines an embedded object, to add multimedia elements to the document.</p>
+
+<h3>Attributes</h3>
+
+  <table class="attributes">
+    <tr>
+      <th>Attributes</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Notes</th>
+    </tr>
+    <tr>
+      <td>lang</td>
+      <td>%LanguageCode;</td>
+      <td></td>
+      <td>Backwards compatible. Removed in XHTML 1.1.</td>
+    </tr>
+    <tr>
+      <td>xml:lang</td>
+      <td>%LanguageCode;</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td class="sep">dir</td>
+      <td class="sep">(ltr|rtl)</td>
+      <td class="sep">ltr</td>
+      <td class="sep">Base directionality (left-to-right or right-to-left) of text.</td>
+    </tr>
+    <tr>
+      <td>id</td>
+      <td>ID</td>
+      <td></td>
+      <td>Fragment identifier (unique within the scope of the document).</td>
+    </tr>
+    <tr>
+      <td>class</td>
+      <td>CDATA</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>style</td>
+      <td>%StyleSheet;</td>
+      <td></td>
+      <td>An inline style definition.</td>
+    </tr>
+    <tr>
+      <td class="sep">title</td>
+      <td class="sep">%Text;</td>
+      <td class="sep"></td>
+      <td class="sep">A text to display in a tool tip.</td>
+    </tr>
+    <tr>
+      <td>onclick</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on mouse click.</td>
+    </tr>
+    <tr>
+      <td>ondblclick</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on mouse double-click.</td>
+    </tr>
+    <tr>
+      <td>onmousedown</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on pressing mouse button.</td>
+    </tr>
+    <tr>
+      <td>onmouseup</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on releasing mouse button.</td>
+    </tr>
+    <tr>
+      <td>onmousemove</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the mouse pointer moves over the element.</td>
+    </tr>
+    <tr>
+      <td>onmouseout</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the mouse pointer moves out of the element.</td>
+    </tr>
+    <tr>
+      <td>onkeypress</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on a key pressed and released.</td>
+    </tr>
+    <tr>
+      <td>onkeydown</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on a key pressed.</td>
+    </tr>
+    <tr>
+      <td class="sep">onkeyup</td>
+      <td class="sep">%Script;</td>
+      <td class="sep"></td>
+      <td class="sep">Script to run on a key released.</td>
+    </tr>
+    <tr>
+      <td>declare</td>
+      <td>declare</td>
+      <td></td>
+      <td>Specifies that the object should only be declared, not created or instantiated until needed.</td>
+    </tr>
+    <tr>
+      <td>classid</td>
+      <td>%URI;</td>
+      <td></td>
+      <td>Defines a class ID value.</td>
+    </tr>
+    <tr>
+      <td>codebase</td>
+      <td>%URI;</td>
+      <td></td>
+      <td>URL of the object's code.</td>
+    </tr>
+    <tr>
+      <td>data</td>
+      <td>%URI;</td>
+      <td></td>
+      <td>URL of the object's data.</td>
+    </tr>
+    <tr>
+      <td>type</td>
+      <td>%ContentType;</td>
+      <td></td>
+      <td>MIME types of data specified by the <code>data</code> attribute.</td>
+    </tr>
+    <tr>
+      <td>codetype</td>
+      <td>%ContentType;</td>
+      <td></td>
+      <td>MIME type of the code specified by the <code>classid</code> attribute.</td>
+    </tr>
+    <tr>
+      <td>archive</td>
+      <td>%UriList;</td>
+      <td></td>
+      <td>Whitespace-separated list of URLs to archives. Archives contain resources relevant to the object.</td>
+    </tr>
+    <tr>
+      <td>standby</td>
+      <td>%Text;</td>
+      <td></td>
+      <td>Text to display while loading the object.</td>
+    </tr>
+    <tr>
+      <td>height</td>
+      <td>%Length;</td>
+      <td></td>
+      <td>Height of the object.</td>
+    </tr>
+    <tr>
+      <td>width</td>
+      <td>%Length;</td>
+      <td></td>
+      <td>Width of the object.</td>
+    </tr>
+    <tr>
+      <td>usemap</td>
+      <td>%URI;</td>
+      <td></td>
+      <td>URL of a client-side image map to be used with the object.</td>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>NMTOKEN</td>
+      <td></td>
+      <td>Defines a unique name for the object (useful within scripts).</td>
+    </tr>
+    <tr>
+      <td>tabindex</td>
+      <td>%Number;</td>
+      <td></td>
+      <td>Sets the tab order of an element</td>
+    </tr>
+  </table>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+
+</html>
+

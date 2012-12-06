@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,Amavisd,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a mail server - Advanced Postfix configuration</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="mail6.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail8.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Previous: <a href="mail6.html">6. Content filtering</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="mail8.html">8. SquirrelMail</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>7. Advanced Postfix configuration</h2>
+
+<p>Postfix offers a lot of interesting features whose discussion would go beyond the scope of this document; we will examine just a few, mostly security-related, that may be necessary depending on the environment where Postfix is operating.</p>
+
+<h3><a id="mail-7.1" name="mail-7.1"></a>7.1 Enabling TLS</h3>
+
+<p>Enabling <acronym title="Transport Layer Security">TLS</acronym> support in Postfix allows you to encrypt SMTP sessions and <a href="#mail-7.2">SASL authentication</a> exchanges and to optionally authenticate remote SMTP clients and/or servers. However, keep in mind that, by enabling TLS support, <q>you also turn on thousands and thousands of lines of OpenSSL library code. Assuming that OpenSSL is written as carefully as Wietse's own code, every 1000 lines introduce one additional bug into Postfix</q> [<a href="http://www.postfix.org/TLS_README.html">TLS</a>]. Therefore, if you think you don't need these features, feel free to skip this paragraph.</p>
+<p>TLS relies on public key certificates for authentication and therefore requires that you first set up a basic Public Key Infrastructure (PKI) for managing digital certificates. As a preliminary step, we will create the directories where certificates will be stored:</p>
+
+<div class="code">
+<pre>
+# <kbd>install -m 700 -d /etc/postfix/ssl/private</kbd>
+</pre>
+</div>
+
+<p>The first step in setting up the PKI is the creation of the root <acronym title="Certificate Authority">CA</acronym> certificate (<tt>/etc/ssl/ca.crt</tt>) and private key (<tt>/etc/ssl/private/ca.key</tt>) using <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=openssl&amp;sektion=1">openssl(1)</a></tt>:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl req -days 3650 -nodes -new -x509 -keyout /etc/ssl/private/ca.key \</kbd>
+&gt; <kbd>-out /etc/ssl/ca.crt</kbd>
+[ ... ]
+Country Name (2 letter code) []: <kbd><var>IT</var></kbd>
+State or Province Name (full name) []: <kbd><var>Italy</var></kbd>
+Locality Name (eg, city) []: <kbd><var>Milan</var></kbd>
+
+Organization Name (eg, company) []: <kbd><var>Kernel Panic Inc.</var></kbd>
+Organizational Unit Name (eg, section) []: <kbd><var>Postfix CA</var></kbd>
+Common Name (eg, fully qualified host name) []: <kbd><var>ca.lan.kernel-panic.it</var></kbd>
+Email Address []: <kbd>&lt;enter&gt;</kbd>
+#
+</pre>
+</div>
+
+<p>The next step is the creation of the private key (<tt>/etc/postfix/ssl/private/server.key</tt>) and Certificate Signing Request (<tt>/etc/postfix/ssl/private/server.csr</tt>) for the mail server:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl req -days 3650 -nodes -new -keyout /etc/postfix/ssl/private/server.key \</kbd>
+&gt; <kbd>-out /etc/postfix/ssl/private/server.csr</kbd>
+[ ... ]
+Country Name (2 letter code) []: <kbd><var>IT</var></kbd>
+State or Province Name (full name) []: <kbd><var>Italy</var></kbd>
+Locality Name (eg, city) []: <kbd><var>Milan</var></kbd>
+
+Organization Name (eg, company) []: <kbd><var>Kernel Panic Inc.</var></kbd>
+Organizational Unit Name (eg, section) []: <kbd><var>Postfix Server</var></kbd>
+Common Name (eg, fully qualified host name) []: <kbd><var>mail.kernel-panic.it</var></kbd>
+Email Address []: <kbd>&lt;enter&gt;</kbd>
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []: <kbd>&lt;enter&gt;</kbd>
+An optional company name []: <kbd>&lt;enter&gt;</kbd>
+
+#
+</pre>
+</div>
+
+<p>Finally, the CA will generate the signed certificate out of the certificate request:</p>
+
+<div class="code">
+<pre>
+# <kbd>openssl x509 -req -days 3650 -in /etc/postfix/ssl/private/server.csr \</kbd>
+&gt; <kbd>-out /etc/postfix/ssl/server.crt -CA /etc/ssl/ca.crt \</kbd>
+&gt; <kbd>-CAkey /etc/ssl/private/ca.key -CAcreateserial</kbd>
+
+Signature ok
+subject=/C=IT/ST=Italy/L=Milan/O=Kernel Panic Inc./OU=Postfix Server/CN=mail.kernel-panic.it
+Getting CA Private Key
+#
+</pre>
+</div>
+
+<p>If you want the mail server to authenticate SMTP clients, you can generate any number of client certificates by repeating the last two steps.</p>
+<p>To actually turn on TLS support in Postfix, we need to add a few parameters to the <tt>/etc/postfix/main.cf</tt> configuration file:</p>
+
+<div class="code">
+  <div>/etc/postfix/main.cf</div>
+<pre>
+<i># Enable (optional) TLS encryption</i>
+smtpd_tls_security_level = may
+<i># Enable logging of TLS handshake and certificate information</i>
+smtpd_tls_loglevel = 1
+
+<i># TLS certificates</i>
+smtpd_tls_cert_file = /etc/postfix/ssl/server.crt
+smtpd_tls_key_file = /etc/postfix/ssl/private/server.key
+smtpd_tls_CAfile = /etc/ssl/ca.crt
+
+<i># External entropy source for the pseudo random number generator pool.
+# Specify /dev/arandom when /dev/urandom gives timeout errors.</i>
+tls_random_source = dev:/dev/urandom
+</pre>
+</div>
+
+<p>and uncomment the <tt>smtps</tt> service in <tt><a href="http://www.postfix.org/master.5.html">/etc/postfix/master.cf(5)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/postfix/master.cf</div>
+<pre>
+smtps     inet  n       -       n       -       -       smtpd
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+  -o milter_macro_daemon_name=ORIGINATING
+</pre>
+</div>
+
+<p>Finally, we can reload Postfix configuration to apply the changes made:</p>
+
+<div class="code">
+<pre>
+# <kbd>postfix reload</kbd>
+postfix/postfix-script: refreshing the Postfix mail system
+</pre>
+</div>
+
+<h3><a id="mail-7.2" name="mail-7.2"></a>7.2 SMTP authentication with SASL</h3>
+
+<p>When <a href="mail3.html#mail-3.1">configuring Postfix</a>, we have restricted mail relay to a limited number of trusted networks, i.e. the internal corporate <acronym title="Local Area Network">LAN</acronym>s. Sometimes, however, such a relay policy may not fit your organization's requirements: a typical example is the need to let mobile users (such as sales people) send messages from anywhere over the Internet.</p>
+<p>In these cases, the best solution to allow relay from legitimate users (while still blocking <acronym title="Unsolicited Commercial Email">UCE</acronym> software) is certainly using SMTP authentication, by means of the <acronym title="Simple Authentication and Security Layer">SASL</acronym> protocol (defined in [<a href="http://tools.ietf.org/html/rfc4954">RFC4954</a>]). However, there are some downsides to enabling SASL authentication: it will force us to unchroot the <tt><a href="http://www.postfix.org/smtpd.8.html">smtpd(8)</a></tt> process and, since <q>the Cyrus SASL library is a lot of code</q>, Postfix will become <q>as secure as other mail systems that use the Cyrus SASL library</q> (see [<a href="http://www.postfix.org/SASL_README.html">SASL</a>]). So, if you don't need this feature, feel free to skip this paragraph</a>.</p>
+<p>To enable SASL authentication in Postfix, we just have to add a few parameters in the <tt>/etc/postfix/main.cf</tt> configuration file:</p>
+
+<div class="code">
+  <div>/etc/postfix/main.cf</div>
+<pre>
+<i># Enable SASL authentication in the Postfix SMTP server</i>
+smtpd_sasl_auth_enable = yes
+
+<i># Only accept mail from trusted networks, authenticated clients or mail with
+# a 'RCPT TO' address that Postfix is forwarder or final destination for</i>
+smtpd_recipient_restrictions = permit_mynetworks permit_sasl_authenticated 
+  reject_unauth_destination
+
+<i># Enable inter-operability with old SMTP clients</i>
+broken_sasl_auth_clients = yes
+
+<i># Name of the Postfix SMTP server's local SASL authentication realm</i>
+smtpd_sasl_local_domain = $mydomain
+</pre>
+</div>
+
+<p>SASL configuration parameters must be contained in a file named <tt>smtpd.conf</tt>, located in <tt>/usr/local/lib/sasl2</tt>. The SASL library will rely on Courier's <tt>authdaemond</tt> process as the authentication backend (the MySQL backend only supports passwords stored in clear-text):</p>
+
+<div class="code">
+  <div>/usr/local/lib/sasl2/smtpd.conf</div>
+<pre>
+pwcheck_method: authdaemond
+authdaemond_path: /var/run/courier-auth/socket
+mech_list: PLAIN LOGIN
+</pre>
+</div>
+
+<p>Next, we need to edit the <tt><a href="http://www.postfix.org/master.5.html">/etc/postfix/master.cf(5)</a></tt> file to make <tt><a href="http://www.postfix.org/smtpd.8.html">smtpd(8)</a></tt> run unchrooted (just put a &quot;<tt>n</tt>&quot; in the process's <tt>chroot</tt> field):</p>
+
+<div class="code">
+  <div>/etc/postfix/master.cf</div>
+<pre>
+smtp      inet  n       -       n       -       -       smtpd
+[ ... ]
+</pre>
+</div>
+
+<p>and reload Postfix configuration.</p>
+
+<div class="code">
+<pre>
+# <kbd>postfix reload</kbd>
+postfix/postfix-script: refreshing the Postfix mail system
+</pre>
+</div>
+
+<p>Finally, we can perform a simple test to make sure everything works as expected. Authentication information is sent as the base64-encoding of the string &quot;<tt>\0<var>username</var>\0<var>password</var></tt>&quot;, where &quot;<tt>\0</tt>&quot; is the null byte.</p>
+
+<div class="code">
+<pre>
+$ <kbd>perl -MMIME::Base64 -e 'print encode_base64(&quot;\0d.mazzocchio\@kernel-panic.it\0danix&quot;);'</kbd>
+AGQubWF6em9jY2hpb0BrZXJuZWwtcGFuaWMuaXQAZGFuaXg=
+$ <kbd>telnet mail.kernel-panic.it 25</kbd>
+Trying 172.16.240.150...
+Connected to mail.kernel-panic.it.
+Escape character is '^]'.
+220 mail.kernel-panic.it ESMTP Postfix
+<kbd>EHLO somedomain.org</kbd>
+250-mail.kernel-panic.it
+250-PIPELINING
+250-SIZE 10240000
+250-VRFY
+250-ETRN
+250-AUTH PLAIN LOGIN
+250-AUTH=PLAIN LOGIN
+250-ENHANCEDSTATUSCODES
+250-8BITMIME
+250 DSN
+<kbd>AUTH PLAIN AGQubWF6em9jY2hpb0BrZXJuZWwtcGFuaWMuaXQAZGFuaXg=</kbd>
+235 2.0.0 Authentication successful
+<kbd>quit</kbd>
+221 2.0.0 Bye
+Connection closed by foreign host.
+$
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="mail6.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail8.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Previous: <a href="mail6.html">6. Content filtering</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="mail8.html">8. SquirrelMail</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

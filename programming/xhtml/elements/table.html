@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,programming,web,XHTML,XML,HTML,CSS,browser,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title></title>
+
+  <link rel="stylesheet" type="text/css" href="../../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../css/xhtml.css" />
+
+</head>
+
+<body>
+
+<h2>&lt;table&gt;</h2>
+
+<p>Defines a table.</p>
+
+<h3>Attributes</h3>
+
+  <table class="attributes">
+    <tr>
+      <th>Attributes</th>
+      <th>Type</th>
+      <th>Default</th>
+      <th>Notes</th>
+    </tr>
+    <tr>
+      <td>lang</td>
+      <td>%LanguageCode;</td>
+      <td></td>
+      <td>Backwards compatible. Removed in XHTML 1.1.</td>
+    </tr>
+    <tr>
+      <td>xml:lang</td>
+      <td>%LanguageCode;</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr class="border">
+      <td class="sep">dir</td>
+      <td class="sep">(ltr|rtl)</td>
+      <td class="sep">ltr</td>
+      <td class="sep">Base directionality (left-to-right or right-to-left) of text.</td>
+    </tr>
+    <tr>
+      <td>id</td>
+      <td>ID</td>
+      <td></td>
+      <td>Fragment identifier (unique within the scope of the document).</td>
+    </tr>
+    <tr>
+      <td>class</td>
+      <td>CDATA</td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>style</td>
+      <td>%StyleSheet;</td>
+      <td></td>
+      <td>An inline style definition.</td>
+    </tr>
+    <tr>
+      <td class="sep">title</td>
+      <td class="sep">%Text;</td>
+      <td class="sep"></td>
+      <td class="sep">A text to display in a tool tip.</td>
+    </tr>
+    <tr>
+      <td>onclick</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on mouse click.</td>
+    </tr>
+    <tr>
+      <td>ondblclick</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on mouse double-click.</td>
+    </tr>
+    <tr>
+      <td>onmousedown</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on pressing mouse button.</td>
+    </tr>
+    <tr>
+      <td>onmouseup</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on releasing mouse button.</td>
+    </tr>
+    <tr>
+      <td>onmousemove</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the mouse pointer moves over the element.</td>
+    </tr>
+    <tr>
+      <td>onmouseout</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run when the mouse pointer moves out of the element.</td>
+    </tr>
+    <tr>
+      <td>onkeypress</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on a key pressed and released.</td>
+    </tr>
+    <tr>
+      <td>onkeydown</td>
+      <td>%Script;</td>
+      <td></td>
+      <td>Script to run on a key pressed.</td>
+    </tr>
+    <tr>
+      <td class="sep">onkeyup</td>
+      <td class="sep">%Script;</td>
+      <td class="sep"></td>
+      <td class="sep">Script to run on a key released.</td>
+    </tr>
+    <tr>
+      <td>summary</td>
+      <td>%Text;</td>
+      <td></td>
+      <td>Defines a summary of the table (for speech-synthesizing and non-visual browsers).</td>
+    </tr>
+    <tr>
+      <td>width</td>
+      <td>%Length;</td>
+      <td></td>
+      <td>Table width.</td>
+    </tr>
+    <tr>
+      <td>border</td>
+      <td>%Pixels;</td>
+      <td></td>
+      <td>Border width.</td>
+    </tr>
+    <tr>
+      <td>frame</td>
+      <td>(void|above|below|hsides|<br />
+           lhs|rhs|vsides|box|border)</td>
+      <td></td>
+      <td>Specifies how the outer borders should be displayed.</td>
+    </tr>
+    <tr>
+      <td>rules</td>
+      <td>(none|groups|rows|cols|all)</td>
+      <td></td>
+      <td>Specifies how the inner borders should be displayed.</td>
+    </tr>
+    <tr>
+      <td>cellspacing</td>
+      <td>%Length;</td>
+      <td></td>
+      <td>Space between cells.</td>
+    </tr>
+    <tr>
+      <td>cellpadding</td>
+      <td>%Length;</td>
+      <td></td>
+      <td>Space between cell borders and contents.</td>
+    </tr>
+  </table>
+
+<h3>Example</h3>
+
+<table class="example">
+  <tr>
+    <th>Code</th>
+    <th>Output</th>
+  </tr>
+  <tr>
+    <td class="code">
+<pre>
+&lt;table border=&quot;1&quot;&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Col 1 Row 1&lt;/td&gt;
+    &lt;td&gt;Col 2 Row 1&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td&gt;Col 1 Row 2&lt;/td&gt;
+    &lt;td&gt;Col 2 Row 2&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;
+</pre>
+    </td>
+    <td class="output">
+      <table border="1">
+  <tr>
+    <td>Col 1 Row 1</td>
+    <td>Col 2 Row 1</td>
+  </tr>
+  <tr>
+    <td>Col 1 Row 2</td>
+    <td>Col 2 Row 2</td>
+  </tr>
+</table>
+    </td>
+  </tr>
+</table>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+
+</html>
+

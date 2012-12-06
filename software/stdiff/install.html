@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<HTML>
+
+<HEAD>
+  <TITLE>Spot The Difference - Installation notes</TITLE>
+  <META NAME="resource-type" CONTENT="document">
+  <META HTTP-EQUIV="Content-Type" CONTENT="text/html; CHARSET=iso-8859-1">
+  <META NAME="description"   CONTENT="Spot The Difference installation notes">
+  <META NAME="keywords"      content= "Spot The Difference, file integrity checker, security, installation notes">
+  <META NAME="distribution"  CONTENT="global">
+  <META NAME="copyright"     CONTENT="This document copyright 2004 Daniele Mazzocchio.">
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#000000" VLINK="#000000" ALINK="#000000">
+<P ALIGN="center">
+<IMG SRC="images/spot.png" WIDTH=680 HEIGHT=150>
+
+<TABLE WIDTH=100% BORDER=0>
+  <TR>
+    <TD HEIGHT=50></TD>
+  </TR>
+  <TR>
+    <TD VALIGN="top" WIDTH=180>
+      <TABLE BORDER=0 CELLPADDING=10 CELLSPACING=0 BGCOLOR="#c9c9c9">
+        <TR>
+          <TD HEIGHT=10>&nbsp;</TD><TD>&nbsp;</TD>
+        </TR>
+        <TR>
+          <TD><IMG SRC="images/off.gif" WIDTH=14 HEIGHT=14></TD>
+          <TD><A HREF="index.html"><B>Home</B></A></TD>
+        </TR>
+        <TR>
+          <TD><IMG SRC="images/on.gif" WIDTH=14 HEIGHT=14></TD>
+          <TD><B>Installation Notes</B></TD>
+        </TR>
+        <TR>
+          <TD><IMG SRC="images/off.gif" WIDTH=14 HEIGHT=14></TD>
+          <TD><A HREF="doc.html"><B>Documentation</B></A></TD>
+        </TR>
+        <TR>
+          <TD><IMG SRC="images/off.gif" WIDTH=14 HEIGHT=14></TD>
+          <TD><A HREF="http://sourceforge.net/projects/stdiff"><B>Download</B></A></TD>
+        </TR>
+        <TR>
+          <TD><IMG SRC="images/off.gif" WIDTH=14 HEIGHT=14></TD>
+          <TD><A HREF="contacts.html"><B>Contacts</B></A></TD>
+        </TR>
+        <TR>
+          <TD HEIGHT=10>&nbsp;</TD><TD>&nbsp;</TD>
+        </TR>
+      </TABLE>
+    </TD>
+    <TD WIDTH=30></TD>
+    <TD>
+<H2>1. Requirements</H2>
+<P>
+<I>Spot The Difference</I> is fully developed in
+<A HREF="http://www.python.org">python</A>; so you need to have python
+(at least 2.3.x). If you don't already have it, you can download it
+<A HREF="http://www.python.org/download/">here</A>.
+
+  Using <TT>dbm</TT> database files to store files information doesn't require
+the installation of any additional python module. If you wish to use another
+database (<A HREF="http://www.mysql.com">MySQL</A>,
+<A HREF="http://www.postgresql.org">PostgreSQL</A> and
+<A HREF="http://www.sqlite.org">SQLite</A> are supported), you might need to
+install database-specific modules.
+<P>
+  Python database modules used by <I>Spot The Difference</I> are:
+
+<UL>
+  <LI>
+      <A HREF="http://sourceforge.net/projects/mysql-python">mysql-python</A>
+      - MySQL python module
+  <LI>
+      <A HREF="http://initd.org/software/initd/psycopg">psycopg</A>
+      - PostgreSQL python module
+  <LI>
+      <A HREF="http://sourceforge.net/projects/pysqlite">sqlite-python</A>
+      - SQLite python module
+</UL>
+
+
+<H2>2. Installation on Unix/Linux Systems</H2>
+<P>
+To install 'Spot The Difference' on a Unix/Linux system follow these few
+steps:
+
+<UL>
+  <LI>unpack the tarball:
+  <TABLE BORDER=0 WIDTH=600><TR><TD NOWRAP BGCOLOR="#EEEEEE">
+    <PRE>  # <B>tar -zxvf stdiff-0.2.1.tar.gz</B></PRE>
+  </TD></TR></TABLE>
+
+  <LI>move to the newly created directory:
+  <TABLE BORDER=0 WIDTH=600><TR><TD NOWRAP BGCOLOR="#EEEEEE">
+    <PRE>  # <B>cd ./stdiff-0.2.1</B></PRE>
+  </TD></TR></TABLE>
+
+  <LI>run the install script by typing:
+  <TABLE BORDER=0 WIDTH=600><TR><TD NOWRAP BGCOLOR="#EEEEEE">
+    <PRE>  # <B>python setup.py install</B></PRE>
+  </TD></TR></TABLE>
+</UL>
+
+<P>
+This will copy all modules in the third-party modules directory and the scripts
+in the local executables directory (usually <TT>/usr/local/bin</TT> on UN*X
+systems). A sample configuration file will be copied to <TT>/etc</TT>.
+
+<H2>3. Installation on windows Systems</H2>
+<P>
+To install <I>Spot The Difference</I> on a Windows system, just run the
+graphical installer (<TT>stdiff-0.2.1.win32.exe</TT>); you will be asked a
+couple of questions:
+
+<UL>
+  <LI>Python Directory (mine is <TT>C:\Python23</TT>)
+  <LI>Installation Directory (default is
+    <TT>&lt;<I>python_directory</I>&gt;\Lib\site-packages\</TT>)
+</UL>
+<P>
+After a couple of 'next', the installer will copy the scripts in the python
+scripts directory (<TT>&lt;<I>python_dir</I>&gt;\Scripts\</TT>) and the modules
+in the third-party modules directory
+(<TT>&lt;<I>python_dir</I>&gt;\Lib\site-packages\</TT>).
+A sample configuration file (<TT>stdiff.conf.sample</TT>) will be copied to
+<TT>&lt;<I>python_dir</I>&gt;\etc\</TT>.
+
+<H2>4. Spotting the Difference</H2>
+<P>
+Before running the file integrity checker, you have to create the
+configuration file, which defines the run-time behaviour of <I>Spot The
+Difference</I>. It includes information about connecting to the database, files
+to check and which checks to perform on those files.
+A sample configuration file is provided and the
+<A HREF="doc.html">documentation</A> covers its syntax in full detail.
+<P>
+If you wish to use a database server (MySQL or PostgreSQL), a script
+(<TT>stdiff_install_db</TT>) is provided to drive you through the creation of the
+database and/or tables. You will be prompted to answer a few questions and
+eventually the database will magically appear. For more information about the
+database structure and its customization, check out the
+<A HREF="doc.html">documentation</A>.
+<P>
+Evenutally, you can update the database and check your filesystem by typing:
+    <TABLE BORDER=0 WIDTH=650><TR><TD NOWRAP BGCOLOR="#EEEEEE">
+    <PRE>  # <B>stdiff [options]</B></PRE>
+    </TD></TR></TABLE>
+
+<P>
+Please refer to the <A HREF="doc.html">documentation</A> for the full syntax.
+    </TD>
+    <TD WIDTH=30></TD>
+  </TR>
+</TABLE>
+
+<TABLE WIDTH=100% BORDER=0>
+  <TR>
+    <TD HEIGHT=70>&nbsp;</TD>
+  </TR>
+  <TR>
+    <TD>
+      <A HREF="http://sourceforge.net">
+      <IMG SRC="http://sourceforge.net/sflogo.php?group_id=11371&amp;type=2" WIDTH="125" HEIGHT="37" BORDER="0" ALT="SourceForge.net Logo">
+      </A>
+    </TD>
+    <TD ALIGN="right"><ADDRESS>Designed by
+      <A HREF="http://www.kernel-panic.it">kernel-panic</A></ADDRESS></TD>
+  </TR>
+</TABLE>
+
+</BODY>
+
+</HTML>

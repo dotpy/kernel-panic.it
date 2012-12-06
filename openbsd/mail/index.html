@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="description" content="Setting up a full-featured, secure mail server using OpenBSD, Postfix, MySQL, Courier-IMAP, Amavisd-new, SpamAssassin, ClamAV and SquirrelMail." />
+  <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,Amavisd,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a mail server - Table of contents</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Previous</span></span></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail1.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="mail1.html">1. Introduction</a>
+    </div>
+  </div>
+
+  <hr />
+
+  <h1>OpenBSD as a Mail Server</h1>
+  <div id="subtitle">Author: <a href="mailto:danix@kernel-panic.it">Daniele Mazzocchio</a><br />
+                     Applies to: OpenBSD 5.2<br />
+                     Last update: Nov 12, 2012<br />
+                     Download: <a href="OpenBSD_mail_server.pdf"><img src="../../images/pdf.gif" height="20" width="20" alt="[PDF]" /></a>
+  </div>
+
+  <h2>Table of contents</h2>
+
+  <ul>
+    <li><a href="mail1.html">1. Introduction</a></li>
+    <li><a href="mail2.html">2. Preliminary installation steps</a></li>
+    <li><a href="mail3.html">3. Postfix</a>
+      <ul>
+        <li><a href="mail3.html#mail-3.1">3.1 Configuration</a></li>
+      </ul>
+    </li>
+    <li><a href="mail4.html">4. MySQL</a>
+      <ul>
+        <li><a href="mail4.html#mail-4.1">4.1 Configuration</a></li>
+      </ul>
+    </li>
+    <li><a href="mail5.html">5. Courier-IMAP</a>
+      <ul>
+        <li><a href="mail5.html#mail-5.1">5.1 Installation and configuration</a></li>
+		<li><a href="mail5.html#mail-5.2">5.2 Adding POP3 access</a></li>
+		<li><a href="mail5.html#mail-5.3">5.3 Managing disk space</a></li>
+      </ul>
+    </li>
+    <li><a href="mail6.html">6. Content filtering</a>
+      <ul>
+        <li><a href="mail6.html#mail-6.1">6.1 SpamAssassin</a></li>
+        <li><a href="mail6.html#mail-6.2">6.2 ClamAV</a></li>
+        <li><a href="mail6.html#mail-6.3">6.3 Amavisd-new</a></li>
+      </ul>
+    </li>
+    <li><a href="mail7.html">7. Advanced Postfix configuration</a>
+      <ul>
+        <li><a href="mail7.html#mail-7.1">7.1 Enabling TLS</a></li>
+        <li><a href="mail7.html#mail-7.2">7.2 SMTP authentication with SASL</a></li>
+      </ul>
+    </li>
+    <li><a href="mail8.html">8. SquirrelMail</a>
+      <ul>
+        <li><a href="mail8.html#mail-8.1">8.1 Preliminary steps</a></li>
+        <li><a href="mail8.html#mail-8.2">8.2 Installation and configuration</a></li>
+      </ul>
+    </li>
+    <li><a href="mail9.html">9. Appendix</a>
+      <ul>
+        <li><a href="mail9.html#mail-9.1">9.1 References</a></li>
+        <li><a href="mail9.html#mail-9.2">9.2 Bibliography</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Previous</span></span></li>
+      <li class="up"><a class="nav-list" href="../../openbsd.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="mail1.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a mail server</h3>
+    <div>Up: <a href="../../openbsd.html">OpenBSD</a>&nbsp;
+         Next: <a href="mail1.html">1. Introduction</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

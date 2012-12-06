@@ -1,0 +1,164 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                                Docs Styles                                 *
+ ******************************************************************************/
+
+/*************************  Override a few defaults  **************************/
+body {
+  background-color: #fff;
+  font-family: sans-serif;
+  color: #000;
+}
+
+a {
+  color: #000;
+}
+ 
+img {
+  border-width: 0px;
+}
+
+kbd {
+  font-weight: bold;
+}
+
+q {
+  font-style: italic;
+}
+
+/****************************  Header and Footer  *****************************/
+div.navigation {
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+}
+
+div.navigation div {
+  font-weight: bold;
+  text-align: left;
+}
+
+div.navigation a {
+  font-weight: normal;
+}
+
+div.navigation ul {
+  margin: 10px 0px 0px;
+  padding: 0;
+  list-style-type: none;
+}
+
+.nav-list {
+  display: block;
+  height: 40px;
+  width:40px;
+}
+
+.nav-list span {
+  display: none;
+}
+
+li.prev {
+  background: transparent url('../images/left_arrow.png') no-repeat top left;
+  float: left;
+}
+
+li.up {
+  background: transparent url('../images/up_arrow.png') no-repeat top left;
+  float: left;
+}
+
+li.next {
+  background: transparent url('../images/right_arrow.png') no-repeat top left;
+  float: left;
+}
+
+li.home {
+  background: transparent url('../images/kp_logo.png') no-repeat top left;
+  width:50px;
+  height:50px;
+  float: right;
+}
+
+/***********************************  Index  **********************************/
+#subtitle {
+  font-style: italic;
+  font-size: 80%;
+}
+
+#subtitle a {
+  font-style: normal;
+}
+
+#subtitle img {
+  border: 0;
+  vertical-align: middle;
+}
+
+/*******************************  Code excerpts  ******************************/
+div.code {
+  border: 1px solid #000;
+  background-color: #e3efff;
+  padding: 0px 10px;
+  margin: 20px 0px ;
+}
+
+div.code div {
+  color: #fff;
+  background-color: #28394f;
+  padding: 0px 10px;
+  margin: 10px 0px;
+}
+
+/***********************************  Images  *********************************/
+div.block-img {
+  border: 1px solid #000;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  width: 100%;
+  text-align: center;
+}
+
+img.float-img {
+  border: 1px solid #000;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  margin: 5px;
+  margin-left: 20px;
+  float: right;
+}
+
+/***********************************  Tables  *********************************/
+table.compact {
+  border-collapse: collapse;
+  margin: auto;
+  width: 100%;
+}
+
+table.compact th, table.compact td {
+  border: 1px solid #28394f;
+  padding: 0 10px 0 10px;
+  vertical-align: top;
+}
+
+table.compact th {
+  color: #fff;
+  background-color: #28394f;
+}
+
+table.compact td.number {
+  text-align: right;
+}
+
+table.compact td.blank {
+  border-style: none;
+}
+
+/***********************************  Lists  **********************************/
+dl.padded  dd {
+  padding-bottom: 20px;
+}
+
+dl.padded div.code {
+  margin-bottom: 0px;
+}

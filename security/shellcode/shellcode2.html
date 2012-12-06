@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,Linux,shellcode,x86,IA32,intel,security,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2006 by Kernel-Panic.it." />
+
+  <title>Writing shellcode for Linux and *BSD - Linux system calls</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="shellcode1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="shellcode3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Writing shellcode for Linux and *BSD</h3>
+    <div>Previous: <a href="shellcode1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="shellcode3.html">3. *BSD system calls</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. Linux system calls</h2>
+
+<p>Though shellcodes can do almost anything, they're ususally aimed at spawning a (possibly privileged) shell on the target machine (that's where the name <dfn>shellcode</dfn> comes from...).</p>
+<p>The easiest and fastest way to execute complex tasks in assembler is using system calls (or <dfn>syscalls</dfn>, as their friends call them). System calls constitute the interface between <dfn>user mode</dfn> and <dfn>kernel mode</dfn>; in other words, system calls are the means by which userland applications obtain system services from the kernel, such as managing the filesystem, starting new processes, accessing devices, etc.</p>
+<p>Syscalls are defined in the <tt>/usr/src/linux/include/asm-i386/unistd.h</tt> file, and each is paired with a number:</p>
+
+<div class="code">
+  <a id="unistd.h" name="unistd.h"></a>
+  <div>/usr/src/linux/include/asm-i386/unistd.h</div>
+<pre>
+#ifndef _ASM_I386_UNISTD_H_
+#define _ASM_I386_UNISTD_H_
+
+/*
+ * This file contains the system call numbers
+ */
+
+#define __NR_exit                       1
+#define __NR_fork                       2
+#define __NR_read                       3
+#define __NR_write                      4
+#define __NR_open                       5
+#define __NR_close                      6
+#define __NR_waitpid                    7
+#define __NR_creat                      8
+[...]
+</pre>
+</div>
+
+<p>There are normally two ways to execute a syscall:</p>
+
+<ol>
+  <li>triggering the 0x80 software interrupt;</li>
+  <li>using the libc wrapper functions.</li>
+</ol>
+
+<p>The first method is much more portable, since it is based on system calls defined in the kernel code and, therefore, common to all Linux distributions. The second method, which uses the addresses of the C functions, instead, is hardly portable among different distributions, if not among different releases of the same distribution.</p>
+
+<h3><a id="shellcode-2.1" name="shellcode-2.1"></a>2.1 int 0x80</h3>
+
+<p>Let's take a look at the first method. When the <acronym title="Central Processing Unit">CPU</acronym> receives a 0x80 interrupt, it enters <dfn>kernel mode</dfn> and executes the requested function, getting the appropriate handler through the <dfn>Interrupt Descriptor Table</dfn>.</p>
+<p>The syscall number must be specified in <tt>EAX</tt>, which will eventually contain the return value. The function arguments (up to six), instead, are passed in the <tt>EBX</tt>, <tt>ECX</tt>, <tt>EDX</tt>, <tt>ESI</tt>, <tt>EDI</tt> and <tt>EBP</tt> registers (exactly in this order and using only the necessary registers). If the function requires more than six arguments, you need to put them in a structure and store the pointer to the first argument in <tt>EBX</tt>. <em>Note</em>: Linux kernels prior to 2.4 didn't use the <tt>EBP</tt> register for passing arguments and, therefore, could pass only up to 5 arguments using registers.</p>
+<p>After the syscall number and the parameters have been stored in the appropriate registers, the 0x80 interrupt is executed: the CPU enters kernel mode, executes the system call and returns the control to the user process.</p>
+<p>To recap, to execute a system call, you need to:</p>
+
+<ol>
+  <li>store the syscall number in <tt>EAX</tt>;</li>
+  <li>store the syscall arguments in the appropriate registers or:
+    <ul>
+      <li>create an in-memory structure containing the syscall parameters,</li>
+      <li>store in <tt>EBX</tt> a pointer to the first argument;</li>
+    </ul>
+  </li>
+  <li>execute the 0x80 software interrupt.</li>
+</ol>
+
+<p>Now let's take a look at the most classic example: the <tt>_exit(2)</tt> syscall. We know from the <tt>/usr/src/linux/include/asm-i386/unistd.h</tt> file (see <a href="#unistd.h">above</a>) that it is number 1. The man page tells us that it requires only one parameter (<tt>status</tt>):</p>
+
+<div class="code">
+  <div>man 2 _exit</div>
+<pre>
+_EXIT(2)        Linux Programmer's Manual               _EXIT(2)
+
+NAME
+
+        _exit, _Exit - terminate the current process
+
+SYNOPSIS
+        #include &lt;unistd.h&gt;
+
+        void _exit(int status)
+[...]
+</pre>
+</div>
+
+<p>which we will store in the <tt>EBX</tt> register. Therefore, the instructions for executing this syscall are:</p>
+
+<div class="code">
+  <a id="exit.asm" name="exit.asm"></a>
+  <div>exit.asm</div>
+<pre>
+mov eax, 1      ; Number of the _exit(2) syscall
+mov ebx, 0      ; status
+int 0x80        ; Interrupt 0x80
+</pre>
+</div>
+
+<h3><a id="shellcode-2.2" name="shellcode-2.2"></a>2.2 libc</h3>
+
+<p>As we've stated before, a system call can also be executed by the means of a C function. So let's take a look at how to achieve the same results as <a href="#exit.asm">above</a> using a simple C program:</p>
+
+<div class="code">
+  <a name="exit.c"></a>
+  <div>exit.c</div>
+<pre>
+main () {
+        exit(0);
+}
+</pre>
+</div>
+
+<p>We  only have to compile it:</p>
+
+<div class="code">
+<pre>
+$ <b>gcc -o exit exit.c</b>
+</pre>
+</div>
+
+<p>and disassemble it with <tt><a href="http://www.gnu.org/software/gdb/">gdb</a></tt> to make sure it executes the system call and see how it works under the hood:</p>
+
+<div class="code">
+<pre>
+$ <kbd>gdb ./exit</kbd>
+GNU gdb 6.1-debian
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type &quot;show copying&quot; to see the conditions.
+There is absolutely no warranty for GDB.  Type &quot;show warranty&quot; for details.
+This GDB was configured as &quot;i386-linux&quot;...Using host libthread_db library &quot;/lib/libthread_db.so.1&quot;.
+
+(gdb) <kbd>break main</kbd>
+Breakpoint 1 at 0x804836a
+(gdb) <kbd>run</kbd>
+Starting program: /ramdisk/var/tmp/exit 
+
+Breakpoint 1, 0x0804836a in main ()
+(gdb) <kbd>disas main</kbd>
+Dump of assembler code for function main:
+0x08048364 &lt;main+0&gt;:    push   %ebp
+0x08048365 &lt;main+1&gt;:    mov    %esp,%ebp
+0x08048367 &lt;main+3&gt;:    sub    $0x8,%esp
+0x0804836a &lt;main+6&gt;:    and    $0xfffffff0,%esp
+0x0804836d &lt;main+9&gt;:    mov    $0x0,%eax
+0x08048372 &lt;main+14&gt;:   sub    %eax,%esp
+0x08048374 &lt;main+16&gt;:   movl   $0x0,(%esp)
+0x0804837b &lt;main+23&gt;:   call   0x8048284 &lt;exit&gt;
+End of assembler dump.
+(gdb)
+</pre>
+</div>
+
+<p>The last instruction in <tt>main()</tt> is the call to the <tt>exit(3)</tt> function. We will now see that <tt>exit(3)</tt>, in turn, calls the <tt>_exit(2)</tt> function which will finally execute the system call, including the 0x80 interrupt:</p>
+
+<div class="code">
+<pre>
+(gdb) <kbd>disas exit</kbd>
+Dump of assembler code for function exit:
+[...]
+0x40052aed &lt;exit+141&gt;:  mov    0x8(%ebp),%eax
+0x40052af0 &lt;exit+144&gt;:  mov    %eax,(%esp)
+0x40052af3 &lt;exit+147&gt;:  call   0x400ced9c &lt;_exit&gt;
+[...]
+End of assembler dump.
+(gdb) <kbd>disas _exit</kbd>
+Dump of assembler code for function _exit:
+0x400ced9c &lt;_exit+0&gt;:   mov    0x4(%esp),%ebx
+0x400ceda0 &lt;_exit+4&gt;:   mov    $0xfc,%eax
+0x400ceda5 &lt;_exit+9&gt;:   int    $0x80
+0x400ceda7 &lt;_exit+11&gt;:  mov    $0x1,%eax
+0x400cedac &lt;_exit+16&gt;:  int    $0x80
+0x400cedae &lt;_exit+18&gt;:  hlt    
+0x400cedaf &lt;_exit+19&gt;:  nop    
+End of assembler dump.
+(gdb)
+</pre>
+</div>
+
+<p>Therefore, a shellcode using the libc to indirectly execute the <tt>_exit(2)</tt> system call looks like:</p>
+
+<div class="code">
+<pre>
+push    dword 0        ; status
+call    0x8048284      ; Call the libc exit() function (address obtained
+                       ;   from the above disassembly)
+add     esp, 4         ; Clean up the stack
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="shellcode1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="shellcode3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Writing shellcode for Linux and *BSD</h3>
+    <div>Previous: <a href="shellcode1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="shellcode3.html">3. *BSD system calls</a>
+    </div>
+  </div>
+
+  <script type="text/javascript">var sc_project=873554, sc_invisible=1, sc_partition=7, sc_security="03daa6ce";</script>
+  <script type="text/javascript" src="http://www.statcounter.com/counter/counter_xhtml.js"></script>
+  <noscript><div class="statcounter"><a class="statcounter" href="http://www.statcounter.com/"><img class="statcounter" src="http://c8.statcounter.com/counter.php?sc_project=873554&amp;java=0&amp;security=03daa6ce&amp;invisible=1" alt="counter" /></a></div></noscript>
+
+</body>
+
+</html>
+

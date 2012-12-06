@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,primary,domain,controller,file,server,Samba,OpenLDAP,smbldap,samba-vscan,ClamAV,CUPS" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a Primary Domain Controller - The IDX-smbldap-tools</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc3.html">3. A bit of Samba</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc5.html">5. Keeping viruses away with Samba-vscan</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>4. The IDX-smbldap-tools</h2>
+
+<p><a href="https://gna.org/projects/smbldap-tools/">Smbldap-tools</a> is <q>a set of perl scripts designed to manage user and group accounts stored in an LDAP directory</q>. These scripts will make our lives much easier by providing a set of simple commands for carrying out the most common user administration tasks, thus saving us from dealing with the internals of LDAP and making managing Samba users almost as easy as managing normal system users.</p>
+<p>Please note that, though Samba account information will be stored in LDAP, <tt><a href="http://samba.org/samba/docs/man/manpages-3/smbd.8.html">smbd(8)</a></tt> <q>will still obtain the user's UNIX account information via the standard C library calls, such as getpwnam()</q> (see <a href="http://www.samba.org/samba/docs/man/Samba-HOWTO-Collection/passdb.html#id357234">documentation</a>), which don't natively support LDAP. This means we'll also need to configure the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap&amp;sektion=8">ypldap(8)</a></tt> daemon, which will act as an interface between LDAP and OpenBSD's authentication routines.</p>
+
+<h3><a id="pdc-4.1" name="pdc-4.1"></a>4.1 Configuration</h3>
+
+<p>The smbldap-tools require the installation of quite a few perl modules:</p>
+
+<ul>
+  <li>p5-Jcode-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Unicode-String-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Unicode-Map8-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Unicode-Map-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Unicode-MapUTF8-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Convert-ASN1-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Digest-SHA1-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Digest-HMAC-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-GSSAPI-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Authen-SASL-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Net-SSLeay-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-IO-Socket-SSL-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-XML-Parser-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-XML-SAX-Writer-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-XML-SAX-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-XML-NamespaceSupport-<var>x</var>.<var>x</var></li>
+  <li>p5-Text-Iconv-<var>x</var>.<var>x</var></li>
+  <li>p5-XML-Filter-BufferText-<var>x</var>.<var>x</var></li>
+  <li>p5-URI-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-ldap-<var>x</var>.<var>x</var>.tgz</li>
+  <li>p5-Crypt-SmbHash-<var>x</var>.<var>x</var>.tgz</li>
+  <li>smbldap-tools-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+</ul>
+
+<p>The <tt>/etc/smbldap-tools/smbldap_bind.conf</tt> file contains the parameters to connect to the LDAP server; they should match the <tt>rootdn</tt> and <tt>rootpw</tt> parameters in <tt>/etc/openldap/slapd.conf</tt>. Make sure this file has restrictive permissions (<tt>600</tt>) to protect the passwords from unauthorized access.</p>
+
+<div class="code">
+  <div>/etc/smbldap-tools/smbldap_bind.conf</div>
+<pre>
+slaveDN=&quot;cn=Manager,dc=kernel-panic,dc=it&quot;
+slavePw=&quot;password&quot;
+masterDN=&quot;cn=Manager,dc=kernel-panic,dc=it&quot;
+masterPw=&quot;password&quot;
+</pre>
+</div>
+
+<p>Before editing the next configuration file, we need to retrieve the <acronym title="Security IDentifier">SID</acronym> for the domain:</p>
+
+<div class="code">
+<pre>
+# <kbd>net getlocalsid</kbd>
+SID for domain <var>SAMBA</var> is: S-1-5-21-2855447605-3248580512-2157288933
+</pre>
+</div>
+
+<p>The <tt>/etc/smbldap-tools/smbldap.conf</tt> file allows you to set global parameters that will be readable by everybody.</p>
+
+<div class="code">
+  <div>/etc/smbldap-tools/smbldap.conf</div>
+<pre>
+<i># SID and domain name</i>
+SID=&quot;S-1-5-21-2855447605-3248580512-2157288933&quot;
+sambaDomain=&quot;KERNEL-PANIC&quot;
+
+<i># LDAP servers and ports (if you're using LDAP over TLS/SSL, set the URI schemes
+# to 'ldaps' and the ports to '636')</i>
+slaveLDAP=&quot;ldap://ldap.kernel-panic.it&quot;
+slavePort=&quot;389&quot;
+masterLDAP=&quot;ldap://ldap.kernel-panic.it&quot;
+masterPort=&quot;389&quot;
+
+<i># TLS configuration (set ldapTLS to '1' to enable TLS)</i>
+ldapTLS=&quot;0&quot;
+verify=&quot;none&quot;
+cafile=&quot;/etc/openldap/ssl/ca.crt&quot;
+clientcert=&quot;/etc/openldap/ssl/client.crt&quot;
+clientkey=&quot;/etc/openldap/ssl/private/client.key&quot;
+
+<i># LDAP configuration</i>
+suffix=&quot;dc=kernel-panic,dc=it&quot;
+usersdn=&quot;ou=Users,${suffix}&quot;
+computersdn=&quot;ou=Computers,${suffix}&quot;
+groupsdn=&quot;ou=Groups,${suffix}&quot;
+idmapdn=&quot;ou=Idmap,${suffix}&quot;
+sambaUnixIdPooldn=&quot;sambaDomainName=KERNEL-PANIC,${suffix}&quot;
+scope=&quot;sub&quot;
+hash_encrypt=&quot;SSHA&quot;
+crypt_salt_format=&quot;%s&quot;
+
+<i># Unix accounts configuration</i>
+userLoginShell=&quot;/bin/ksh&quot;
+userHome=&quot;/home/%U&quot;
+userHomeDirectoryMode=&quot;700&quot;
+userGecos=&quot;System User&quot;
+defaultUserGid=&quot;513&quot;
+defaultComputerGid=&quot;515&quot;
+skeletonDir=&quot;/etc/skel&quot;
+defaultMaxPasswordAge=&quot;45&quot;
+
+<i># Samba configuration</i>
+userSmbHome=&quot;&quot;
+userProfile=&quot;&quot;
+userHomeDrive=&quot;H:&quot;
+userScript=&quot;logon.bat&quot;
+mailDomain=&quot;kernel-panic.it&quot;
+
+<i># smbldap-tools configuration</i>
+with_smbpasswd=&quot;0&quot;
+smbpasswd=&quot;/usr/local/bin/smbpasswd&quot;
+with_slappasswd=&quot;0&quot;
+slappasswd=&quot;/usr/local/sbin/slappasswd&quot;
+</pre>
+</div>
+
+<h3><a id="pdc-4.2" name="pdc-4.2"></a>4.2 Populating the LDAP database</h3>
+
+<p>Now we can create the structure of the LDAP tree by inserting the base entries in the database; the <tt>smbldap-populate</tt> script will take care of everything for us:</p>
+
+<div class="code">
+<pre>
+# <kbd>/usr/local/sbin/smbldap-populate</kbd>
+Populating LDAP directory for domain KERNEL-PANIC (S-1-5-21-2855447605-3248580512-2157288933)
+(using builtin directory structure)
+
+adding new entry: dc=kernel-panic,dc=it
+adding new entry: ou=Users,dc=kernel-panic,dc=it
+adding new entry: ou=Groups,dc=kernel-panic,dc=it
+adding new entry: ou=Computers,dc=kernel-panic,dc=it
+adding new entry: ou=Idmap,dc=kernel-panic,dc=it
+adding new entry: uid=root,ou=Users,dc=kernel-panic,dc=it
+adding new entry: uid=nobody,ou=Users,dc=kernel-panic,dc=it
+adding new entry: cn=Domain Admins,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Domain Users,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Domain Guests,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Domain Computers,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Administrators,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Account Operators,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Print Operators,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Backup Operators,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: cn=Replicators,ou=Groups,dc=kernel-panic,dc=it
+adding new entry: sambaDomainName=KERNEL-PANIC,dc=kernel-panic,dc=it
+
+Please provide a password for the domain root:
+Changing UNIX and samba passwords for root
+New password: <kbd><var>&lt;admin_passwd&gt;</var></kbd>
+Retype new password: <kbd><var>&lt;admin_passwd&gt;</var></kbd>
+#
+</pre>
+</div>
+
+<p>The last step of the above command doesn't actually change the UNIX password for the root account: it only sets the password for the domain administrator (in LDAP). You can test that the database now contains the base entries by running the <tt><a href="http://www.openldap.org/software/man.cgi?query=ldapsearch&amp;format=html">ldapsearch(1)</a></tt> command; you can get an LDIF dump of the users defined in the LDAP database by running:</p>
+
+<div class="code">
+<pre>
+# <kbd>ldapsearch -x -LL -b 'ou=Users,dc=kernel-panic,dc=it' -s sub</kbd>
+version: 1
+
+dn: ou=Users,dc=kernel-panic,dc=it
+objectClass: top
+objectClass: organizationalUnit
+ou: Users
+
+[ ... ]
+</pre>
+</div>
+
+<p>In addition to the default groups created by <tt>smbldap-populate</tt>, you may also want to define some additional groups, e.g.:</p>
+
+<div class="code">
+<pre>
+# <kbd>smbldap-groupadd -g 1500 Accounting</kbd>
+[ ... ]
+</pre>
+</div>
+
+<p>Now we need to create the appropriate user for every computer that will need to connect to Samba (the &quot;<tt>$</tt>&quot; sign at the end of each name is mandatory):</p>
+
+<div class="code">
+<pre>
+# <kbd>smbldap-useradd -w -u 3000 computer1$</kbd>
+# <kbd>smbldap-useradd -w -u 3001 computer2$</kbd>
+[ ... ]
+</pre>
+</div>
+
+<p>Finally, we can create the actual Samba users; each user will have a home directory that will be automatically connected as drive &quot;<tt>H:</tt>&quot; at logon:</p>
+
+<div class="code">
+<pre>
+# <kbd>smbldap-useradd -a -u 2000 -g 512 -G 513 -N Daniele -S Mazzocchio \</kbd>
+&gt; <kbd>-c &quot;Daniele Mazzocchio&quot; danix</kbd>
+# <kbd>smbpasswd -a danix</kbd>
+New SMB password: <kbd><var>password</var></kbd>
+Retype new SMB password: <kbd><var>password</var></kbd>
+#
+</pre>
+</div>
+
+<p>Now we can (re)start the Samba processes:</p>
+
+<div class="code">
+<pre>
+# <kbd>pkill .mbd</kbd>
+# <kbd>/usr/local/libexec/smbd -D</kbd>
+# <kbd>/usr/local/libexec/nmbd -D</kbd>
+</pre>
+</div>
+
+<p>Don't forget to assign the correct permissions and ownerships to the Samba shares.</p>
+
+<h3><a id="pdc-4.3" name="pdc-4.3"></a>4.3 Configuring ypldap(8)</h3>
+
+<p><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=yp&amp;sektion=8">YP(8)</a></tt> is a directory service originally developed by Sun Microsystems which, long before LDAP, allowed network management of password, group and hosts file entries. Starting with <a href="http://www.openbsd.org/45.html">release 4.5</a>, OpenBSD provides an additional YP daemon, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap&amp;sektion=8">ypldap(8)</a></tt>, which uses LDAP as a backend in place of the traditional <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=db&amp;sektion=3">db(3)</a></tt> database.</p>
+<p>Since YP is the only directory service <q>that can be accessed directly using standard C-library functions like <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=getpwent&amp;sektion=3">getpwent(3)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=getgrent&amp;sektion=3">getgrent(3)</a></tt>, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=gethostbyname&amp;sektion=3">gethostbyname(3)</a></tt> and so on</q> [<a href="http://www.openbsd.org/faq/faq10.html#Dir">FAQ10</a>], it will act as an interface between the system's authentication routines (used by <tt><a href="http://samba.org/samba/docs/man/manpages-3/smbd.8.html">smbd(8)</a></tt>) and the LDAP directory.</p>
+<p>As a first step in configuring the YP subsystem, we will set the <dfn>YP domain</dfn> of the host, which is an arbitrary string identifying the hosts that share (part of) their system configuration data through YP (and has nothing to do with Samba or DNS domains); the YP domain for a host is set with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=domainname&amp;sektion=1">domainname(1)</a></tt> and can be made permanent across reboots by putting it into the file
+<tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=defaultdomain&amp;sektion=5">/etc/defaultdomain(5)</a></tt>:</p>
+
+<div class="code">
+<pre>
+# <kbd>domainname <var>kernel-panic.it</var></kbd>
+# <kbd>echo &quot;<var>kernel-panic.it</var>&quot; &gt; /etc/defaultdomain</kbd>
+</pre>
+</div>
+
+<p>Before initializing the YP server, you may want to edit <tt>/var/yp/Makefile.yp</tt> in order to create only the necessary YP maps, by modifying the &quot;<tt>all</tt>&quot; target:</p>
+
+<div class="code">
+  <div>/var/yp/Makefile.yp</div>
+<pre>
+all: passwd group netid
+</pre>
+</div>
+
+<p>Now we are ready to initialize the YP server as a master by issuing the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypinit&amp;sektion=8">ypinit(8)</a></tt> command:</p>
+
+<div class="code">
+<pre>
+# <kbd>ypinit -m</kbd>
+Server Type: MASTER Domain: kernel-panic.it
+
+Creating an YP server will require that you answer a few questions.
+Questions will all be asked at the beginning of the procedure.
+
+Do you want this procedure to quit on non-fatal errors? [y/n: n] <kbd><var>&lt;Enter&gt;</var></kbd>
+
+Ok, please remember to go back and redo manually whatever fails.
+If you don't, something might not work.
+
+At this point, we have to construct a list of this domain's YP servers.
+smb.kernel-panic.it is already known as master server.
+Please continue to add any slave servers, one per line. When you are
+done with the list, type a &lt;control D&gt;.
+        master server   :  smb.kernel-panic.it
+        next host to add:  <kbd><var>^D</var></kbd>
+The current list of NIS servers looks like this:
+
+smb.kernel-panic.it
+
+Is this correct?  [y/n: y] <kbd><var>&lt;Enter&gt;</var></kbd>
+Building /var/yp/kernel-panic.it/ypservers...
+smb.kernel-panic.it has been setup as an YP master server.
+Edit /var/yp/kernel-panic.it/Makefile to suit your needs.
+After that, run 'make' in /var/yp.
+#
+</pre>
+</div>
+
+<p>The default configuration file for <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap&amp;sektion=8">ypldap(8)</a></tt> is <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap.conf&amp;sektion=5">/etc/ypldap.conf(5)</a></tt>, which is made up of three sections: macros, global configuration settings and the declaration of one or more directories. Below is a sample configuration file:</p>
+
+<div class="code">
+  <div>/etc/ypldap.conf</div>
+<pre>
+<i># Macros
+# Optional macros go here...</i>
+
+<i># Global settings</i>
+domain       &quot;kernel-panic.it&quot;
+interval     3600
+<i># Specify the maps that ypldap should provide</i>
+provide map  &quot;passwd.byname&quot;
+provide map  &quot;passwd.byuid&quot;
+provide map  &quot;group.byname&quot;
+provide map  &quot;group.bygid&quot;
+
+<i># Directory declaration</i>
+directory &quot;ldap.kernel-panic.it&quot; {
+    binddn    &quot;cn=Manager,dc=kernel-panic,dc=it&quot;
+    bindcred  &quot;password&quot;
+    basedn    &quot;ou=Users,dc=kernel-panic,dc=it&quot;
+
+    <i># passwd maps configuration</i>
+    passwd filter &quot;(objectClass=posixAccount)&quot;
+
+    attribute name maps to &quot;uid&quot;
+    fixed attribute passwd &quot;*&quot;
+    attribute uid maps to &quot;uidNumber&quot;
+    attribute gid maps to &quot;gidNumber&quot;
+    attribute gecos maps to &quot;gecos&quot;
+    attribute home maps to &quot;homeDirectory&quot;
+    <i># LDAP users are not interactive system users</i>
+    fixed attribute shell &quot;/sbin/nologin&quot;
+    fixed attribute change &quot;0&quot;
+    fixed attribute expire &quot;0&quot;
+    fixed attribute class &quot;default&quot;
+
+    <i># group maps configuration</i>
+    group filter &quot;(objectClass=posixGroup)&quot;
+
+    attribute groupname maps to &quot;cn&quot;
+    fixed attribute grouppasswd &quot;*&quot;
+    attribute groupgid maps to &quot;gidNumber&quot;
+    list groupmembers maps to &quot;memberUid&quot;
+}
+</pre>
+</div>
+
+<p>Since it contains sensitive information, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap.conf&amp;sektion=5">ypldap.conf(5)</a></tt> file should have restrictive permissions (<tt>600</tt>); the &quot;<tt>-n</tt>&quot; flag of <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap&amp;sektion=8">ypldap(8)</a></tt> allows you to check the configuration file for validity:</p>
+
+<div class="code">
+<pre>
+# <kbd>chmod 600 /etc/ypldap.conf</kbd>
+# <kbd>ypldap -n</kbd>
+configuration OK
+</pre>
+</div>
+
+<p>To actually tell the system to include user and group accounts from the YP domain, we need to add the default YP markers to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=passwd&amp;sektion=5">passwd(5)</a></tt> and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=group&amp;sektion=5">group(5)</a></tt> files:</p>
+
+<div class="code">
+<pre>
+# <kbd>echo &quot;+:*::::::::&quot; &gt;&gt; /etc/master.passwd</kbd>
+# <kbd>pwd_mkdb -p /etc/master.passwd</kbd>
+# <kbd>echo &quot;+:*::&quot; &gt;&gt; /etc/group</kbd>
+</pre>
+</div>
+
+<p>Well, now we're ready to start all the required daemons! YP uses <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rpc&amp;sektion=3"><acronym title="Remote Procedure Calls">RPC(3)</acronym></a> to communicate with clients, so it requires that the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=portmap&amp;sektion=8">portmap(8)</a></tt> daemon be enabled. Also the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypbind&amp;sektion=8">ypbind(8)</a></tt> daemon is required for the server to use its own maps.</p>
+
+<div class="code">
+<pre>
+# <kbd>portmap</kbd>
+# <kbd>ypldap</kbd>
+# <kbd>ypbind</kbd>
+Enabling yp client subsystem.
+To disable: kill ypbind and remove /var/yp/binding
+#
+</pre>
+</div>
+
+<p>You can test that the system is correctly retrieving user information from the YP directory by using the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=getent&amp;sektion=1">getent(1)</a></tt> command:</p>
+
+<div class="code">
+<pre>
+# <kbd>getent passwd</kbd>
+[ ... ]
+danix:*:2000:512:Daniele Mazzocchio:/home/danix:/sbin/nologin
+#
+</pre>
+</div>
+
+<p>To automatically start the daemons on boot, add the following lines to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> file:
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+portmap=YES
+ypldap_flags=&quot;&quot;
+</pre>
+</div>
+
+<p>comment out the following lines in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc&amp;sektion=8">/etc/rc(8)</a></tt> (which would start <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypserv&amp;sektion=8">ypserv(8)</a></tt> instead of <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ypldap&amp;sektion=8">ypldap(8)</a></tt>):</p>
+
+<div class="code">
+  <div>/etc/rc</div>
+<pre>
+<i>#        if [ -d /var/yp/`domainname` ]; then
+#                # YP server capabilities needed...
+#                echo -n ' ypserv';              ypserv ${ypserv_flags}
+#                #echo -n ' ypxfrd';             ypxfrd
+#        fi
+
+#        if [ -d /var/yp/binding ]; then
+#                # YP client capabilities needed...
+#                echo -n ' ypbind';              ypbind
+#        fi</i>
+</pre>
+</div>
+
+<p>and add the following commands to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.local&amp;sektion=8">/etc/rc.local(8)</a></tt>, right after the startup of <tt><a href="http://www.openldap.org/software/man.cgi?query=slapd&amp;format=html">slapd(8C)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/rc.local</div>
+<pre>
+if [ -d /var/yp/$(domainname) ]; then
+    echo -n ' ypldap'
+    ypldap ${ypldap_flags}
+    <i># Wait 5 seconds to fully initialize ypldap before starting ypbind</i>
+    sleep 5
+fi
+
+if [ -d /var/yp/binding ]; then
+    echo -n ' ypbind'
+    ypbind
+fi
+</pre>
+</div>
+
+<p>Well, now we have a fully functional Primary Domain Controller: then we can start <a href="http://technet2.microsoft.com/windowsserver/en/library/34f9c7c0-50c4-4adf-9106-db9c7e671d091033.mspx?mfr=true">joining computers</a> to our fresh new domain and perform all the necessary tests! The next chapters will discuss a couple of additional features you may find very useful: <a href="pdc5.html">antivirus support</a> and <a href="pdc6.html">printer shares</a>.</p>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pdc3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pdc5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a Primary Domain Controller</h3>
+    <div>Previous: <a href="pdc3.html">3. A bit of Samba</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pdc5.html">5. Keeping viruses away with Samba-vscan</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

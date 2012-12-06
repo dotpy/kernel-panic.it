@@ -1,0 +1,35 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                     Javascript games specific styles                       *
+ ******************************************************************************/
+
+#container {
+  width: 100%;
+}
+
+td.left-col {
+  width: 50px;
+}
+
+#hdr {
+  margin-bottom: 30px;
+}
+
+td.right-menu {
+  text-align: center;
+  vertical-align: top;
+}
+
+td.right-menu table {
+  width: 100%;
+}
+
+#close {
+  padding: 0px 10px;
+  text-align: right;
+}
+ 
+#close img {
+  vertical-align: bottom;
+}
+

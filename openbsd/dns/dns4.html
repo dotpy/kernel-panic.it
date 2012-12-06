@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD as a domain name server - Further Bind configuration</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="dns3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Previous: <a href="dns3.html">3. Base configuration</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="dns5.html">5. Appendix A</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>4. Further Bind configuration</h2>
+
+<p>So we have a couple of name servers, doing a good job and allowing us to address our DMZ servers by name now. Their setup is rather simple, but can be good enough in many environments. Anyway, Bind can do much more and solve many of the potential problems you may have to face; let's see some of the most common ones.</p>
+
+<h3><a id="dns-4.1" name="dns-4.1"></a>4.1 Views and split namespace</h3>
+
+<p>Our name servers are configured to return the private addresses of our DMZ servers, i.e. the addresses on the 172.16.240.0/24 network. However, some of those servers (e.g. mail and web servers) must be accessed from the Internet too, using the public (<acronym title="Network Address Translation">NAT</acronym>ted) IP address. Therefore, the name server should return different values depending on the origin of the query: private addresses if queried from the internal network, public address(es) if queried from the outside.</p>
+<p>This is called a <dfn>split namespace</dfn>: the real namespace is only available to the internal systems, while hosts on the internet can only see its reduced and translated version (called <dfn>shadow namespace</dfn>). Bind achieves this through one of its greatest features: <dfn>views</dfn>. Let's see them in action with a brief example.</p>
+<p>First we need to define the group of hosts that should access the servers by their private address. We do this by defining an <dfn>acl</dfn>, which is simply a statement that associates a name with a group of hosts.</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+acl &quot;internal&quot; {
+    127/8; 172.16.240/24; 172.16.0.0/24;
+};
+</pre>
+</div>
+
+<p>Next we add the views to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named.conf&amp;sektion=5">named.conf(5)</a></tt> and specify different zone data files for each view.</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+view &quot;internal&quot; {
+    <i># This view applies to machines in the 'internal' acl</i>
+    match-clients   { &quot;internal&quot; };
+    <i># Allow 'internal' machines to query for internet names</i>
+    recursion       yes;
+
+    zone &quot;kernel-panic.it&quot; {
+        type        master;
+        file        &quot;master/db.kernel-panic.it&quot;
+    };
+
+    zone &quot;240.16.172.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.172.16.240&quot;
+    };
+
+    zone &quot;250.16.172.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.172.16.250&quot;
+    };
+
+    zone &quot;3.2.1.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.1.2.3&quot;
+    };
+
+    <i># Loopback address</i>
+    zone &quot;localhost&quot; {
+        type        master;
+        file        &quot;master/db.localhost&quot;;
+    };
+
+    zone &quot;0.0.127.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.127.0.0&quot;;
+    };
+
+    <i># Special zones</i>
+    zone &quot;255.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.255&quot;;
+    };
+
+    zone &quot;0.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.0&quot;;
+    };
+
+    <i># Root zone</i>
+    zone &quot;.&quot; {
+        type        hint;
+        file        &quot;master/db.cache&quot;
+    };
+};
+
+view &quot;internet&quot; {
+    <i># This view applies to all the other machines</i>
+    match-clients   { any; };
+    <i># Do not allow external machines to query for internet names</i>
+    recursion       no;
+
+    zone &quot;kernel-panic.it&quot; {
+        type        master;
+        file        &quot;master/db.kernel-panic.it.shadow&quot;
+    };
+
+    zone &quot;3.2.1.in-addr.arpa&quot; {
+        type        master;
+        file        &quot;master/db.1.2.3.shadow&quot;
+    };
+};
+</pre>
+</div>
+
+<p>The following are the shadow zone data files:</p>
+
+<div class="code">
+  <div>/var/named/master/db.kernel-panic.it.shadow</div>
+<pre>
+$TTL 1d
+
+@ IN SOA dns.kernel-panic.it. danix.kernel-panic.it. (
+    2007020601 <i>; serial</i>
+    3h         <i>; refresh after 3 hours</i>
+    1h         <i>; retry after 1 hour</i>
+    1w         <i>; expire after 1 week</i>
+    1h )       <i>; negative caching TTL of 1 hour</i>
+
+                    IN NS       dns.kernel-panic.it.
+                    IN NS       dns.provider.com.
+
+                    IN MX    0  mail.kernel-panic.it.
+                    IN MX   10  mail.provider.com.
+
+                    IN A        1.2.3.4
+
+www                 IN CNAME    kernel-panic.it.
+mail                IN CNAME    kernel-panic.it.
+dns                 IN CNAME    kernel-panic.it.
+
+*                   IN MX    0  mail.kernel-panic.it.
+                    IN MX   10  mail.provider.com.
+</pre>
+</div>
+
+<div class="code">
+  <div>/var/named/master/db.1.2.3.shadow</div>
+<pre>
+$TTL 1d
+
+@ IN SOA dns.kernel-panic.it. danix.kernel-panic.it. (
+    2007020601 <i>; serial</i>
+    3h         <i>; refresh after 3 hours</i>
+    1h         <i>; retry after 1 hour</i>
+    1w         <i>; expire after 1 week</i>
+    1h )       <i>; negative caching TTL of 1 hour</i>
+
+                    IN NS       dns.kernel-panic.it.
+                    IN NS       dns.provider.com.
+
+4                   IN PTR      kernel-panic.it.
+</pre>
+</div>
+
+<p>As you may have noticed, to increase DNS service availability, we have set up an additional name server hosted by our ISP, containing only the information about the shadow namespace.</p>
+
+<h3><a id="dns-4.2" name="dns-4.2"></a>4.2 Delegation</h3>
+
+<p>So far, we have taken into account only our DMZ servers: now is time for our LAN name servers to enter the scene. Let's see how they relate to the other hosts:</p>
+
+<ul>
+  <li>machines on the internet shouldn't know anything about our internal network and private servers; therefore, we won't have to modify the <a href="#dns-4.1">shadow files</a>;</li>
+  <li>LAN machines should only resolve names internal to our network (LAN and DMZ); surfing the web is made possible through the <a href="../proxy/index.html">proxy server</a> (in the DMZ) which is able to resolve internet names;</li>
+  <li>DMZ servers should resolve both internal and external names.</li>
+</ul>
+
+<p>Probably, the simplest solution would be once again to take advantage of <a href="#dns-4.1">views</a> and add the internal servers to the zone data files configured in the &quot;<tt>internal</tt>&quot; view (see <a href="#dns-4.1">above</a>). A more interesting and scalable solution, however, is to create a new zone, for example &quot;lan.kernel-panic.it&quot;, and delegate it to a couple of name servers (master and slave) that we will place in the LAN.</p>
+<p>On the parent side (&quot;kernel-panic.it&quot; domain name servers), we simply need to add the appropriate <tt>NS</tt> records and the corresponding <tt>A</tt> records:</p>
+
+<div class="code">
+  <div>/var/named/master/db.kernel-panic.it</div>
+<pre>
+[...]
+lan                 IN NS       dns1.lan.kernel-panic.it.
+                    IN NS       dns2.lan.kernel-panic.it.
+
+dns1.lan.kernel-panic.it.   IN A        172.16.0.161
+dns2.lan.kernel-panic.it.   IN A        172.16.0.162
+[...]
+</pre>
+</div>
+
+<p>Delegated name servers will simply have to create the appropriate configuration and zone data files the <a href="dns3.html#dns-3.1">usual way</a>. You can find the complete files <a href="dns5.html#dns-5.2.3">here</a>.</p>
+
+<h3><a id="dns-4.3" name="dns-4.3"></a>4.3 Dynamic updates and notify</h3>
+
+<p>And what about our <acronym title="Dinamic Host Configuration Protocol">DHCP</acronym>-enabled clients? Can Bind map names to dynamic IP addresses? Of course the answer is &quot;yes&quot;! Bind supports <dfn>dynamic update</dfn> (see [<a href="http://www.faqs.org/rfcs/rfc2136.html">RFC2136</a>]), which enables the DHCP server to automatically add/delete/modify resource records whenever changes occur. Configuration is very simple (assuming the DHCP server address is <tt>172.16.0.163</tt>):</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+zone &quot;lan.kernel-panic.it&quot; {
+    type            master;
+    file            &quot;master/db.lan.kernel-panic.it&quot;;
+    allow-update    { 172.16.0.163; };
+    notify          yes;
+};
+</pre>
+</div>
+
+<p>The <tt>allow-update</tt> clause specifies the list of IP addresses allowed to update the zone (usually just the DHCP server). It may also accept an ACL name or a TSIG key (see <a href="#dns-4.4">below</a> for further details). For example:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+key dhcp-dns1.lan.kernel-panic.it. {
+    algorithm       hmac-md5;
+    secret          &quot;+io/5nabnVFgC4Tx+UAkgg==&quot;;
+};
+
+zone &quot;lan.kernel-panic.it&quot; {
+    type            master;
+    file            &quot;master/db.lan.kernel-panic.it&quot;;
+    allow-update    { key dhcp-dns1.lan.kernel-panic.it.; };
+    notify          yes;
+};
+</pre>
+</div>
+
+<p>The <tt>notify</tt> clause tells Bind to send a <tt>NOTIFY</tt> announcement to all of the slave name servers for that zone to inform them that the zone data has changed. This allows Bind to minimize the delay in synchronization between master and slave name servers. Dynamic update and DNS NOTIFY work great together, beacuse Bind 9 automatically increments the zone's <a href="dns3.html#dns-3.2">serial number</a> after each update and this increment automatically triggers zone change notification.</p>
+<p>Alternatively to <tt>allow-update</tt>, Bind 9 also supports the <tt>update-policy</tt> clause, which allows for a stricter control over which <a href="#dns-4.4">keys</a> are allowed to update which records in a specific zone. For example:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+zone &quot;lan.kernel-panic.it&quot; {
+    type            master;
+    file            &quot;master/db.lan.kernel-panic.it&quot;;
+    update-policy   { grant dhcp-dns1.lan.kernel-panic.it. subdomain lan.kernel-panic.it. A; };
+    notify          yes;
+};
+</pre>
+</div>
+
+<p>Please refer to the <a href="https://www.isc.org/software/bind/documentation/arm94#dynamic_update_policies">official documentation</a> for a detailed explanation of the <tt>update-policy</tt>'s syntax.</p>
+
+<h3><a id="dns-4.4" name="dns-4.4"></a>4.4 TSIG and security</h3>
+
+<p>So far, our only concern was having everything running smooth, without caring much about security; but we can't ignore that part of our name servers will be exposed to the Internet, so security is not an option.</p>
+<p>The most basic security measures are implemented by default on OpenBSD: Bind runs as the unprivileged user &quot;<tt>named</tt>&quot; and chrooted inside the <tt>/var/named</tt> directory. This will make it much harder for attackers to exploit any newly-discovered vulnerabilities.</p>
+<p>Another important security measure is to configure Bind not to reveal its version number, just to make attackers' lives a little more complicated.</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+options {
+    version         &quot;Go hack yourself!&quot;;
+};
+</pre>
+</div>
+
+<p>We have already seen how <a href="#dns-4.1">views</a> and <a href="#dns-4.1">acls</a> can help in dealing with NAT and firewalls, but they are also a great security feature, since they allow you to select which hosts should access which information. For example, using the <tt>recursion</tt> substatement within a view (or the <tt>allow-recursion</tt> clause in the <tt>options</tt> statement), you can specify which hosts are allowed to perform recursive queries against your name servers. This allows you to prevent some of the most common spoofing attacks (see [<a href="http://www.oreilly.com/catalog/dns5/">DNS&amp;BIND</a>]).</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+acl &quot;dmz&quot; {
+    127/8; 172.16.240/24;
+};
+
+view &quot;dmz&quot; {
+    match-clients   { &quot;dmz&quot; };
+    recursion       yes;
+};
+
+view &quot;internet&quot; {
+    match-clients   { any; };
+    recursion       no;
+};
+</pre>
+</div>
+
+<p>Needless to say, if your name server only answers queries from other name servers or for domains it is authoritative for (such as our <a href="#dns-4.2">LAN</a> servers), you should completely turn off recursion.</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+options {
+    version         &quot;Go hack yourself!&quot;;
+    recursion       no;
+};
+</pre>
+</div>
+
+<p>Besides recursion, Bind also allows you to restrict queries and zone transfers using the <tt>allow-query</tt> and <tt>allow-transfer</tt> clauses respectively. These clauses apply to a specific zone, if used within a <tt>zone</tt> statement, or globally, if used within the <tt>options</tt> statement. E.g.:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+acl &quot;dmz&quot; { 127/8; 172.16.240/24; };
+
+options {
+    <i># Restrict zone transfers to our internal name servers</i>
+    allow-transfer  { 172.16.0.161; 172.16.0.162; };
+};
+
+zone &quot;kernel-panic.it&quot; {
+    type            master;
+    file            &quot;master/db.kernel-panic.it&quot;
+    <i># Restrict queries to DMZ servers</i>
+    allow-query     { &quot;dmz&quot; };
+};
+</pre>
+</div>
+
+<p>Using acls and address match lists to restrict zone transfers is better than nothing, but using <dfn>transaction signatures</dfn>, or TSIG (see [<a href="http://www.faqs.org/rfcs/rfc2845.html">RFC2845</a>]), is considerably better. TSIG allows name servers to authenticate DNS messages, using shared secrets (<dfn>TSIG keys</dfn>) and a one-way hash function (HMAC-MD5).</p>
+<p>TSIG configuration is very simple. The first step is to create the shared key(s): the easiest way is using the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=dnssec-keygen&amp;sektion=8">dnssec-keygen(8)</a></tt> program, which creates two files, both containing the key generated.</p>
+
+<div class="code">
+<pre>
+# <kbd>dnssec-keygen -a HMAC-MD5 -b 128 -n HOST rndc-key</kbd>
+Krndc-key.+157+32572
+# <kbd>ls</kbd>
+Krndc-key.+157+32572.key             Krndc-key.+157+32572.private
+# <kbd>cat Krndc-key.+157+32572.key</kbd>
+rndc-key. IN KEY 512 3 157 p2L9cNndDtTTHn6GzGHOEg==
+# <kbd>cat Krndc-key.+157+32572.private</kbd>
+Private-key-format: v1.2
+Algorithm: 157 (HMAC_MD5)
+Key: p2L9cNndDtTTHn6GzGHOEg==
+</pre>
+</div>
+
+<p>The next step is to configure both name servers with the shared key:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+key dns1-dns2.kernel-panic.it. {
+    algorithm       hmac-md5;
+    secret          &quot;p2L9cNndDtTTHn6GzGHOEg==&quot;;
+};
+</pre>
+</div>
+
+<p>Though it may look like a domain name, the argument to the <tt>key</tt> statement (<tt>dns1-dns2.kernel-panic.it.</tt>) is actually the name of the key. As suggested by the RFC, it is made up of the names of the two hosts that use it. The RFC also recommends that you use different keys for each pair of hosts.</p>
+<p>Now that the keys are in place, we can use the <tt>keys</tt> clause of the <tt>server</tt> statement to tell the slave name server to sign all zone transfer requests and queries sent to its master server:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+server 172.16.240.154
+    keys            { dns1-dns2.kernel-panic.it.; };
+};
+</pre>
+</div>
+
+<p>Similarly, on the master name server, we can restrict zone tranfers only to those signed with a specific key:</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+zone &quot;kernel-panic.it&quot; {
+    type            master;
+    file            &quot;master/db.kernel-panic.it&quot;;
+    allow-transfer  { key dns1-dns2.kernel-panic.it.; };
+};
+</pre>
+</div>
+
+<h3><a id="dns-4.5" name="dns-4.5"></a>4.5 Logging</h3>
+
+<p>Bind allows for a very flexible and fine-grained configuration of logging options. Log messages are divided into a number of <dfn>categories</dfn>, according to the information they contain, and each category can have its log messages sent to one or more user-defined <dfn>channels</dfn>.</p>
+<p>Channels allow you to specify the output destination (a file, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslogd&amp;sektion=8">syslogd(8)</a></tt> or stderr), the minimum severity level required to report an event (<tt>critical</tt>, <tt>error</tt>, <tt>warning</tt> and so on) and whether to include time, category or severity information in the log message.</p>
+<p>The configuration of channels and categories is placed inside the <tt>logging</tt> directive; below is a sample configuration, with Bind logging to the <tt>local0</tt> syslog facility, writing security events to an additional file (<tt>/var/named/log/security.log</tt>) and discarding messages about misconfigured remote servers (please refer to the <a href="https://www.isc.org/software/bind/documentation/arm94#id2574861">documentation</a> for further details on available categories and predefined channels):</p>
+
+<div class="code">
+  <div>/var/named/etc/named.conf</div>
+<pre>
+<i># Configure the logging options</i>
+logging {
+    channel security_channel {
+        <i># Send log messages to the specified file</i>
+        file            &quot;log/security.log&quot;;
+        <i># Log all messages</i>
+        severity        debug;
+        <i># Log the date and time of the message</i>
+        print-time      yes;
+        <i># Log the category of the message</i>
+        print-category  yes;
+        <i># Log the severity level of the message</i>
+        print-severity  yes; 
+    };
+
+    channel default {
+        <i># Send logs to the 'local0' syslog facility</i>
+        syslog          local0;
+        <i># Log messages of severity 'info' or higher</i>
+        severity        info;
+        print-category  yes;
+        print-severity  yes;
+    };
+
+    <i># Logs about approval and denial of requests</i>
+    category security {
+        security_channel;
+        default;
+    };
+
+    <i># Ignore logs about misconfigured remote servers</i>
+    category lame-servers { null; };
+
+    <i># Default logging options</i>
+    category default { default; };
+};
+</pre>
+</div>
+
+<p>Using the <tt>local0</tt> facility allows Bind to log to a dedicated file, without cluttering generic log files. After adding the appropriate line to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslog.conf&amp;sektion=5">/etc/syslog.conf(5)</a></tt>:</p>
+
+<div class="code">
+  <div>/etc/syslog.conf</div>
+<pre>
+[ ... ]
+local0.*                                                /var/log/named.log
+</pre>
+</div>
+
+<p>we need to create the log file and reload both <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslogd&amp;sektion=8">syslogd(8)</a></tt> and <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=named&amp;sektion=8">named(8)</a></tt>. We will also create the <tt>/var/named/log</tt> directory, where the <tt>security_channel</tt> log file will be written:</p>
+
+<div class="code">
+<pre>
+# <kbd>touch /var/log/named.log</kbd>
+# <kbd>install -m 700 -o named -g named -d /var/named/log</kbd>
+# <kbd>pkill -HUP syslogd</kbd>
+# <kbd>rndc reload</kbd>
+server reload successful
+#
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="dns3.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="dns5.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>OpenBSD as a domain name server</h3>
+    <div>Previous: <a href="dns3.html">3. Base configuration</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="dns5.html">5. Appendix A</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
+

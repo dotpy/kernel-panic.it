@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="stylesheet" type="text/css" href="../../css/pydoc.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf6.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf8.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf6.html">6. Addresses, address pools and tables</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pf8.html">8. Using the py-pf module</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>7. Anatomy of a Packet Filter rule</h2>
+
+<p>PF makes its filtering decisions based on user-defined <dfn>rules</dfn>, i.e. statements specifying the action to take (block, pass or match) whenever a packet meets certain criteria; typically, packet filtering is done based on source and destination addresses and ports, layer 3 and 4 protocols, traffic direction and so on.</p>
+
+<h3><a id="pf-7.1" name="pf-7.1"></a>7.1 PFRule objects</h3>
+
+<p>Rules are represented by the <tt>pf.PFRule</tt> class:</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFRule</span>([<var>**kw</var>])</tt><dt>
+  <dd>A <tt>PFRule</tt> object can be instantiated by passing the value of its attributes as keywords; instantiating a <tt>PFRule</tt> with no arguments results in a &quot;<tt>pass all</tt>&quot; rule.</dd>
+</dl>
+
+<p><tt>PFRule</tt> objects have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFRule.<span class="attr">action</span></tt></dt>
+  <dd>A constant specifying the action to be taken by Packet Filter when the rule is matched; valid actions are (names should be pretty self-explanatory): <tt>pf.PF_PASS</tt>, <tt>pf.PF_DROP</tt>, <tt>pf.PF_SCRUB</tt>, <tt>pf.PF_NOSCRUB</tt>, <tt>pf.PF_NAT</tt>, <tt>pf.PF_NONAT</tt>, <tt>pf.PF_BINAT</tt>, <tt>pf.PF_NOBINAT</tt>, <tt>pf.PF_RDR</tt>, <tt>pf.PF_NORDR</tt>, <tt>pf.PF_SYNPROXY_DROP</tt> and <tt>pf.PF_MATCH</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">direction</span></tt></dt>
+  <dd>The direction of traffic: it can be <tt>pf.PF_IN</tt> (incoming packets), <tt>pf.PF_OUT</tt> (outgoing packets) or <tt>pf.PF_INOUT</tt> (packets in both directions).</dd>
+
+  <dt><tt>PFRule.<span class="attr">log</span></tt></dt>
+  <dd>A bitmask containing the logging flags; valid flags are <tt>pf.PF_LOG</tt> (log the packet that establishes the state), <tt>pf.PF_LOG_ALL</tt> (log all packets for the connection) and <tt>pf.PF_LOG_SOCKET_LOOKUP</tt> (additionally log the user ID and PID of the process that the socket belongs to).</dd>
+
+  <dt><tt>PFRule.<span class="attr">logif</span></tt></dt>
+  <dd>The number of the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pflog&amp;sektion=4"><tt>pflog(4)</tt></a> interface where logs should be sent (e.g. <tt>0</tt> for <tt>pflog0</tt>).</dd>
+
+  <dt><tt>PFRule.<span class="attr">quick</span></tt></dt>
+  <dd>A boolean value that, if <tt>True</tt>, forces Packet Filter to skip the evaluation of subsequent rules if the packet matches the current rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">src</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.1.3"><tt>PFRuleAddr</tt></a> instance containing the source address/port pair.</dd>
+
+  <dt><tt>PFRule.<span class="attr">dst</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.1.3"><tt>PFRuleAddr</tt></a> instance containing the destination address/port pair.</dd>
+
+  <dt><tt>PFRule.<span class="attr">ifname</span></tt></dt>
+  <dd>The name of the interface to which the rule applies.</dd>
+
+  <dt><tt>PFRule.<span class="attr">ifnot</span></tt></dt>
+  <dd>Boolean value that allows you to negate the interface specified by <tt>PFRule.ifname</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">rt</span></tt></dt>
+  <dd>A constant specifying optional routing options for packets matching this rule; valid options are: <tt>pf.PF_FASTROUTE</tt> (normal route lookup), <tt>pf.PF_ROUTETO</tt> (route the packet to the specified interface, with an optional address for the next hop), <tt>pf.PF_DUPTO</tt> (create a duplicate of the packet and route it like <tt>pf.PF_ROUTETO</tt>), <tt>pf.PF_REPLYTO</tt> (similar to <tt>pf.PF_ROUTETO</tt>, but route packets that pass in the opposite direction (replies) to the specified interface). The interface and the optional next-hop address are specified by means of a <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object contained in the <tt>PFRule.route</tt> attribute.</dd>
+
+  <dt><tt>PFRule.<span class="attr">route</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for filtering rules with <tt>PFRule.rt</tt> set to <tt>pf.PF_ROUTETO</tt>, <tt>pf.PF_DUPTO</tt> or <tt>pf.PF_REPLYTO</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">nat</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for <acronym title="Network Address Translation">NAT</acronym>ting rules (i.e. the target of the <tt>nat-to</tt> option in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a> format).</dd>
+
+  <dt><tt>PFRule.<span class="attr">rdr</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for redirection rules (i.e. the target of the <tt>rdr-to</tt> option in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a> format).</dd>
+
+  <dt><tt>PFRule.<span class="attr">af</span></tt></dt>
+  <dd>The address family; it can be one of <tt>AF_INET</tt> (IPv4), <tt>AF_INET6</tt> (IPv6) or <tt>AF_UNSPEC</tt> (address family not specified); these constants are available through the <tt>socket</tt> module.</dd>
+
+  <dt><tt>PFRule.<span class="attr">proto</span></tt></dt>
+  <dd>A constant specifying the transport layer protocol; the <tt>socket</tt> module provides constants for most protocols.</dd>
+
+  <dt><tt>PFRule.<span class="attr">uid</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.4"><tt>PFUid</tt></a> object; the rule only applies to packets to and from sockets owned by the specified user.</dd>
+
+  <dt><tt>PFRule.<span class="attr">gid</span></tt></dt>
+  <dd>A <a href="pf5.html#pf-5.4"><tt>PFGid</tt></a> object; the rule only applies to packets to and from sockets owned by the specified group.</dd>
+
+  <dt><tt>PFRule.<span class="attr">flags</span></tt></dt>
+  <dd>A string containing the TCP flags that should be set out of <tt>PFRule.flagset</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">flagset</span></tt></dt>
+  <dd>A string containing the TCP flags that must be checked by Packet Filter.</dd>
+
+  <dt><tt>PFRule.<span class="attr">type</span></tt></dt>
+  <dd>A constant specifying the ICMP or ICMPv6 type that the rule applies to; it can be one of the <tt>ICMP_*</tt> type constants and is stored incremented by 1. It is valid only when <tt>PFRule.proto</tt> is <tt>IPPROTO_ICMP</tt> or <tt>IPPROTO_ICMPV6</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">code</span></tt></dt>
+  <dd>A constant specifying the ICMP or ICMPv6 code that the rule applies to; it can be one of the <tt>ICMP_*</tt> code constants and is stored incremented by 1. It is valid only when <tt>PFRule.proto</tt> is <tt>IPPROTO_ICMP</tt> or <tt>IPPROTO_ICMPV6</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">tos</span></tt></dt>
+  <dd>An integer containing the <acronym title="Type of Service">TOS</acronym> bits that must be set in the packets for the rule to match; the following constants may be used: <tt>pf.IPTOS_LOWDELAY</tt>, <tt>pf.IPTOS_THROUGHPUT</tt> and <tt>pf.IPTOS_RELIABILITY</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">set_tos</span></tt></dt>
+  <dd>The <acronym title="Type of Service">TOS</acronym> bits to enforce on matching packets; the following constants may be used: <tt>pf.IPTOS_LOWDELAY</tt>, <tt>pf.IPTOS_THROUGHPUT</tt> and <tt>pf.IPTOS_RELIABILITY</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">keep_state</span></tt></dt>
+  <dd>A constant specifying the state tracking mode for the rule; valid values are <tt>pf.PF_STATE_NORMAL</tt> (default state tracking), <tt>pf.PF_STATE_MODULATE</tt> (with randomized <acronym title="Initial Sequence Numbers">ISNs</acronym>) and <tt>pf.PF_STATE_SYNPROXY</tt> (with Packet Filter acting as a SYN proxy).</dd>
+
+  <dt><tt>PFRule.<span class="attr">rule_flag</span></tt></dt>
+  <dd>A bitmask containing various rule options, including:
+    <ul>
+      <li>stateful tracking options: <tt>pf.PFRULE_NOSYNC</tt> (don't synchronize state changes with <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4"><tt>pfsync(4)</tt></a>), <tt>pf.PFRULE_SRCTRACK</tt> (track the number of states per source IP) and <tt>pf.PFRULE_RULESRCTRACK</tt> (the maximum number of states created by this rule is limited by the rules's <tt>PFRule.max_src_nodes</tt> and <tt>PFRule.max_src_states</tt> attributes).</li>
+      <li>block-policy options: <tt>pf.PFRULE_DROP</tt> (silently drop the packet), <tt>pf.PFRULE_RETURNRST</tt> (for TCP packets, issue a RST to close the connection), <tt>pf.PFRULE_RETURNICMP</tt> (return ICMP messages for packets matching this rule) and <tt>pf.PFRULE_RETURN</tt> (return a TCP RST for TCP packets and an ICMP UNREACHABLE message for other packets).</li>
+    </ul>
+  </dd>
+
+  <dt><tt>PFRule.<span class="attr">scrub_flags</span></tt></dt>
+  <dd>A bitmask containing traffic normalization (scrub) options: <tt>pf.PFSTATE_NODF</tt> (clear the <dfn>don't fragment</dfn> bit), <tt>pf.PFSTATE_RANDOMID</tt> (randomize the IP identification field), <tt>pf.PFSTATE_SCRUB_TCP</tt> (statefully normalize TCP connections), <tt>pf.PFSTATE_SETTOS</tt> (enable enforcing of TOS, as specified by <tt>PFRule.set_tos</tt>, for matching packets);</li></dd>
+
+  <dt><tt>PFRule.<span class="attr">return_ttl</span></tt></dt>
+  <dd>If the block-policy for this rule is <tt>pf.PFRULE_RETURNRST</tt>, force the TTL of the returned packets to the specified value.</dd>
+
+  <dt><tt>PFRule.<span class="attr">return_icmp</span></tt></dt>
+  <dd>A constant specifying the ICMP code to return when the block-policy is set to <tt>pf.PFRULE_RETURNICMP</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">return_icmp6</span></tt></dt>
+  <dd>A constant specifying the ICMPv6 code to return when the block-policy is set to <tt>pf.PFRULE_RETURNICMP</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">max_states</span></tt></dt>
+  <dd>The maximum number of concurrent states that the rule may create.</dd>
+
+  <dt><tt>PFRule.<span class="attr">src_nodes</span></tt></dt>
+  <dd>The current number of source addresses which have state table entries for this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">max_src_nodes</span></tt></dt>
+  <dd>The maximum number of source addresses which can simultaneously have state table entries for this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">max_src_states</span></tt></dt>
+  <dd>The maximum number of simultaneous state entries that a single source address can create with this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">max_src_conn</span></tt></dt>
+  <dd>The maximum number of simultaneous TCP connections which have completed the 3-way handshake that a single host can make.</dd>
+
+  <dt><tt>PFRule.<span class="attr">max_src_conn_rate</span></tt></dt>
+  <dd>A two-items tuple (in the form <tt>(<var>number</var>, <var>seconds</var>)</tt>) specifying the maximum number of new connections over the given time interval.</dd>
+
+  <dt><tt>PFRule.<span class="attr">min_ttl</span></tt></dt>
+  <dd>The minimum <acronym title="Time To Live">TTL</acronym> to be enforced for matching IP packets.</dd>
+
+  <dt><tt>PFRule.<span class="attr">max_mss</span></tt></dt>
+  <dd>The maximum <acronym title="Maximum Segment Size">MSS</acronym> to be enforced for matching TCP packets.</dd>
+
+  <dt><tt>PFRule.<span class="attr">label</span></tt></dt>
+  <dd>A string specifying a label for the rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">qname</span></tt></dt>
+  <dd>The name of the queue to which packets matching this rule must be assigned.</dd>
+
+  <dt><tt>PFRule.<span class="attr">qid</span></tt></dt>
+  <dd>The numeric ID of the queue specified by <tt>PFRule.qname</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">pqname</span></tt></dt>
+  <dd>The optional queue to which packets which have a TOS of <dfn>lowdelay</dfn> and TCP ACKs with no data payload will be assigned.</dd>
+
+  <dt><tt>PFRule.<span class="attr">pqid</span></tt></dt>
+  <dd>The numeric ID of the queue specified by <tt>PFRule.pqname</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">rcv_ifname</span></tt></dt>
+  <dd>String specifying an interface or interface group name; the rule will only match packets which were received on this interface or interface group.</dd>
+
+  <dt><tt>PFRule.<span class="attr">tagname</span></tt></dt>
+  <dd>The name of the tag to assign to packets matching this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">match_tagname</span></tt></dt>
+  <dd>The name of the tag that the packet must be tagged with for the rule to match.</dd>
+
+  <dt><tt>PFRule.<span class="attr">match_tag_not</span></tt></dt>
+  <dd>A boolean value that, if set to <tt>True</tt>, allows you to negate <tt>PFRule.match_tagname</tt>.</dd>
+
+  <dt><tt>PFRule.<span class="attr">rtableid</span></tt></dt>
+  <dd>The ID of the alternate routing table to use for the routing lookup.</dd>
+
+  <dt><tt>PFRule.<span class="attr">overload_tblname</span></tt></dt>
+  <dd>The name of the table to which hosts connecting faster than the <tt>PFRule.max_src_conn_rate</tt> must be added.</dd>
+
+  <dt><tt>PFRule.<span class="attr">flush</span></tt></dt>
+  <dd>A bitmask specifying the flush options for hosts added to the table specified by <tt>PFRule.overload_tblname</tt>; valid flags are: <tt>pf.PF_FLUSH</tt> (kill all states created by this rule and originating from the offending host) and <tt>pf.PF_FLUSH_GLOBAL</tt> (kill all states originating from the offending host).</dd>
+ 
+ <dt><tt>PFRule.<span class="attr">evaluations</span></tt></dt>
+  <dd>The number of evaluations for this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">packets</span></tt></dt>
+  <dd>The number of packets that matched this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">bytes</span></tt></dt>
+  <dd>The total size of packets that matched this rule.</dd>
+<!--
+  <dt><tt>PFRule.os_fingerprint</tt></dt>
+  <dd></dd>
+-->
+
+  <dt><tt>PFRule.<span class="attr">onrdomain</span></tt></dt>
+  <dd>The number of the routing domain that packets must come in on, or go out through for this rule to apply.</dd>
+
+  <dt><tt>PFRule.<span class="attr">timeout</span></tt></dt>
+  <dd>A list of <tt>PFTM_MAX</tt> elements specifying the timeout values to be used for states created by this rule; <tt>PFTM_*</tt> constants can be used as indexes for this list.</dd>
+
+  <dt><tt>PFRule.<span class="attr">states_cur</span></tt></dt>
+  <dd>The number of current states for this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">states_tot</span></tt></dt>
+  <dd>The total number of states created by this rule.</dd>
+<!--
+  <dt><tt>PFRule.rt_listid</tt></dt>
+  <dd></dd>
+-->
+
+  <dt><tt>PFRule.<span class="attr">nr</span></tt></dt>
+  <dd>An integer that uniquely identifies the rule inside the ruleset.</dd>
+
+  <dt><tt>PFRule.<span class="attr">prob</span></tt></dt>
+  <dd>The probability with which the rule should be honoured; the value must be between 0 and 1, bounds not included.</dd>
+
+  <dt><tt>PFRule.<span class="attr">cuid</span></tt></dt>
+  <dd>The UID of the user who added this rule.</dd>
+
+  <dt><tt>PFRule.<span class="attr">cpid</span></tt></dt>
+  <dd>The PID of the process which added this rule.</dd>
+
+<!--
+  <dt><tt>PFRule.tag</tt></dt>
+  <dd></dd>
+  <dt><tt>PFRule.match_tag</tt></dt>
+  <dd></dd>
+-->
+
+  <dt><tt>PFRule.<span class="attr">allow_opts</span></tt></dt>
+  <dd>A boolean value that, if set to <tt>True</tt>, allows the passing of IPv4 packets with IP options or IPv6 packets with routing extension headers.</dd>
+
+<!--
+  <dt><tt>PFRule.anchor_relative</tt></dt>
+  <dd></dd>
+  <dt><tt>PFRule.anchor_wildcard</tt></dt>
+  <dd></dd>
+-->
+
+  <dt><tt>PFRule.<span class="attr">prio</span></tt></dt>
+  <dd>A two-items tuple to assign a specific queueing priority to packets matching this rule; priorities are assigned as integers <tt>0</tt> through <tt>7</tt>, with a default priority of <tt>3</tt>. The second item, if different from the first, allows you to specify a different priority for packets which have a TOS of lowdelay and TCP ACKs with no data payload.</dd>
+
+  <dt><tt>PFRule.<span class="attr">divert</span></tt></dt>
+  <dd>A two-items tuple (<a href="pf6.html#pf-6.1.1"><tt>PFAddr</tt></a>, <a href="pf6.html#pf-6.1.2"><tt>PFPort</tt></a>) used to redirect packets to a local socket bound to that address and port. You can set <tt>address</tt> to <tt>None</tt> in order to receive replies for sockets that are bound to addresses which are not local to the machine (<tt>divert-reply</tt> parameter in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a>).</dd>
+
+  <dt><tt>PFRule.<span class="attr">divert_packet</span></tt></dt>
+  <dd>A <a href="pf6.html#pf-6.1.2"><tt>PFPort</tt></a> instance with the port number of the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=divert&amp;sektion=4"><tt>divert(4)</tt></a> socket to which to send matching packets.</dd>
+
+</dl>
+
+<p>Below are a few examples; for each example, the same rule in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a> format is provided:</p>
+
+<div class="code">
+<pre>
+import socket
+
+<i># Interfaces</i>
+ext_if = pf.PFAddr(type=pf.PF_ADDR_DYNIFTL, ifname=&quot;sis0&quot;)
+int_if = &quot;sis1&quot;
+
+<i># Internal servers</i>
+www_srv  = pf.PFAddr(&quot;192.168.30.10&quot;)
+www_prt  = pf.PFPort(&quot;www&quot;, socket.IPPROTO_TCP)
+smtp_srv = pf.PFAddr(&quot;192.168.30.11&quot;)
+smtp_prt = pf.PFPort(&quot;smtp&quot;, socket.IPPROTO_TCP)
+
+<i># NAT outgoing connections
+# rule: match out on $ext_if inet from !($ext_if) to any nat-to ($ext_if)</i>
+r0 = pf.PFRule(action=pf.PF_MATCH,
+               direction=pf.PF_OUT,
+               ifname=ext_if.ifname,
+               af=socket.AF_INET,
+               src=PFRuleAddr(addr=ext_if, neg=True),
+               nat=PFPool(pf.PF_POOL_NAT, ext_if))
+
+<i># Redirect web services (with load balancing)
+# rule: match in on $ext_if inet proto tcp from any to ($ext_if) port $www_prt \
+#           rdr-to $www_srv round-robin sticky-address</i>
+r1 = pf.PFRule(action=pf.PF_MATCH,
+               direction=pf.PF_IN,
+               ifname=ext_if.ifname,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_TCP,
+               dst=pf.PFRuleAddr(ext_if, www_prt),
+               rdr=pf.PFPool(pf.PF_POOL_RDR, www_srv,
+                             opts=pf.PF_POOL_ROUNDROBIN|pf.PF_POOL_STICKYADDR))
+
+<i># Default deny
+# rule: block drop all</i>
+r2 = pf.PFRule(action=pf.PF_DROP)
+
+<i># Spoofed address protection
+# rule: block drop in quick from urpf-failed</i>
+r3 = pf.PFRule(action=pf.PF_DROP,
+               direction=pf.PF_IN,
+               quick=True,
+               src=pf.PFRuleAddr(pf.PFAddr(type=pf.PF_ADDR_URPFFAILED)))
+
+<i># Allow traffic to web server
+# rules: pass in on $ext_if inet proto tcp from any to $www_srv port $www_prt synproxy state
+#        pass out on $int_if inet proto tcp from any to $www_srv port $www_prt</i>
+r4 = pf.PFRule(action=pf.PF_PASS,
+               direction=pf.PF_IN,
+               ifname=ext_if.ifname,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_TCP,
+               dst=pf.PFRuleAddr(www_srv, www_prt),
+               flags=&quot;S&quot;, flagset=&quot;SA&quot;,
+               keep_state=pf.PF_STATE_SYNPROXY)
+r5 = pf.PFRule(action=pf.PF_PASS,
+               direction=pf.PF_OUT,
+               ifname=int_if,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_TCP,
+               dst=pf.PFRuleAddr(www_srv, www_prt),
+               flags=&quot;S&quot;, flagset=&quot;SA&quot;,
+               keep_state=pf.PF_STATE_NORMAL)
+
+<i># Creating template rules can make writing rules easier and more readable.
+# The two previous rules could have been written also as follows:</i>
+class PassRule(pf.PFRule):
+    def __init__(self, **kw):
+        d = {&quot;action&quot;: pf.PF_PASS, &quot;af&quot;: socket.AF_INET, &quot;proto&quot;: socket.IPPROTO_TCP,
+             &quot;flags&quot;: &quot;S&quot;, &quot;flagset&quot;: &quot;SA&quot;, &quot;keep_state&quot;: pf.PF_STATE_NORMAL}
+        d.update(kw)
+        super(PassRule, self).__init__(**d)
+
+r4 = PassRule(direction=pf.PF_IN, ifname=ext_if.ifname,
+               dst=pf.PFRuleAddr(www_srv, www_prt), keep_state=pf.PF_STATE_SYNPROXY)
+r5 = PassRule(direction=pf.PF_OUT, ifname=int_if, dst=pf.PFRuleAddr(www_srv, www_prt))
+
+<i># Allow incoming &quot;unreach code needfrag&quot; ICMP packets and all outgoing ICMP traffic.
+# rules: pass in  inet proto icmp all icmp-type unreach code needfrag
+#        pass out inet proto icmp all</i>
+r6 = pf.PFRule(action=pf.PF_PASS,
+               direction=pf.PF_IN,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_ICMP,
+               type=pf.ICMP_UNREACH+1,
+               code=pf.ICMP_UNREACH_NEEDFRAG+1,
+               keep_state=pf.PF_STATE_NORMAL)
+r7 = pf.PFRule(action=pf.PF_PASS,
+               direction=pf.PF_OUT,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_ICMP,
+               keep_state=pf.PF_STATE_NORMAL)
+
+<i># Allow smtp traffic from all except for addresses in the &lt;spammers&gt; table
+# rules: table &lt;spammers&gt; persist
+#        pass in on $ext_if inet proto tcp from !&lt;spammers&gt; to $smtp_srv port $smtp_prt
+#        pass out on $int_if inet proto tcp from !&lt;spammers&gt; to $smtp_srv port $smtp_prt</i>
+t1 = pf.PFTable(&quot;spammers&quot;, flags=pf.PFR_TFLAG_PERSIST)
+r8 = pf.PFRule(action=pf.PF_PASS,
+               direction=pf.PF_IN,
+               ifname=ext_if.ifname,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_TCP,
+               src=pf.PFRuleAddr(pf.PFAddr(&quot;&lt;{0}&gt;&quot;.format(t1.name)), neg=True),
+               dst=pf.PFRuleAddr(smtp_srv, smtp_prt),
+               flags=&quot;S&quot;, flagset=&quot;SA&quot;)
+r9 = pf.PFRule(action=pf.PF_PASS,
+               direction=pf.PF_OUT,
+               ifname=int_if,
+               af=socket.AF_INET,
+               proto=socket.IPPROTO_TCP,
+               src=pf.PFRuleAddr(pf.PFAddr(&quot;&lt;{0}&gt;&quot;.format(t1.name)), neg=True),
+               dst=pf.PFRuleAddr(smtp_srv, smtp_prt),
+               flags=&quot;S&quot;, flagset=&quot;SA&quot;)
+</pre>
+</div>
+
+<p>The <a href="#pf-7.2">next paragraph</a> explains how these rules can be actually loaded onto the system.</p>
+
+<h3><a id="pf-7.2" name="pf-7.2"></a>7.2 PFRuleset objects</h3>
+
+<p>Rules are grouped together in <dfn>rulesets</dfn>; each ruleset has a name (the name of the main ruleset is the empty string) and may contain filtering rules, tables and other rulesets. Nested rulesets are accessed through their absolute path (i.e. the name of the parent rulesets, separated by &quot;<tt>/</tt>&quot;) and can be manipulated at runtime.</p>
+<p>Rulesets are represented by the <tt>pf.PFRuleset</tt> class, which is a subclass of <tt>pf.PFRule</tt>; in fact, rulesets can specify packet filtering parameters just like normal rules, in order to apply their inner rules only to packets with specific characteristics.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFRuleset</span>([<var>name</var>[, <var>**kw</var>]])</tt><dt>
+  <dd>The <tt>name</tt> parameter allows you to assign a name to the ruleset; if omitted, it will default to the empty string, i.e. the name of the main ruleset. The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+</dl>
+
+<p>Besides the attributes inherited from <tt><a href="#pf-7.1">pf.PFRule</a></tt> (which will be omitted for conciseness), <tt>pf.PFRuleset</tt> objects support the following attributes and methods:</p>
+
+<dl class="padded">
+  <dt><tt>PFRuleset.<span class="attr">name</span></tt><dt>
+  <dd>The name of the ruleset; the main ruleset is named by the empty string.</dd>
+
+  <dt><tt>PFRuleset.<span class="attr">rules</span></tt><dt>
+  <dd>A list containing all the rules (including sub rulesets) defined in this ruleset.</dd>
+
+  <dt><tt>PFRuleset.<span class="attr">tables</span></tt><dt>
+  <dd>A list containing all the tables defined in this ruleset.</dd>
+
+  <dt><tt>PFRuleset.<span class="attr">append</span>(<var>*items</var>)</tt><dt>
+  <dd>Append one or more rules or tables to the ruleset. <tt>items</tt> can be either <tt><a href="#pf-7.1">PFRule</a></tt>, <tt>PFRuleset</tt> or <tt><a href="pf6.html#pf-6.3">PFTable</a></tt> objects.</dd>
+
+  <dt><tt>PFRuleset.<span class="attr">insert</span>(<var>index</var>, <var>rule</var>)</tt><dt>
+  <dd>Insert one or more rules in the ruleset before <tt>index</tt>; <tt>rules</tt> must be <tt><a href="#pf-7.1">PFRule</a></tt> or <tt>PFRuleset</tt> objects.</dd>
+
+  <dt><tt>PFRuleset.<span class="attr">remove</span>([<var>index</var>])</tt><dt>
+  <dd>Remove a rule from the ruleset. <tt>index</tt> allows you to specify the index of the rule to remove; if omitted, the last rule will be removed.</dd>
+</dl>
+
+<p>In the following example, the rules created in the <a href="#pf-7.1">previous paragraph</a>, will be loaded onto the system:</p>
+
+<div class="code">
+<pre>
+<i># Initialize and populate the ruleset</i>
+rs = pf.PFRuleset()
+rs.append(r0, r1, r2, r3, r4, r5, r6, r7, t1, r8, r9)
+
+<i># Load rules</i>
+filter = pf.PacketFilter()
+filter.load_ruleset(rs)
+
+<i># Retrieve rules and print them</i>
+print filter.get_ruleset()
+</pre>
+</div>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="pf6.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="pf8.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>py-pf - Managing OpenBSD's Packet Filter with Python</h3>
+    <div>Previous: <a href="pf6.html">6. Addresses, address pools and tables</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="pf8.html">8. Using the py-pf module</a>
+    </div>
+  </div>
+
+</body>
+
+</html>

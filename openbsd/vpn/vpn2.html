@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,virtual,private,network,VPN,OpenSSH,OpenVPN,IPsec,AH,ESP,IKE,isakmpd,PF,CARP,sasyncd" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+
+  <title>Building VPNs on OpenBSD - IPsec overview</title>
+
+  <link rel="stylesheet" type="text/css" href="../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="vpn1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="vpn3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Building VPNs on OpenBSD</h3>
+    <div>Previous: <a href="vpn1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="vpn3.html">3. IPsec on OpenBSD</a>
+    </div>
+  </div>
+
+  <hr />
+
+<h2>2. IPsec overview</h2>
+
+<p>IPsec configuration on OpenBSD is a pretty easy and straightforward process, especially compared to most other implementations; nevertheless, IPsec is a rather complicated beast and a good working knowledge of its protocols and internals is essential to configure it and get it to work properly. Therefore, before beginning the configuration, let's take a brief tour of the IPsec protocols and features.</p>
+<p><dfn>IPsec</dfn> (IP security) is a suite of standard protocols <q>designed to provide interoperable, high quality, cryptographically-based security</q> [<a href="http://tools.ietf.org/html/rfc4301">RFC4301</a>] for protecting communications over IPv4 and IPv6 networks. The main security services offered by IPsec are:</p>
+
+<dl class="padded">
+  <dt><dfn>Confidentiality</dfn></dt>
+  <dd>traffic is encrypted to ensure that only the legitimate receiver is able to access the data transmitted.</dd>
+  <dt><dfn>Connectionless integrity</dfn></dt>
+  <dd>ensures that no modifications were made to the data while in transit across the network.</dd>
+  <dt><dfn>Data origin authentication</dfn></dt>
+  <dd>the receiver is able to verify that data actually originates from the claimed source.</dd>
+  <dt><dfn>Detection and rejection of replays</dfn></dt>
+  <dd>duplicate IP datagrams are detected and processed only once.</dd>
+</dl>
+
+<p>These security services are provided at the IP layer (layer 3 of the <acronym title="Open Systems Interconnection">OSI</acronym> model), thus protecting all protocols that may be carried over IP, including IP itself.</p>
+
+<h3><a id="vpn-2.1" name="vpn-2.1"></a>2.1 IPsec protocols</h3>
+
+<p>Most of IPsec security services are provided using two traffic security protocols:</p>
+
+<dl class="padded">
+  <dt>AH (<dfn>Authentication Header</dfn>)</dt>
+  <dd>defined in [<a href="http://tools.ietf.org/html/rfc4302">RFC4302</a>], AH is used to provide connectionless integrity, data origin authentication and optional (at the discretion of the receiver) anti-replay protection for IP datagrams.</dd>
+  <dt>ESP (<dfn>Encapsulating Security Payload</dfn>)</dt>
+  <dd>defined in [<a href="http://tools.ietf.org/html/rfc4302">RFC4303</a>], ESP offers the same set of services as AH (data origin authentication, connectionless integrity and anti-replay), plus confidentiality.</dd>
+</dl>
+
+<p>ESP is by far the most popular of the two protocols, since it provides confidentiality by encrypting network traffic, thus protecting transmitted data from passive attacks. On the other hand, AH provides stronger authentication than ESP as it protects part of the outer IP header as well as the next level protocol data, while ESP only protects the inner (encapsulated) IP header; however, this feature, in addition to not being of great use in most cases, also violates the modularization of the protocol stack (see [<a href="http://www.schneier.com/paper-ipsec.pdf">SCHNEIER</a>], where the AH protocol is proposed for complete elimination).</p>
+<p>AH and ESP may also be applied in combination with each other to exploit the strengths of both protocols but, in most real-world scenarios, ESP alone is enough.</p>
+<p>Both ESP and AH support two modes of operation:</p>
+
+<dl class="padded">
+  <dt>transport mode</dt>
+  <dd>IPsec protects only the payload of the IP packet (usually the transport layer data, hence its name), leaving the IP header, and thus routing, unchanged; transport mode can be used only for host-to-host communication;<div class="block-img"><img src="transport.png" alt="Transport-mode VPN" width="670" height="320" /></div></dd>
+  <dt>tunnel mode</dt>
+  <dd>the entire IP packet is encrypted and/or authenticated and then encapsulated into a new IP packet; tunnel mode is typically used to connect either two remote networks or a host and a network; it is more flexible than transport mode, but imposes more bandwidth overhead;<div class="block-img"><a id="tunnel" name="tunnel"></a><img src="tunnel.png" alt="Tunnel-mode VPN" width="670" height="320" /></div></dd>
+</dl>
+
+<p>The flexibility of tunnel mode allows it to fully supersede the functionality of transport mode, at the reasonable expense of a slightly higher bandwidth overhead. As a consequence, transport mode is rarely used in real-world VPNs and, just like AH, [<a href="http://www.schneier.com/paper-ipsec.pdf">SCHNEIER</a>] suggests that transport mode be eliminated altogether, with the advantage of significantly reducing IPsec complexity.</p>
+<p>In a nutshell, while ESP and tunnel mode are by far the most prevalent choice, AH and transport mode can be considered the black sheeps of the IPsec protocol family!</p>
+
+<h3><a id="vpn-2.2" name="vpn-2.2"></a>2.2 SA, SPI, SPD and other acronyms</h3>
+
+<p>To actually establish the VPN, the IPsec protocols require that some state data be shared between the VPN endpoints, such as the cryptographic algorithms for encryption and authentication, the keys used as input to the cryptographic algorithms, the current sequence number, the antireplay window and so on.</p>
+<p>These data are held in a data structure called a <dfn>Security Association</dfn> (SA); SAs are created by a specific protocol, <acronym title="Internet Key Exchange">IKEv2</acronym> (defined in [<a href="http://tools.ietf.org/html/rfc4306">RFC4306</a>]), which also has the responsibility of mutually authenticating the two communicating parties, setting up the encrypted channel for secure information exchange (these steps are part of the so-called <dfn>IKE phase 1</dfn>) and negotiating the shared secret from which cryptographic keys are derived (<dfn>IKE phase 2</dfn>).</p>
+<p>A Security Association applies to a single protocol (AH or ESP) and to a single direction of traffic flow; therefore, <q>to secure typical, bi-directional communication between two IPsec-enabled systems, a pair of SAs (one in each direction) is required. IKE explicitly creates SA pairs in recognition of this common usage requirement</q> [<a href="http://tools.ietf.org/html/rfc4301#section-4.1">RFC4301</a>].</p>
+<p>SAs are collected in a <dfn>Security Association Database</dfn> (SAD), where they are uniquely identified by the combination of protocol (AH or ESP), destination address and an arbitrary 32-bit value called the <dfn>Security Parameter Index</dfn> (SPI). The SPI has the specific task of helping the receiver to identify the SA under which an incoming packet should be processed.</p>
+<p>But how does IPsec decide which datagrams to send through the VPN and which not? For instance, in a typical site-to-site VPN scenario, the IPsec gateway will usually tunnel and/or protect only traffic between the remote LANs, leaving all other traffic unaffected. Well, IPsec makes such decisions based on <dfn>policies</dfn>, i.e. user-defined rules stating which packets should be protected using IPsec security services, which should be allowed to bypass IPsec protection and which should be discarded. IPsec policies are applied based on some specific fields in the datagram headers, called <dfn>selectors</dfn>, which include: source and destination addresses, Next Layer Protocol, source and destination ports (if used by the next layer protocol).</p>
+<p>As with Security Associations, IPsec policies are held in a database, called the <dfn>Security Policy Database</dfn> (SPD), which must be consulted during the processing of all traffic (inbound and outbound), including traffic not protected by IPsec, that traverses the IPsec boundary.</p>
+
+<h3><a id="vpn-2.3" name="vpn-2.3"></a>2.3 The life of an IPsec packet</h3>
+
+<p>To recap, let's have a look at what the (brief) life of an IPsec packet looks like; we will consider the most common case: an ESP tunnel-mode VPN between two remote networks (see <a href="#tunnel">picture</a> above). The story begins when the first gateway (GW1) receives an outbound packet from a host (Host1) within its internal network and destined for a host (Host2) on the remote network:</p>
+
+<ul>
+  <li>the gateway first compares the datagram's selector fields against the SPD to find the first matching policy;</li>
+  <li>the policy may specify one of three possible processing choices:
+    <ul>
+	  <li>DISCARD, the packet is not allowed to traverse the IPsec boundary and is dropped;</li>
+	  <li>BYPASS, the packet is allowed to cross the IPsec boundary without IPsec protection and will be routed normally;</li>
+	  <li>PROTECT, the packet must be afforded IPsec protection and the policy will point to zero or more SAs in the SAD;</li>
+	</ul>
+	 in the present case, the gateway has a policy specifying that the datagram must be encapsulated with tunnel-mode ESP and sent to GW2;
+  </li>
+  <li>if no SA exists for this policy, IKE will be invoked to negotiate the SAs with the appropriate peer;</li>
+  <li>the first matching SA(s) will be applied, providing the requested security services to the datagram;</li>
+  <li>the IP datagram will be encapsulated in ESP and the outer IP header will have the addresses of GW1 and GW2 as source and destination addresses respectively;</li>
+</ul>
+
+<p>After a brief walk around the Internet, the encapsulated packet hits the second gateway (GW2):</p>
+
+<ul>
+  <li>the datagram is checked to see whether it contains an IPsec header; if not, the datagram is forwarded normally;</li>
+  <li>using the destination address, the SPI and the type of IPsec header of the incoming datagram, the gateway determines which SA to use; if no matching SA is found, the packet is dropped;</li>
+  <li>if antireplay is activated, the sequence number is checked for validity;</li>
+  <li>the packet is decrypted and/or authenticated as specified by the SA;</li>
+  <li>the gateway locates the SPD entry that applies to the datagram based on its selectors and verifies that the SA(s) applied in the previous steps match with SA(s) specified by the policy;</li>
+  <li>the packet is decapsulated and forwarded to next hop or to the appropriate transport protocol.</li>
+</ul>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><a class="nav-list" href="vpn1.html"><span>Previous</span></a></li>
+      <li class="up"><a class="nav-list" href="index.html"><span>Up</span></a></li>
+      <li class="next"><a class="nav-list" href="vpn3.html"><span>Next</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
+    </ul>
+    <h3>Building VPNs on OpenBSD</h3>
+    <div>Previous: <a href="vpn1.html">1. Introduction</a>&nbsp;
+         Up: <a href="index.html">Table of contents</a>&nbsp;
+         Next: <a href="vpn3.html">3. IPsec on OpenBSD</a>
+    </div>
+  </div>
+
+</body>
+</html>
