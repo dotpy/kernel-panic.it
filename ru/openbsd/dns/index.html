@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta name="resource-type" content="document" />
+  <meta name="description" content="Setting up a secure DNS server with OpenBSD and Bind" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
+  <meta name="distribution" content="global" />
+  <meta name="author" content="Daniele Mazzocchio" />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+
+  <title>OpenBSD в качестве сервера доменных имен - Содержание</title>
+
+  <link rel="stylesheet" type="text/css" href="../../../css/docs.css" />
+  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+
+<body>
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Назад</span></span></li>
+      <li class="up"><a class="nav-list" href="../../../openbsd_ru.html"><span>Начало</span></a></li>
+      <li class="next"><a class="nav-list" href="dns1_ru.html"><span>Далее</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index_ru.html"><span>На главную OpenBSD</span></a></li>
+    </ul>
+    <h3>OpenBSD в качестве сервера доменных имен</h3>
+    <div>Назад: <a href="../../../openbsd_ru.html">OpenBSD</a>&nbsp;
+         Далее: <a href="dns1_ru.html">1. Введение</a>
+    </div>
+  </div>
+
+  <hr />
+
+  <h1>OpenBSD в качестве сервера доменных имен</h1>
+  <div id="subtitle">Автор: <a href="mailto:danix@kernel-panic.it">Daniele Mazzocchio</a><br />
+                     Применимо к: OpenBSD 5.2<br />
+                     Последнее обновление: 10 ноября 2012 г.<br />
+                     Перевод: <a href="mailto:haikudjin@gmail.com">Руслан Гундаков</a>
+  </div>
+
+  <h2>Содержание</h2>
+
+  <ul>
+    <li><a href="dns1.html">1. Введение</a></li>
+    <li><a href="dns2.html">2. Система доменных имен</a>
+      <ul>
+        <li><a href="dns2.html#dns-2.1">2.1 Несколько определений</a></li>
+        <li><a href="dns2.html#dns-2.2">2.2 Процесс разрешения имен</a></li>
+        <li><a href="dns2.html#dns-2.3">2.3 Обратное разрешение имен</a></li>
+        <li><a href="dns2.html#dns-2.4">2.4 Ресурс записей</a></li>
+      </ul>
+    </li>
+    <li><a href="dns3.html">3. Базовая конфигурация</a>
+      <ul>
+        <li><a href="dns3.html#dns-3.1">3.1 Основной файл конфигурации</a></li>
+        <li><a href="dns3.html#dns-3.2">3.2 Файлы данных зоны</a></li>
+        <li><a href="dns3.html#dns-3.3">3.3 Запуск Bind</a></li>
+        <li><a href="dns3.html#dns-3.4">3.4 rndc(8)</a></li>
+        <li><a href="dns3.html#dns-3.5">3.5 Добавление подчиненного сервера имен</a></li>
+      </ul>
+    </li>
+    <li><a href="dns4.html">4. Дальнейшая настройка Bind</a>
+      <ul>
+        <li><a href="dns4.html#dns-4.1">4.1 Представление и разделение пространства имен</a></li>
+        <li><a href="dns4.html#dns-4.2">4.2 Делегирование</a></li>
+        <li><a href="dns4.html#dns-4.3">4.3 Авто-обновление и регистрация</a></li>
+        <li><a href="dns4.html#dns-4.4">4.4 TSIG и безопасность</a></li>
+        <li><a href="dns4.html#dns-4.5">4.5 Журналирование</a></li>
+      </ul>
+    </li>
+    <li><a href="dns5.html">5. Приложение А</a>
+      <ul>
+        <li><a href="dns5.html#dns-5.1">5.1 Первый проект конфигурации и файлов данных зоны</a>
+          <ul>
+            <li><a href="dns5.html#dns-5.1.1">5.1.1 первичный мастер DMZ </a></li>
+            <li><a href="dns5.html#dns-5.1.2">5.1.2 вторичный мастер DMZ </a></li>
+          </ul>
+        </li>
+        <li><a href="dns5.html#dns-5.2">5.2 Окончательный вариант конфигурации и файлов данных зоны</a>
+          <ul>
+            <li><a href="dns5.html#dns-5.2.1">5.2.1 первичный мастер DMZ</a></li>
+            <li><a href="dns5.html#dns-5.2.2">5.2.2 вторичный мастер DMZ</a></li>
+            <li><a href="dns5.html#dns-5.2.3">5.2.3 первичный мастер LAN</a></li>
+            <li><a href="dns5.html#dns-5.2.4">5.2.4 вторичный мастер LAN</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="dns6.html">6. Приложение B</a>
+      <ul>
+        <li><a href="dns6.html#dns-6.1">6.1 Литература</a></li>
+        <li><a href="dns6.html#dns-6.2">6.2 Библиография</a></li>
+      </ul>
+    </li>
+
+  </ul>
+
+  <hr />
+
+  <div class="navigation">
+    <ul>
+      <li class="prev"><span class="nav-list"><span>Назад</span></span></li>
+      <li class="up"><a class="nav-list" href="../../../openbsd_ru.html"><span>Начало</span></a></li>
+      <li class="next"><a class="nav-list" href="dns1_ru.html"><span>Далее</span></a></li>
+      <li class="home"><a class="nav-list" href="../../index_ru.html"><span>На главную OpenBSD</span></a></li>
+    </ul>
+    <h3>OpenBSD в качестве сервера доменных имен</h3>
+    <div>Назад: <a href="../../../openbsd_ru.html">OpenBSD</a>&nbsp;
+         Далее: <a href="dns1_ru.html">1. Введение</a>
+    </div>
+  </div>
+
+</body>
+
+</html>
