@@ -7,10 +7,10 @@
 
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <meta name="resource-type" content="document" />
-  <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,Amavisd,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
+  <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
 
   <title>OpenBSD as a mail server - Advanced Postfix configuration</title>
 
@@ -39,7 +39,7 @@
 
 <h2>7. Advanced Postfix configuration</h2>
 
-<p>Postfix offers a lot of interesting features whose discussion would go beyond the scope of this document; we will examine just a few, mostly security-related, that may be necessary depending on the environment where Postfix is operating.</p>
+<p>Postfix offers a lot of interesting features that are beyond the scope of this document; we will examine just a few, mostly security-related, that may be necessary depending on the environment where Postfix is operating.</p>
 
 <h3><a id="mail-7.1" name="mail-7.1"></a>7.1 Enabling TLS</h3>
 
@@ -138,7 +138,8 @@ tls_random_source = dev:/dev/urandom
 <div class="code">
   <div>/etc/postfix/master.cf</div>
 <pre>
-smtps     inet  n       -       n       -       -       smtpd
+smtps     inet  n       -       -       -       -       smtpd
+  -o syslog_name=postfix/smtps
   -o smtpd_tls_wrappermode=yes
   -o smtpd_sasl_auth_enable=yes
   -o smtpd_client_restrictions=permit_sasl_authenticated,reject
