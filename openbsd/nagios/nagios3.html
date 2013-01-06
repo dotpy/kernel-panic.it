@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Object data configuration</title>
 
@@ -48,7 +48,7 @@
   <li><em>which</em> hosts and services to monitor.</li>
 </ul>
 
-<p>All this information is represented by means of <dfn>objects</dfn>, which are defined by a set of &quot;<tt>define</tt>&quot; <dfn>statements</dfn>, enclosed in curly braces and containing a variable number of newline-separated <dfn>directives</dfn>, in keyword/value form. Keywords are separated from values by whitespace and multiple values can be separated by commas; indentation within statements is allowed.</p>
+<p>All this information is represented by means of <dfn>objects</dfn>, which are defined by a set of &quot;<tt>define</tt>&quot; <dfn>statements</dfn>, enclosed in curly braces and containing a variable number of newline-separated <dfn>directives</dfn>, in keyword/value form. Keywords are separated from values by whitespace and multiple values can be provided, separated by commas; indentation within statements is allowed.</p>
 <p>To recap, the basic syntax of an object declaration can be represented as follows:</p>
 
 <div class="code">
@@ -72,9 +72,20 @@ define <var>object</var> {
 <div class="code">
   <div>/var/www/etc/nagios/timeperiods.cfg</div>
 <pre>
-<i># The following timeperiod definition includes normal work hours. The
-# 'timeperiod_name' and 'alias' directives are mandatory. Note that weekend days
-# are simply omitted</i>
+<i># A simple timeperiod including bank holidays. The 'timeperiod_name' and
+# 'alias' directives are mandatory.</i>
+define timeperiod {
+    timeperiod_name    bankholidays
+    alias              Bank Holidays
+    january 1          00:00-24:00	; New Year's Day
+    january 6          00:00-24:00	; Epiphany
+    may 1              00:00-24:00	; Labour's Day
+    december 25        00:00-24:00	; Christmas
+    december 26        00:00-24:00	; Boxing Day
+}
+
+<i># Timeperiod for normal work hours. Note that weekend days are simply omitted.
+# The 'exclude' keyword allows you to subtract a timeperiod from another.</i>
 define timeperiod {
     timeperiod_name    workhours
     alias              Work Hours
@@ -83,6 +94,7 @@ define timeperiod {
     wednesday          09:00-18:00
     thursday           09:00-18:00
     friday             09:00-18:00
+    exclude            bankholidays
 }
 
 <i># The following timeperiod includes all time outside normal work hours. The
@@ -120,7 +132,7 @@ define timeperiod {
     alias              No Time is a Good Time
 }
 
-<i># Some exceptions to the normal weekly time (see <a href="http://nagios.sourceforge.net/docs/3_0/objectdefinitions.html#timeperiod">documentation</a> for more examples)</i>
+<i># Some exceptions to the normal weekly time (see <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/objectdefinitions.html#timeperiod">documentation</a> for more examples)</i>
 define timeperiod {
     timeperiod_name    exceptions
     alias              Some random dates
@@ -136,8 +148,8 @@ define timeperiod {
 
 <h3><a id="nagios-3.2" name="nagios-3.2"></a>3.2 Command definition</h3>
 
-<p>The next step is to tell Nagios <em>how</em> to perform the various checks and send out notifications; this is accomplished by defining multiple <tt>command</tt> objects specifying the actual commands for Nagios to run.</p>
-<p>Command definitions are pairs of short names and command lines (both mandatory) and can contain <dfn>macros</dfn>. As we mentioned <a href="nagios2.html#nagios-2.2.2">before</a>, macros are variables, enclosed in &quot;<tt>$</tt>&quot; signs, that will get expanded to the appropriate value immediately prior to the execution of a command; macros allow you to keep command definitions generic and straightforward. A simple example will make this clear.</p>
+<p>The next step is to tell Nagios <em>how</em> to perform the various checks and send out notifications, by defining multiple <tt>command</tt> objects containing the actual commands for Nagios to run.</p>
+<p>Command definitions are pairs of short names and command lines (both mandatory) and can contain <dfn>macros</dfn>. As we mentioned <a href="nagios2.html#nagios-2.2.2">before</a>, macros are variables, enclosed in &quot;<tt>$</tt>&quot; signs, that will be expanded to the appropriate value immediately prior to the execution of a command; macros allow you to keep command definitions generic and straightforward. A simple example will make this clear.</p>
 <p>Suppose you want to monitor a web server with IP address &quot;1.2.3.4&quot;; you could then define a command such as the following:</p>
 
 <div class="code">
@@ -172,7 +184,7 @@ define command {
 </pre>
 </div>
 
-<p>In addition to the ones we have just seen, Nagios provides several other useful macros. Please refer to the <a href="http://nagios.sourceforge.net/docs/3_0/macros.html">documentation</a> for a detailed list of all available macros and their validity context. Below is a sample set of command definitions.</p>
+<p>In addition to the ones we have just seen, Nagios provides several other useful macros. Please refer to the <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/macrolist.html">documentation</a> for a detailed list of all available macros and their validity context. Below is a sample set of command definitions.</p>
 
 <div class="code">
   <div>/var/www/etc/nagios/commands.cfg</div>
@@ -271,11 +283,11 @@ define contact {
     service_notification_period     always
 
 <i># Host states for which notifications can be sent out to this contact
-# (d=down, u=unreachable, r=recovery, f=<a href="http://nagios.sourceforge.net/docs/3_0/flapping.html">flapping</a>, n=none)</i>
+# (d=down, u=unreachable, r=recovery, f=<a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/flapping.html">flapping</a>, n=none)</i>
     host_notification_options       d,u,r
 
 <i># Service states for which notifications can be sent out to this contact
-# (w=warning, c=critical, u=unknown, r=recovery, f=<a href="http://nagios.sourceforge.net/docs/3_0/flapping.html">flapping</a>, n=none)</i>
+# (w=warning, c=critical, u=unknown, r=recovery, f=<a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/flapping.html">flapping</a>, n=none)</i>
     service_notification_options    w,u,c,r
 
 <i># Command(s) used to notify the contact about host and service problems
@@ -291,7 +303,7 @@ define contact {
 # for SMS notifications)</i>
     address1                        xxx-xxx-xxxx
 
-<i># Allow this contact to submit <a href="http://nagios.sourceforge.net/docs/3_0/extcommands.html">external commands</a> to Nagios from the CGIs</i>
+<i># Allow this contact to submit <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/extcommands.html">external commands</a> to Nagios from the CGIs</i>
     can_submit_commands             1
 }
 
@@ -344,7 +356,7 @@ define contactgroup {
 
 <h3><a id="nagios-3.4" name="nagios-3.4"></a>3.4 Host definition</h3>
 
-<p>Now we have finally come to one of the most important facets of Nagios configuration: the definition of the hosts (servers, workstations, devices, etc.) that we want to monitor. This will lead us to introduce one of the most powerful features of Nagios configuration: <a href="http://nagios.sourceforge.net/docs/3_0/objectinheritance.html"><dfn>object inheritance</dfn></a>. Note that, though we are discussing it now first, object inheritance applies to all Nagios objects; however, it's in the definition of hosts and services that you can get the most out of it.</p>
+<p>Now we have finally come to one of the most important aspects of Nagios configuration: the definition of the hosts (servers, workstations, devices, etc.) that we want to monitor. This will lead us to introduce one of the most powerful features of Nagios configuration: <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/objectinheritance.html"><dfn>object inheritance</dfn></a>. Note that, though we are discussing it now first, object inheritance applies to all Nagios objects; however, it's in the definition of hosts and services that you can get the most out of it.</p>
 <p>In fact, configuring a host requires setting up quite a few parameters; and the value of these parameters will normally be the same for most hosts. Without object inheritance, this would mean wasting a lot of time typing the same parameters over and over again and eventually ending up with cluttered, overweight and almost unmanageable configuration files.</p>
 <p>But luckily, Nagios is smart enough to save you a lot of typing by allowing you to define special <dfn>template</dfn> objects, whose properties can be &quot;inherited&quot; by other objects without having to rewrite them. Below is a brief example of how a template is created:</p>
 
