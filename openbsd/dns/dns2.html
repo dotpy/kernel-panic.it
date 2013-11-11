@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a domain name server - The Domain Name System</title>
 
@@ -87,8 +87,8 @@
 <p>Let's see how it all works by going through an example. Suppose you want to visit the &quot;<tt>www.kernel-panic.it</tt>&quot; web site; you type the <acronym title="Uniform Resource Locator">URL</acronym> in your browser, press &quot;<tt>Enter</tt>&quot; and this is what happens next:</p>
 
 <ol>
-  <li><img src="dns4.png" alt="The name resolution process" width="250" height="400" class="float-img" />the resolver performs a recursive query against your corporate DNS server, expecting the IP address of the &quot;<tt>www.kernel-panic.it</tt>&quot; web server (or an error) in return;</li>
-  <li>since the corporate DNS server isn't authoritative for the queried zone, it will send an iterative query for the address of the &quot;<tt>www.kernel-panic.it</tt>&quot; domain name to a <dfn>root name server</dfn>, i.e. one of the 13 worldwide DNS servers which know the name servers authoritative for each of the top-level zones;</li>
+  <li><img src="dns4.png" alt="The name resolution process" width="250" height="400" class="float-img" />the resolver performs a <em>recursive</em> query against your corporate DNS server, expecting the IP address of the &quot;<tt>www.kernel-panic.it</tt>&quot; web server (or an error) in return;</li>
+  <li>since the corporate DNS server isn't authoritative for the queried zone, it will send an <em>iterative</em> query for the address of the &quot;<tt>www.kernel-panic.it</tt>&quot; domain name to a <dfn>root name server</dfn>, i.e. one of the 13 worldwide DNS servers which know the name servers authoritative for each of the top-level zones;</li>
   <li>the queried root name server won't probably know the full answer, but it will certainly know which name servers are authoritative for the &quot;<tt>it</tt>&quot; zone. Therefore, it will refer your corporate DNS server to those name servers;</li>
   <li>your DNS server will choose one of the referred name servers and send it the same iterative query for the &quot;<tt>www.kernel-panic.it</tt>&quot; domain name;</li>
   <li>the queried &quot;<tt>it</tt>&quot; name server won't probably know the full answer and therefore will refer your corporate DNS server to the list of name servers authoritative for the &quot;<tt>kernel-panic.it</tt>&quot; zone;</li>
@@ -97,7 +97,7 @@
   <li>your corporate name server is finally able to return the information to the resolver.</li>
 </ol>
 
-<p>As you can see, the resolution process may involve quite a few steps; but after each step, the name server learns a new piece of information about the domain name space. For instance, in the previous example, the corporate DNS server has learned which servers are authoritative for the &quot;<tt>it</tt>&quot; and &quot;<tt>kernel-panic.it</tt>&quot; zones. So what happens now if you want to connect to the &quot;<tt>ftp.kernel-panic.it</tt>&quot; machine? Your corporate name server already knows the authoritative servers for the &quot;<tt>kernel-panic.it</tt>&quot; zone; therefore it will send the query directly to one of them and get the answer in a single step, thus speeding up the resolution process. Storing learned data for future reference is called <dfn>caching</dfn>. Since version 4.9, Bind also keeps track of non-existing domains (<dfn>negative caching</dfn>), thus preventing the repeating of failed queries.</p>
+<p>As you can see, the resolution process may involve quite a few steps; but after each step, the name server learns a new piece of information about the domain name space. For instance, in the previous example, the corporate DNS server has learned which servers are authoritative for the &quot;<tt>it</tt>&quot; and &quot;<tt>kernel-panic.it</tt>&quot; zones. So what happens now if you want to connect to the &quot;<tt>ftp.kernel-panic.it</tt>&quot; machine? Your corporate name server already knows the authoritative servers for the &quot;<tt>kernel-panic.it</tt>&quot; zone; so it will send the query directly to one of them and get the answer in a single step, thus speeding up the resolution process. Storing learned data for future reference is called <dfn>caching</dfn>. Since version 4.9, Bind also keeps track of non-existing domains (<dfn>negative caching</dfn>), thus preventing the repeating of failed queries.</p>
 
 <h3><a id="dns-2.3" name="dns-2.3"></a>2.3 Reverse name resolution</h3>
 

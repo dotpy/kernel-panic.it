@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,dns,bind,domain,name,system" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a domain name server - Further Bind configuration</title>
 
@@ -93,9 +93,9 @@ view &quot;internal&quot; {
         file        &quot;master/db.localhost&quot;;
     };
 
-    zone &quot;0.0.127.in-addr.arpa&quot; {
+    zone &quot;127.in-addr.arpa&quot; {
         type        master;
-        file        &quot;master/db.127.0.0&quot;;
+        file        &quot;master/db.127&quot;;
     };
 
     <i># Special zones</i>
@@ -270,7 +270,7 @@ zone &quot;lan.kernel-panic.it&quot; {
 <h3><a id="dns-4.4" name="dns-4.4"></a>4.4 TSIG and security</h3>
 
 <p>So far, our only concern was having everything running smooth, without caring much about security; but we can't ignore that part of our name servers will be exposed to the Internet, so security is not an option.</p>
-<p>The most basic security measures are implemented by default on OpenBSD: Bind runs as the unprivileged user &quot;<tt>named</tt>&quot; and chrooted inside the <tt>/var/named</tt> directory. This will make it much harder for attackers to exploit any newly-discovered vulnerabilities.</p>
+<p>The most basic security measures are implemented by default on OpenBSD: Bind runs as the unprivileged user &quot;<tt>named</tt>&quot; and chrooted inside <tt>/var/named</tt>. This will make it much harder for attackers to exploit any newly-discovered vulnerabilities.</p>
 <p>Another important security measure is to configure Bind not to reveal its version number, just to make attackers' lives a little more complicated.</p>
 
 <div class="code">
@@ -456,7 +456,7 @@ local0.*                                                /var/log/named.log
 # <kbd>touch /var/log/named.log</kbd>
 # <kbd>install -m 700 -o named -g named -d /var/named/log</kbd>
 # <kbd>pkill -HUP syslogd</kbd>
-# <kbd>rndc reload</kbd>
+# <kbd>rndc -c /var/named/etc/rndc.conf reload</kbd>
 server reload successful
 #
 </pre>

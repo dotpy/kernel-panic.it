@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,DNS,BIND,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a domain name server - Introduction</title>
 
@@ -39,7 +39,7 @@
 
 <h2>1. Introduction</h2>
 
-<p>So our network is growing rapidly, with our fresh new <a href="../carp/">redundant firewalls</a>, <a href="../mail/">mail server</a>, <a href="../proxy/">proxy cache</a> and so on. Now our mind is filled up with IP addresses and our fingers are getting tired of typing all those numbers and dots. It's definitely time to set up a domain name server and assign some fancy names to our servers! The following is the list of the pieces of software we will use:</p>
+<p>So our network is growing rapidly, with our fresh new <a href="../carp/">redundant firewalls</a>, <a href="../mail/">mail server</a>, <a href="../proxy/">proxy cache</a> and so on. Now our mind is filled up with IP addresses and our fingers are getting tired from typing all those numbers and dots: it's definitely time to set up a domain name server and assign some fancy names to our servers! The following is the list of the pieces of software we will use:</p>
 
 <dl>
   <dt><a href="http://www.openbsd.org/">OpenBSD</a></dt>
@@ -48,9 +48,9 @@
   <dd><q>open-source software that implements the Domain Name System (DNS) protocols for the Internet</q>.</dd>
 </dl>
 
-<p>OpenBSD is an ideal platform for running a domain name server, for a number of reasons: the default install always includes a patched version of Bind 9.4.2 with <q>many improvements in chroot operation and other security-related issues</q> (see [<a href="http://www.openbsd.org/faq/faq1.html">FAQ1</a>]); if necessary, also the latest version of Bind is available through <a href="http://www.openbsd.org/faq//faq15.html">ports and packages</a>. OpenBSD is also renowned for its security, and domain name server security is at the very heart of the whole network security; last but not least, OpenBSD is very stable, reliable, fast and easy-to-administer ...just how a domain name server is supposed to be!</p>
+<p>OpenBSD is an ideal platform for running a domain name server, for a number of reasons: the default install always includes a patched version of Bind 9.4.2 with <q>many improvements in chroot operation and other security-related issues</q> (see [<a href="http://www.openbsd.org/faq/faq1.html#Included">FAQ1</a>]); if necessary, also the latest version of Bind is available through <a href="http://www.openbsd.org/faq//faq15.html">ports and packages</a>. OpenBSD is also renowned for its security, and domain name server security is at the very heart of the whole network security; last but not least, OpenBSD is very stable, reliable, fast and easy-to-administer ...just how a domain name server is supposed to be!</p>
 <p>In any case, most of the topics we will cover aren't OpenBSD-specific: Bind supports several platforms, thus making its configuration easy to port across different operating systems with minimal changes.</p>
-<p>Bind is very powerful, flexible and feature-rich, and this can sometimes turn its configuration into a tricky task. Therefore, we will proceed step-by-step, starting with a very basic configuration and then building upon it, gradually introducing the most interesting and popular features of Bind. We will address common issues such as redundancy, security and <acronym title="Dinamic Host Configuration Protocol">DHCP</acronym> and <acronym title="Network Address Translation">NAT</acronym> handling.</p>
+<p>Bind is very powerful, flexible and feature-rich, and this can sometimes turn its configuration into a tricky task. Therefore, we will proceed step-by-step, starting with a very basic configuration and then building upon it, gradually introducing the most interesting and popular features of Bind. We will address common issues such as redundancy, security and the handling of <acronym title="Dinamic Host Configuration Protocol">DHCP</acronym> and <acronym title="Network Address Translation">NAT</acronym>.</p>
 <p>A basic working knowledge of OpenBSD is assumed, since we won't cover topics such as installation and base configuration of the operating system.</p>
 
   <hr />
