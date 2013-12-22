@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Writing your own Nagios plugins</title>
 
@@ -39,9 +39,9 @@
 
 <h2>6. Writing your own Nagios plugins</h2>
 
-<p>Plugins are executable files run by Nagios to determine the status of a host or service. By default, Nagios comes with a very rich set of official plugins that should cover most people's needs; in addition, you can find lots of contributed plugins on the <a href="http://www.monitoringexchange.org/">Monitoring Exchange website</a>, some of which are also available via OpenBSD's packages and ports system.</p>
+<p>Plugins are executable files run by Nagios to determine the status of a host or service. By default, Nagios comes with a very rich set of official plugins that should cover most people's needs; in addition, you can find lots of contributed plugins on the <a href="http://exchange.nagios.org/directory/Plugins">Nagios Exchange website</a>, some of which are also available via OpenBSD's packages and ports system.</p>
 <p>However, despite the abundance of plugins, there may be occasions in which no existing plugin is suitable for monitoring a particular service, thus forcing you to write a fully custom plugin, tailored to your exact needs. Luckily, this is a very simple task!</p>
-<p>Nagios doesn't bind you to a specific programming language: plugins may be either compiled C programs or interpreted scripts, in Perl, shell, Python or any other language. Nagios doesn't mess with the internals of plugins; however, it asks developers to follow a few basic <a href="http://nagiosplug.sourceforge.net/developer-guidelines.html">guidelines</a>, just for standard's sake.</p>
+<p>Nagios doesn't bind you to a specific programming language: plugins may be either compiled C programs or interpreted scripts, in Perl, shell, Python or any other language. Nagios doesn't care about the the internals of a plugin; however, it asks developers to follow a few basic <a href="https://www.nagios-plugins.org/doc/guidelines.html">guidelines</a>, just for standard's sake.</p>
 
 <h3><a id="nagios-6.1" name="nagios-6.1"></a>6.1 Command line options</h3>
 
@@ -52,7 +52,7 @@
   <li>all plugins should provide a &quot;<tt>-V</tt>&quot; command-line option (and &quot;<tt>--version</tt>&quot; if long options are enabled) to display the plugin's revision number;</li>
   <li>the &quot;<tt>-?</tt>&quot; option, as well as any incorrect option, displays a short usage statement that should fit on a standard 80x25 terminal;</li>
   <li>the &quot;<tt>-h</tt>&quot;, or &quot;<tt>--help</tt>&quot;, option displays detailed help information;</li>
-  <li>the &quot;<tt>-v</tt>&quot;, or &quot;<tt>--verbose</tt>&quot;, option adjusts the verbosity level; multiple &quot;<tt>-v</tt>&quot; options (up to 3) should increase the verbosity level, as described in the <a href="http://nagiosplug.sourceforge.net/developer-guidelines.html#AEN40">official guidelines</a>;</li>
+  <li>the &quot;<tt>-v</tt>&quot;, or &quot;<tt>--verbose</tt>&quot;, option adjusts the verbosity level; multiple &quot;<tt>-v</tt>&quot; options (up to 3) should increase the verbosity level, as described in the <a href="https://www.nagios-plugins.org/doc/guidelines.html#VERBOSELEVELS">official guidelines</a>;</li>
   <li>There are a few other reserved options that should not be used for other purposes:
     <ul>
       <li>&quot;<tt>-t</tt>&quot; or &quot;<tt>--timeout</tt>&quot; (plugin timeout);</li>
@@ -107,7 +107,7 @@
 <p>Just a couple of notes before moving to a practical example:</p>
 
 <ul>
-  <li>plugins can access <a href="http://nagios.sourceforge.net/docs/2_0/macros.html">macros</a> as environment variables; such variables have the same name as the corresponding macros, with &quot;<tt>NAGIOS_</tt>&quot; prepended. For instance, the &quot;<tt>$HOSTNAME$</tt>&quot; macro will be accessible through the &quot;<tt>NAGIOS_HOSTNAME</tt>&quot; environment variable;</li>
+  <li>plugins can access <a href="http://nagios.sourceforge.net/docs/3_0/macros.html">macros</a> as environment variables; such variables have the same name as the corresponding macros, with &quot;<tt>NAGIOS_</tt>&quot; prepended. For instance, the &quot;<tt>$HOSTNAME$</tt>&quot; macro will be accessible through the &quot;<tt>NAGIOS_HOSTNAME</tt>&quot; environment variable;</li>
   <li>always specify the full path of any system commands run from your plugins.</li>
 </ul>
 
@@ -124,7 +124,7 @@
 ################################################################################</i>
 
 VERSION=&quot;Version 1.0&quot;
-AUTHOR=&quot;(c) 2007-2009 Daniele Mazzocchio (danix@kernel-panic.it)&quot;
+AUTHOR=&quot;(c) 2007-2014 Daniele Mazzocchio (danix@kernel-panic.it)&quot;
 
 PROGNAME=`/usr/bin/basename $0`
 
@@ -132,11 +132,8 @@ PROGNAME=`/usr/bin/basename $0`
 BYTES_IN_MB=$(( 1024 * 1024 ))
 KB_IN_MB=1024
 
-<i># Exit codes</i>
-STATE_OK=0
-STATE_WARNING=1
-STATE_CRITICAL=2
-STATE_UNKNOWN=3
+<i># Load nagios library for scripts</i>
+. /usr/local/libexec/nagios/utils.sh
 
 <i># Helper functions #############################################################</i>
 
@@ -300,4 +297,3 @@ fi
 </body>
 
 </html>
-

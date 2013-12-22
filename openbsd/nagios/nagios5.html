@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Nagios addons</title>
 
@@ -54,10 +54,10 @@
 <p>Both the agent and the plugin are available from the following package:</p>
 
 <ul>
-  <li>nrpe-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>nrpe</li>
 </ul>
 
-<p>In addition, the Nagios plugins package will be installed on the monitored host as a dependency: this will allow the NRPE agent to take advantage of the standard Nagios plugins to perform local checks. The package installation automatically creates the <tt>_nrpe</tt> user and group that the daemon will run as and copy a sample <tt>nrpe.cfg</tt> configuration file in <tt>/etc/</tt>:</p>
+<p>In addition, the Nagios plugins package will be installed on the monitored host as a dependency: this will allow the NRPE agent to take advantage of the standard Nagios plugins to perform local checks. The package installation automatically creates the <tt>_nrpe</tt> user and group that the daemon will run as and copy a sample <tt>nrpe.cfg</tt> configuration file to <tt>/etc/</tt>:</p>
 
 <div class="code">
   <div>/etc/nrpe.cfg</div>
@@ -116,15 +116,12 @@ command[check_total_procs]=/usr/local/libexec/nagios/check_procs -w 150 -c 200
 </pre>
 </div>
 
-<p>and add the following lines to <tt>/etc/rc.local</tt> to start it automatically after reboot:</p>
+<p>and add <tt>nrpe</tt> to the <tt>pkg_scripts</tt> variable in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> to start it automatically after reboot:</p>
 
 <div class="code">
   <div>/etc/rc.local/</div>
 <pre>
-if [ -x /usr/local/sbin/nrpe ]; then
-    echo -n ' nrpe'
-    /usr/local/sbin/nrpe -c /etc/nrpe.cfg -d
-fi
+pkg_scripts=&quot;nrpe&quot;
 </pre>
 </div>
 
@@ -146,11 +143,20 @@ nrpe	5666/tcp	<i># Nagios Remote Plugin Executor</i>
 </pre>
 </div>
 
-<p>and then send the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8">inetd(8)</a></tt> daemon the hangup signal, instructing it to re-read its configuration:</p>
+<p>Then enable the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8">inetd(8)</a></tt> daemon, which is disabled by default starting from OpenBSD 5.4:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+inetd_flags=&quot;&quot;
+</pre>
+</div>
+
+<p>and start it:</p>
 
 <div class="code">
 <pre>
-# <kbd>pkill -HUP inetd</kbd>
+# <kbd>/etc/rc.d/inetd start</kbd>
 </pre>
 </div>
 
@@ -176,9 +182,8 @@ define command {
 <p>NSCA can run either as a standalone daemon or under <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8">inetd(8)</a></tt>. To install the server component we need to add the following packages on the Nagios server:</p>
 
 <ul>
-  <li>mhash-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>libmcrypt-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>nsca-<var>x</var>.<var>x</var>.tgz</li>
+  <li>libmcrypt</li>
+  <li>nsca</li>
 </ul>
 
 <p>Next, we need to edit the <tt>/etc/nsca.cfg</tt> configuration file:</p>
@@ -187,7 +192,7 @@ define command {
   <div>/etc/nsca.cfg</div>
 <pre>
 <i># Path to the pid file (ignored if running under inetd)</i>
-pid_file=/var/run/nrpe.pid
+pid_file=/var/run/nsca.pid
 
 <i># Address to bind to (optional)</i>
 server_address=172.16.0.164
@@ -233,15 +238,12 @@ decryption_method=16
 </pre>
 </div>
 
-<p>and add the following lines to <tt>/etc/rc.local</tt> to start it automatically after reboot:</p>
+<p>and add <tt>nsca</tt> to the <tt>pkg_scripts</tt> variable in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> to start it automatically after reboot:</p>
 
 <div class="code">
-  <div>/etc/rc.local</div>
+  <div>/etc/rc.local/</div>
 <pre>
-if [ -x /usr/local/sbin/nsca ]; then
-    echo -n ' nsca'
-    /usr/local/sbin/nsca -c /etc/nsca.cfg
-fi
+pkg_scripts=&quot;nagios nsca&quot;
 </pre>
 </div>
 
@@ -263,11 +265,20 @@ nsca	5667/tcp	<i># Nagios Service Check Acceptor</i>
 </pre>
 </div>
 
-<p>and then send the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8">inetd(8)</a></tt> daemon the hangup signal, instructing it to re-read its configuration:</p>
+<p>Then enable the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8">inetd(8)</a></tt> daemon:</p>
+
+<div class="code">
+  <div>/etc/rc.conf.local</div>
+<pre>
+inetd_flags=&quot;&quot;
+</pre>
+</div>
+
+<p>and start it:</p>
 
 <div class="code">
 <pre>
-# <kbd>pkill -HUP inetd</kbd>
+# <kbd>/etc/rc.d/inetd start</kbd>
 </pre>
 </div>
 
@@ -276,9 +287,8 @@ nsca	5667/tcp	<i># Nagios Service Check Acceptor</i>
 <p>On the client side, we need to install the following packages:</p>
 
 <ul>
-  <li>mhash-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>libmcrypt-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>nsca-client-<var>x</var>.<var>x</var>.tgz</li>
+  <li>libmcrypt</li>
+  <li>nsca-client</li>
 </ul>
 
 <p>and edit the encryption parameters in the <tt>/etc/send_nsca.cfg</tt> configuration file:</p>
@@ -320,42 +330,33 @@ echo &quot;router1\t2\tRouter #1 is down&quot; | /usr/local/libexec/nagios/send_
 
 <h3><a id="nagios-5.3" name="nagios-5.3"></a>5.3 NagVis and NDO</h3>
 
-<p><a href="http://www.nagvis.org/doku.php">NagVis</a> is a visualization addon for Nagios; it can be used to give users a <a href="http://www.nagvis.org/doku.php?id=screenshots">graphical view</a> of Nagios data. It requires the installation of <a href="http://www.php.net/">PHP</a> and a few libraries:</p>
+<p><a href="http://www.nagvis.org/doku.php">NagVis</a> is a visualization addon for Nagios; it can be used to give users a <a href="http://www.nagvis.org/doku.php?id=screenshots">graphical view</a> of Nagios data. It requires the installation of <a href="http://www.mysql.com/">MySQL</a> and a few graphics libraries:</p>
 
 <ul>
-  <li>libxml-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>t1lib-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>jpeg-<var>x</var>.tgz</li>
-  <li>png-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>php5-core-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>php5-gd-<var>x</var>.<var>x</var>.<var>x</var>-no_x11.tgz</li>
-  <li>mysql-client-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>php5-mysql-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
+  <li>mysql-client</li>
+  <li>p5-FreezeThaw</li>
+  <li>p5-MLDBM</li>
+  <li>p5-Clone</li>
+  <li>p5-Params-Util</li>
+  <li>p5-SQL-Statement</li>
+  <li>p5-Net-Daemon</li>
+  <li>p5-PlRPC</li>
+  <li>p5-DBI</li>
+  <li>p5-DBD-mysql</li>
+  <li>mysql-server</li>
+  <li>png</li>
+  <li>t1lib</li>
+  <li>jpeg</li>
+  <li>php-gd</li>
+  <li>php-mysql</li>
 </ul>
 
-<p>Apache is already up and running, so we only need to enable the php modules we have just installed:</p>
+<p>Apache is already up and running, so we only need to enable the php modules we have just installed and restart Apache:</p>
 
 <div class="code">
 <pre>
-# <kbd>ln -s /var/www/conf/modules.sample/php5.conf /var/www/conf/modules</kbd>
-# <kbd>ln -fs /var/www/conf/php5.sample/gd.ini /var/www/conf/php5/gd.ini</kbd>
-# <kbd>ln -fs /var/www/conf/php5.sample/mysql.ini /var/www/conf/php5/mysql.ini</kbd>
-</pre>
-</div>
-
-<p>uncomment the following line in <tt>/var/www/conf/httpd.conf</tt>:</p>
-
-<div class="code">
-  <div>/var/www/conf/httpd.conf</div>
-<pre>
-AddType application/x-httpd-php .php
-</pre>
-</div>
-
-<p>and restart Apache:</p>
-
-<div class="code">
-<pre>
+# <kbd>ln -sf /etc/php-5.3.sample/mysql.ini /etc/php-5.3/mysql.ini</kbd>
+# <kbd>ln -sf /etc/php-5.3.sample/gd.ini /etc/php-5.3/gd.ini</kbd>
 # <kbd>apachectl restart</kbd>
 /usr/sbin/apachectl restart: httpd restarted
 </pre>
@@ -371,31 +372,21 @@ AddType application/x-httpd-php .php
   <li>the NDO2DB daemon, which is a standalone daemon and reads the output produced by the NDOMOD module through the Unix or TCP socket and dumps it into the database.</li>
 </ul>
 
-<p>First off, we need to install MySQL; the following is the list of the required packages:</p>
-
-<ul>
-  <li>p5-Net-Daemon-<var>x</var>.<var>x</var>.tgz</li>
-  <li>p5-PlRPC-<var>x</var>.<var>x</var>.tgz</li>
-  <li>p5-DBI-<var>x</var>.<var>x</var>.tgz</li>
-  <li>p5-DBD-mysql-<var>x</var>.<var>x</var>.tgz</li>
-  <li>mysql-server-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-</ul>
-
-<p>Next, we need to <a href="http://sourceforge.net/project/showfiles.php?group_id=26589">download</a>, extract and compile the NDOUTILS tarball:</p>
+<p>Next, we need to <a href="http://sourceforge.net/projects/nagios/files/ndoutils-1.x/ndoutils-1.5.2/ndoutils-1.5.2.tar.gz/download">download</a>, extract and compile the NDOUTILS tarball:</p>
 
 <div class="code">
 <pre>
 # <kbd>tar -zxvf ndoutils-<var>x</var>.<var>x</var>.<var>x</var>.tar.gz</kbd>
 [ ... ]
 # <kbd>cd ndoutils-<var>x</var>.<var>x</var>.<var>x</var></kbd>
-# <kbd>./configure --disable-pgsql --enable-mysql --with-mysql-lib=/usr/local/lib \
-&gt;   --with-mysql-inc=/usr/local/include</kbd>
+# <kbd>./configure --enable-mysql --with-mysql-lib=/usr/local/lib \
+&gt;   --with-ndo2db-user=_nagios --with-ndo2db-group=_nagios</kbd>
 [ ... ]
 # <kbd>make</kbd>
 </pre>
 </div>
 
-<p><em>Note</em>: if <tt>make</tt> fails to compile the <tt>dbhandlers.c</tt> file, try installing <a href="ndo-openbsd.patch">this patch</a> (applies to version 1.4b9) by running the following command from outside the ndoutils source tree:</p>
+<p><em>Note</em>: if <tt>make</tt> fails to compile the <tt>dbhandlers.c</tt> file, try installing <a href="ndo-openbsd.patch">this patch</a> (applies to version 1.5.2) by running the following command from outside the ndoutils source tree:</p>
 
 <div class="code">
 <pre>
@@ -411,7 +402,9 @@ AddType application/x-httpd-php .php
 # <kbd>/usr/local/bin/mysql_install_db</kbd>
 [ ... ]
 # <kbd>mysqld_safe &amp;</kbd>
-Starting mysqld daemon with databases from /var/mysql
+[1] 26984
+131123 17:33:56 mysqld_safe Logging to '/var/mysql/nagios.kernel-panic.it.err'.
+131123 17:33:56 mysqld_safe Starting mysqld daemon with databases from /var/mysql
 # <kbd>/usr/local/bin/mysql_secure_installation</kbd>
 [ ... ]
 Enter current password for root (enter for none): <kbd><i>&lt;enter&gt;</i></kbd>
@@ -443,6 +436,7 @@ Database changed
 mysql&gt; <kbd>\.  db/mysql.sql</kbd>
 [...]
 mysql&gt; <kbd>GRANT SELECT, INSERT, UPDATE, DELETE ON nagios.* TO 'ndouser'@'localhost' IDENTIFIED BY 'ndopasswd';</kbd>
+mysql&gt; <kbd>FLUSH PRIVILEGES;</kbd>
 mysql&gt; <kbd>\q</kbd>
 </pre>
 </div>
@@ -528,35 +522,58 @@ broker_module=/usr/local/libexec/nagios/ndomod.o config_file=/var/www/etc/nagios
 <div class="code">
 <pre>
 # <kbd>/usr/local/sbin/ndo2db -c /var/www/etc/nagios/ndo2db.cfg</kbd>
-# <kbd>chmod 770 /var/www/var/nagios/rw/ndo.sock</kbd>
-# <kbd>pkill nagios</kbd>
-# <kbd>nagios -d /var/www/etc/nagios/nagios.cfg</kbd>
+# <kbd>chmod 660 /var/www/var/nagios/rw/ndo.sock</kbd>
+# <kbd>/etc/rc.d/nagios restart</kbd>
 </pre>
 </div>
 
-<p>Add the following lines to <tt>/etc/rc.local</tt> to start the NDO2DB daemon on boot:</p>
+<p>To start the NDO2DB daemon on boot, we need to create an additional <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.d&amp;sektion=8">rc.d(8)</a></tt> script:</p>
 
 <div class="code">
-  <div>/etc/rc.local</div>
+  <div>/etc/rc.d/ndo2db</div>
 <pre>
-if [ -x /usr/local/sbin/ndo2db ]; then
-    echo -n ' ndo2db'
-    /usr/local/sbin/ndo2db -c /var/www/etc/nagios/ndo2db.cfg
-    chmod 770 /var/www/var/nagios/rw/ndo.sock
-fi
+#!/bin/sh
+
+daemon=&quot;/usr/local/sbin/ndo2db&quot;
+daemon_flags=&quot;-c /var/www/etc/nagios/ndo2db.cfg&quot;
+
+. /etc/rc.d/rc.subr
+
+rc_reload=NO
+
+rc_pre() {
+        rm -f /var/www/var/nagios/rw/ndo.sock
+}
+
+rc_start() {
+        ${daemon} ${daemon_flags} &amp;&amp; chmod 660 /var/www/var/nagios/rw/ndo.sock
+}
+
+rc_cmd $1
+</pre>
+</div>
+
+and update the <tt>pkg_scripts</tt> variable in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf.local&amp;sektion=8">/etc/rc.conf.local(8)</a></tt> to start all the necessary daemons:
+
+<div class="code">
+  <div>/etc/rc.local/</div>
+<pre>
+pkg_scripts=&quot;mysqld nagios ndo2db nsca&quot;
 </pre>
 </div>
 
 <h4><a id="nagios-5.3.2" name="nagios-5.3.2"></a>5.3.2 Configuring NagVis</h4>
 
-<p>Now that we have installed all the necessary prerequisites, we can <a href="http://www.nagvis.org/downloads">download</a> and extract the NagVis tarball:</p>
+<p>Now that we have installed all the necessary prerequisites, we can <a href="http://www.nagvis.org/downloads">download</a> and extract the NagVis tarball (the install script is Linux-based, so we'll have to do things manually):</p>
 
 <div class="code">
 <pre>
 # <kbd>tar -zxvf nagvis-<var>x</var>.<var>x</var>.<var>x</var>.tar.gz -C /var/www/nagios/</kbd>
 [ ... ]
 # <kbd>mv /var/www/nagios/nagvis-<var>x</var>.<var>x</var>.<var>x</var> /var/www/nagios/nagvis</kbd>
+# <kbd>mkdir -p /var/www/nagios/nagvis/var/tmpl/{cache,compile}</kbd>
 # <kbd>chown -R www /var/www/nagios/nagvis/{etc,var}</kbd>
+# <kbd>mv /var/www/nagios/nagvis/docs /var/www/nagios/nagvis/share</kbd>
 </pre>
 </div>
 
@@ -761,4 +778,3 @@ define textbox {
 </body>
 
 </html>
-

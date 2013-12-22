@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Introduction</title>
 
@@ -39,7 +39,7 @@
 
 <h2>1. Introduction</h2>
 
-<p>So our OpenBSD-based network now includes <a href="../carp/index.html">redundant firewalls</a>, <a href="../dns/index.html">domain name servers</a>, a <a href="../mail/index.html">mail gateway</a> and a <a href="../proxy/index.html">web proxy cache</a>. All the services provided by these machines are particularly critical and can't afford even minimal downtime. Redundancy may give us the time to recover a failure before having angry users trying to knock down our door, but it doesn't free us from the responsibility to detect and solve ongoing problems.</p>
+<p>So our OpenBSD-based network now includes <a href="../carp/index.html">redundant firewalls</a>, <a href="../dns/index.html">domain name servers</a>, a <a href="../mail/index.html">mail gateway</a> and a <a href="../proxy/index.html">web proxy cache</a>. All the services provided by these machines are particularly critical and can't afford even minimal downtime. Redundancy may give us the time to recover from a failure before having angry users trying to knock down our door, but it doesn't free us from the responsibility to detect and solve ongoing problems.</p>
 <p>To put it short, it's time to think about monitoring our network! And the following are the perfect ingredients for implementing a full-featured, secure and reliable network monitoring system:</p>
 
 <dl>
@@ -67,9 +67,8 @@
   <li><a href="nagios5.html#nagios-5.3">NagVis</a>, the <dfn>Nagios Visualization Addon</dfn>, which allows you to deeply customize how Nagios data is displayed;</li>
 </ul>
 
-<p>If you're intereseted in a more <a href="https://www.icinga.org/screenshots/">&quot;modern-looking&quot; interface</a> and some <a href="https://www.icinga.org/nagios/feature-comparison/">extra features</a>, you might want to have a look at <a href="https://www.icinga.org/">Icinga</a>, which is also available as an <a href="http://www.openbsd.org/faq/faq15.html">OpenBSD package or port</a>.</p>
-<p>A good knowledge of OpenBSD is assumed, since we won't delve into system management topics such as base configuration or packages/ports 
-installation.</p>
+<p>If you're intereseted in a more <a href="https://www.icinga.org/screenshots/">&quot;modern-looking&quot; interface</a> and some <a href="https://www.icinga.org/nagios/feature-comparison/">extra features</a>, you might want to have a look at <a href="https://www.icinga.org/">Icinga</a>, a fork of Nagios which is also available as an <a href="http://www.openbsd.org/faq/faq15.html">OpenBSD package or port</a>.</p>
+<p>This document assumes a good knowledge of OpenBSD, since it doesn't cover basic system management topics such as OS installation, base configuration or packages/ports installation.</p>
 
   <hr />
 
@@ -90,4 +89,3 @@ installation.</p>
 </body>
 
 </html>
-

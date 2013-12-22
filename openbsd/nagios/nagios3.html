@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Object data configuration</title>
 
@@ -217,8 +217,8 @@ define command {
 <i>################################################################################
 # Check commands                                                               #
 # The official Nagios plugins should handle most of your needs for host and    #
-# service checks. Anyway, should they not, we will discuss <a href="nagios6.html">in a moment</a> how to  #
-# write custom plugins.                                                        #
+# service checks. Anyway, should they not, we will <a href="nagios6.html">later</a> discuss how to write  #
+# custom plugins.                                                              #
 ################################################################################</i>
 define command {
     command_name    check-host-alive
@@ -379,11 +379,11 @@ define host {
 
 <ul>
   <li>every template must be assigned a name with the <tt>name</tt> directive;</li>
-  <li>since this is not an actual host, you must tell Nagios not to <dfn>register</dfn> it by setting the value of the <tt>register</tt> directive to 0; this property doesn't get inherited and defaults to 1, so you won't need to explicitely override it in all &quot;children&quot; objects;</li>
+  <li>since this is not an actual host, you must tell Nagios not to <dfn>register</dfn> it by setting the value of the <tt>register</tt> directive to 0; this property doesn't get inherited and defaults to 1, so you won't need to explicitely override it in &quot;children&quot; objects;</li>
   <li>a template object can be left <dfn>incomplete</dfn>, i.e. it may not supply all mandatory parameters.</li>
 </ul>
 
-<p>To create an actual host object from a template, you simply have to specify the template name as the value of the <tt>use</tt> directive and make sure that all mandatory fields are either inherited or explicitely set:</p>
+<p>To create an actual host object from a template, you simply need to specify the template name as the value of the <tt>use</tt> directive and make sure that all mandatory fields are either inherited or explicitely set:</p>
 
 <div class="code">
 <pre>

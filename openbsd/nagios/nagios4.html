@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2009 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Setting up the web interface</title>
 
@@ -39,7 +39,7 @@
 
 <h2>4. Setting up the web interface</h2>
 
-<p>Nagios doesn't have a specific client application to access the monitoring information; instead, it relies on the <a href="http://httpd.apache.org/">Apache</a> web server to provide a very simple yet powerful web interface, accessible via any browser and allowing users to access current status information, browse historical logs, create reports and, if so configured, issue commands to the monitoring daemon.</p>
+<p>Nagios doesn't have a specific client application to access monitoring information; instead, it relies on the <a href="http://httpd.apache.org/">Apache</a> web server to provide a very simple yet powerful web interface, accessible via any browser and allowing users to access current status information, browse historical logs, create reports and, if so configured, issue commands to the monitoring daemon.</p>
 
 <h3><a id="nagios-4.1" name="nagios-4.1"></a>4.1 CGIs configuration</h3>
 
@@ -56,11 +56,19 @@ physical_html_path=/nagios
 <i># Path portion of the URL used to access the web interface</i>
 url_html_path=/nagios
 
+<i># Time interval (in seconds) between page refreshes</i>
+refresh_rate=90
 <i># Disable context-sensitive help</i>
 show_context_help=0
+<i># Mark hosts/services that have not been checked yet as PENDING</i>
+use_pending_states=1
+<i># Limit the default number of results displayed on the status.cgi</i>
+result_limit=100
 
 <i># Enable authentication for the CGIs</i>
 use_authentication=1
+<i># Do not use x509 cert (SSL) authentication</i>
+use_ssl_authentication=0
 <i># Uncomment the following directive to set a default user for unauthenticated
 # sessions (strongly discouraged)
 #default_user_name=guest</i>
@@ -90,9 +98,6 @@ statuswrl_include=myworld.wrl
 
 <i># Command to use when attempting to ping a host from the <a href="http://nagios.sourceforge.net/docs/3_0/cgis.html#statuswml_cgi">WAP interface</a></i>
 ping_syntax=/sbin/ping -n -c 5 $HOSTADDRESS$
-
-<i># Time interval (in seconds) between page refreshes</i>
-refresh_rate=90
 
 <i># List of audio files to play in the browser in case of problems. These files
 # are assumed to be in the /var/www/nagios/media/ directory</i>
@@ -133,7 +138,8 @@ Adding password for user nagiosadmin
 New password: <kbd><var>password</var></kbd>
 Re-type new password: <kbd><var>password</var></kbd>
 Adding password for user danix@work
-#
+# <kbd>chmod 600 /var/www/users/nagios.passwd</kbd>
+# <kbd>chown www /var/www/users/nagios.passwd</kbd>
 </pre>
 </div>
 
@@ -218,6 +224,14 @@ Alias /nagios &quot;/var/www/nagios&quot;
 </pre>
 </div>
 
+<p>And, of course, don't forget to enable the PHP module!</p>
+
+<div class="code">
+<pre>
+# <kbd>ln -sf /var/www/conf/modules.sample/php-5.3.conf /var/www/conf/modules/php.conf</kbd>
+</pre>
+</div>
+
 <h3><a id="nagios-4.3" name="nagios-4.3"></a>4.3 Running Nagios</h3>
 
 <p>Well, it looks like we're done with the configuration for now! Then we can make Nagios evaluate our hard work by invoking it with the &quot;<tt>-v</tt>&quot; option:</p>
@@ -226,12 +240,17 @@ Alias /nagios &quot;/var/www/nagios&quot;
 <pre>
 # <kbd>/usr/local/sbin/nagios -v /var/www/etc/nagios/nagios.cfg</kbd>
 
-Nagios 3.0.6
-Copyright (c) 1999-2008 Ethan Galstad (http://www.nagios.org)
-Last Modified: 12-01-2008
+Nagios Core 3.5.0
+Copyright (c) 2009-2011 Nagios Core Development Team and Community Contributors
+Copyright (c) 1999-2009 Ethan Galstad
+Last Modified: 03-15-2013
 License: GPL
 
+Website: http://www.nagios.org
 Reading configuration data...
+   Read main config file okay...
+[...]
+   Read object config files okay...
 
 Running pre-flight check on configuration data...
 
@@ -257,25 +276,13 @@ Things look okay - No serious problems were detected during the pre-flight check
 </div>
 
 <p>You can check if everything is working fine by connecting to the web interface (<tt>https://<var>your.server.here</var>/nagios/</tt>) or taking a look at the logs (<tt>/var/www/var/log/nagios/nagios.log</tt>).</p>
-<p>To finish up, we have to configure the system to start both Apache and Nagios at boot time, by setting the <tt>httpd_flags</tt> variable in the <tt>/etc/rc.conf.local</tt> file:</p>
+<p>To finish up, we only have to configure the system to start both Apache and Nagios at boot time, by setting the <tt>httpd_flags</tt> and <tt>pkg_scripts</tt> variables in <tt>/etc/rc.conf.local</tt>:</p>
 
 <div class="code">
   <div>/etc/rc.conf.local</div>
 <pre>
 httpd_flags=&quot;-DSSL&quot;
-</pre>
-</div>
-
-<p>and by adding the following lines to the <tt>/etc/rc.local</tt> file:</p>
-
-<div class="code">
-  <div>/etc/rc.local</div>
-<pre>
-if [ -x /usr/local/sbin/nagios ]; then
-    install -d -o _nagios /var/run/nagios
-    echo -n ' nagios'
-    /usr/local/sbin/nagios -d /var/www/etc/nagios/nagios.cfg
-fi
+pkg_scripts=&quot;nagios&quot;
 </pre>
 </div>
 

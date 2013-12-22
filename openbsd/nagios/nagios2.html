@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,network,monitoring,Nagios,NRPE,NSCA,NagVis,NDO,MySQL,PHP,smstools,Apache" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Network monitoring with Nagios and OpenBSD - Installation and base configuration</title>
 
@@ -48,7 +48,7 @@
 </ul>
 
 <p>Our network monitoring system is a security-critical host and won't need to directly access the Internet, so it will perfectly fit in the internal LAN.</p>
-<p>The OpenBSD installation procedure is documented in full detail in the <a href="http://www.openbsd.org/faq/faq4.html">official <acronym title="Frequently Asked Questions">FAQ</acronym></a>, so we won't linger on it here. Nagios doesn't have particular requirements and a standard OpenBSD installation will do just fine: according to the <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/about.html#requirements">documentation</a>, Nagios makes do with just <q>a machine running Linux (or UNIX variant)</q>. That doesn't sound so fussy, does it?</p>
+<p>The OpenBSD installation procedure is documented in full detail in the <a href="http://www.openbsd.org/faq/faq4.html">official <acronym title="Frequently Asked Questions">FAQ</acronym></a>, so we won't cover it here. Nagios doesn't have particular requirements and a standard OpenBSD installation will do just fine: according to the <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/about.html#requirements">documentation</a>, Nagios makes do with just <q>a machine running Linux (or UNIX variant)</q>. That doesn't sound so fussy, does it?</p>
 
 <h3><a id="nagios-2.1" name="nagios-2.1"></a>2.1 Packages installation</h3>
 
@@ -64,9 +64,6 @@
   <li>nagios-chroot</li>
   <li>php</li>
   <li>nagios-web-chroot</li>
-  <li>gd</li>
-  <li>jpeg-8c</li>
-  <li>png</li>
   <li>nagios-plugins</li>
 </ul>
 
@@ -111,7 +108,7 @@
 
 <h4><a id="nagios-2.2.1" name="nagios-2.2.1"></a>2.2.1 The main configuration file</h4>
 
-<p>The overall behaviour of the Nagios daemon is determined by the directives included in the main configuration file, <tt>/var/www/etc/nagios/nagios.cfg</tt>. Though this file contains several dozens of parameters, for most of them the default value is the most reasonable option and you will probably want to care about only very few of them (usually <tt><a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html#cfg_file">cfg_file</a></tt>, <tt><a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html#cfg_dir">cfg_dir</a></tt> and <tt><a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html#admin_email">admin_email</a></tt>). In any case, you can find a detailed description of each and every parameter in the official <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html">documentation</a>.</p>
+<p>The overall behaviour of the Nagios daemon is determined by the directives included in the main configuration file, <tt>/var/www/etc/nagios/nagios.cfg</tt>. Though this file contains several dozens of parameters, for most of them the default value is the most reasonable option and you will probably want to care only about very few of them (usually <tt><a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html#cfg_file">cfg_file</a></tt>, <tt><a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html#cfg_dir">cfg_dir</a></tt> and <tt><a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html#admin_email">admin_email</a></tt>). In any case, you can find a detailed description of each and every parameter in the official <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/configmain.html">documentation</a>.</p>
 
 <div class="code">
   <div>/var/www/etc/nagios/nagios.cfg</div>
@@ -245,6 +242,7 @@ event_broker_options=-1
 
 sleep_time=0.25
 service_check_timeout=60
+service_check_timeout_state=c
 host_check_timeout=30
 event_handler_timeout=30
 notification_timeout=30
@@ -283,7 +281,7 @@ max_debug_file_size=1000000
 
 <h4><a id="nagios-2.2.2" name="nagios-2.2.2"></a>2.2.2 The resource file</h4>
 
-<p>The <dfn>resource file</dfn> allows you to assign values to the user-definable macros &quot;<tt>$USER<var>n</var>$</tt>&quot; (where <tt><var>n</var></tt> is a number between 1 and 32 inclusive). Basically, in Nagios, macros are variables (starting and ending with a dollar sign, &quot;<tt>$</tt>&quot;) that you can insert into <a href="nagios3.html#nagios-3.2">command definitions</a> and that will be expanded to the appropriate value immediately prior to the execution of the command. User-defined macros (and the several other <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/macros.html">macros</a> Nagios makes available) allow you to keep command definitions generic and simple (see the <a href="nagios3.html#nagios-3.2">next chapter</a> for some examples).</p>
+<p>The <dfn>resource file</dfn> allows you to assign values to the user-definable macros &quot;<tt>$USER<var>n</var>$</tt>&quot; (where <tt><var>n</var></tt> is a number between 1 and 32 inclusive). Basically, in Nagios, macros are variables (beginning and ending with a dollar sign, &quot;<tt>$</tt>&quot;) that you can insert into <a href="nagios3.html#nagios-3.2">command definitions</a> and that will be expanded to the appropriate value immediately prior to the execution of the command. User-defined macros (and the several other <a href="http://nagios.sourceforge.net/docs/nagioscore/3/en/macros.html">macros</a> Nagios makes available) allow you to keep command definitions generic and simple (see the <a href="nagios3.html#nagios-3.2">next chapter</a> for some examples).</p>
 <p>User-defined macros are normally used to store recurring items in command definitions (like directory paths) and sensitive information (like usernames and passwords). It is recommended that you set restrictive permissions (<tt>600</tt>) on the resource file(s) in order to keep sensitive information protected.</p>
 
 <div class="code">
@@ -298,7 +296,7 @@ $USER3$=password
 </pre>
 </div>
 
-<p>The next step is configuring object data, which is probably the trickiest part of the configuration. We will therefore devote the <a href="nagios3.html">next chapter</a> entirely to this topic.</p>
+<p>The next step is configuring object data, which is probably the trickiest part of the configuration. We will therefore devote the whole <a href="nagios3.html">next chapter</a> to this topic.</p>
 
   <hr />
 
