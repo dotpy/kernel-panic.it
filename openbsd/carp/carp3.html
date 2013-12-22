@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - Base configuration</title>
 
@@ -49,25 +49,7 @@
 </ul>
 
 <p>There should be no need to install the compiler (<tt>comp<var>XX</var>.tgz</tt>), also to avoid providing such a useful tool to possible intruders (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
-<p>After the first reboot, we can start setting up some configuration files; by default, OpenBSD comes with very few services enabled through <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>inetd(8)</tt></a>:</p>
-
-<div class="code">
-<pre>
-$ <kbd>grep -v ^# /etc/inetd.conf</kbd>
-ident           stream  tcp     nowait  _identd /usr/libexec/identd     identd -el
-ident           stream  tcp6    nowait  _identd /usr/libexec/identd     identd -el
-127.0.0.1:comsat dgram  udp     wait    root    /usr/libexec/comsat     comsat
-[::1]:comsat    dgram   udp6    wait    root    /usr/libexec/comsat     comsat
-daytime         stream  tcp     nowait  root    internal
-daytime         stream  tcp6    nowait  root    internal
-time            stream  tcp     nowait  root    internal
-time            stream  tcp6    nowait  root    internal
-$
-</pre>
-</div>
-
-<p>The system is considered secure also with these services turned on (see [<a href="http://www.absoluteopenbsd.com/">ABSO</a>]); anyway, disabling them all will make no harm.</p>
-<p>It's also a good practice to edit the <tt>/etc/motd</tt> file to give as few information as possible about the system and to warn users, whether legitimate or not, that all access is being logged and that any unauthorized access will be prosecuted (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
+<p>After the first reboot, we can start doing some basic configuration; since version 5.4, OpenBSD doesn't start  <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>inetd(8)</tt></a> by default, so there are no unnecessary daemons to prevent from running. It's also a good practice to edit the <tt>/etc/motd</tt> file to give as few information as possible about the system and to warn users, whether legitimate or not, that all access is being logged and that any unauthorized access will be prosecuted (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
 <p>You should already have configured the network during installation; anyway, if you need to make some changes, these are the main files to edit:</p>
 
 <dl>

@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - The CARP protocol</title>
 
@@ -39,7 +39,7 @@
 
 <h2>4. The CARP protocol</h2>
 
-<p>CARP (<dfn>Common Address Redundancy Protocol</dfn>) is the protocol that achieves system redundancy, by having a group of hosts on the same network segment (<dfn>redundancy group</dfn>) to share an IP address, so that, should a machine fail, another host in the redundancy group can respond in its place. CARP also allows a degree of <a href="#carp-4.1.2">load sharing</a> between systems.</p>
+<p>CARP (<dfn>Common Address Redundancy Protocol</dfn>) is the protocol that achieves system redundancy, by having a group of hosts on the same network segment (<dfn>redundancy group</dfn>) to share an IP address, so that, in case of a machine going down, another host in the redundancy group can take over its tasks. CARP also allows a degree of <a href="#carp-4.1.2">load sharing</a> between systems.</p>
 <p>Although creating redundant firewalls is one of its most common uses, CARP isn't a firewall-specific protocol. It can be used to ensure service continuity and/or load sharing to a number of network services.</p>
 <p>Initially, the OpenBSD team wanted to produce a free implementation of the IETF standard protocols, VRRP (<dfn>Virtual Router Redundancy Protocol</dfn>), defined in [<a href="http://www.faqs.org/rfcs/rfc3768.html">RFC3768</a>], and HSRP (<dfn>Hot Standby Router Protocol</dfn>), defined in [<a href="http://www.faqs.org/rfcs/rfc2281.html">RFC2281</a>]; but Cisco, claiming patent rights on it, <q>firmly informed the OpenBSD community that Cisco would defend its patents for VRRP implementation</q> (see [<a href="http://www.openbsd.org/lyrics.html#35">CARP</a>] for more details), thus forcing the OpenBSD developers to create a new, competing protocol designed to be fundamentally different from VRRP.</p>
 <p>CARP is a multicast protocol, grouping several physical computers together under one or more virtual addresses. Of these, one system is the <dfn>master</dfn> and responds to all packets destined for the group; the other systems (<dfn>backups</dfn>) just stand by, waiting for any problem to take its place (as it happens between co-workers...).</p>
@@ -52,9 +52,9 @@
 
 <dl>
   <dt><tt>net.inet.carp.allow</tt></dt>
-  <dd>it defines whether the host handles CARP packets or not. It is enabled by default;</dd>
+  <dd>defines whether the host handles CARP packets or not. It is enabled by default;</dd>
   <dt><tt>net.inet.carp.log</tt></dt>
-  <dd>it defines whether to log CARP errors or not. It may be a value between 0 and 7, corresponding to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslog&amp;sektion=3">syslog(3)</a></tt> priorities, and defaults to 2 (i.e. only CARP state changes are logged);</dd>
+  <dd>defines whether to log CARP errors or not. It may be a value between 0 and 7, corresponding to the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=syslog&amp;sektion=3">syslog(3)</a></tt> priorities, and defaults to 2 (i.e. only CARP state changes are logged);</dd>
   <dt><tt>net.inet.carp.preempt</tt></dt>
   <dd>if set to 0 (default), the host won't try to become master if it receives CARP advertisements from another master. Otherwise, it will try to become master if it is able to advertise more frequently than the current master. This option also enables failing over all interfaces in the event that one interface goes down. In fact, if one physical CARP-enabled interface goes down, CARP will increase by 1 the demotion counter (see <a href="#carp-4.1.1">below</a>) for all groups that the interface belongs to, thus allowing the election of new masters on all subnets.</dd>
 </dl>
@@ -75,15 +75,15 @@
   <dt><tt>carpN</tt></dt>
   <dd>the name of the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> virtual interface.</dd>
   <dt><tt>advbase</tt>, <tt>advskew</tt></dt>
-  <dd>these values determine the interval between two consecutive CARP advertisements. This interval (in seconds) is given by the formula <tt>(advbase + (advskew / 255))</tt>; increasing <tt>advbase</tt> (the default value is 1 second) will decrease network traffic but increase the delay in electing the new master. Small <tt>advskew</tt> values allow a host to advertise more frequently, increasing its probability to become master. <tt>advbase</tt> must be a value between 1 and 255, <tt>advskew</tt> between 0 (the default) and 254;</dd>
+  <dd>these values determine the interval between two consecutive CARP advertisements. This interval (in seconds) is given by the formula <tt>(advbase + (advskew / 255))</tt>; increasing <tt>advbase</tt> will decrease network traffic but increase the delay in electing the new master. Small <tt>advskew</tt> values allow a host to advertise more frequently, increasing its probability to become master. The values of <tt>advbase</tt> and <tt>advskew</tt> must be in the range 0 to 254 and default to 1 and 0 respectively;</dd>
   <dt><tt>balancing</tt></dt>
   <dd>sets the load balancing mode (which will be discussed <a href="#carp-4.1.2">later</a>); valid modes are <tt>arp</tt>, <tt>ip</tt>, <tt>ip-stealth</tt> and <tt>ip-unicast</tt>;</dd>
   <dt><tt>carpnodes</tt></dt>
   <dd>a comma-separated list of <tt>vhid:advskew</tt> pairs to actually define how the load should be shared among the configured carp nodes (see <a href="#carp-4.1.2">below</a> for further details);</dd>
   <dt><tt>carpdev</tt></dt>
   <dd>specifies the physical interface that belongs to this redundancy group. By default, CARP uses the physical interface that belongs to the same subnet as the virtual interface;</dd>
-  <dt><tt>carppeer</tt></dt>
-  <dd>allows you to specify the IP address of the other CARP peer(s), instead of using the default multicast group;</dd>
+  <dt><tt>[-]carppeer</tt></dt>
+  <dd>allows you to specify the IP address of the other CARP peer(s), instead of using the default multicast group; this allows to use <tt><a href="/cgi-bin/man.cgi?query=ipsec&amp;sektion=4">ipsec(4)</a></tt> to protect <tt><a href="/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> traffic;</dd>
   <dt><tt>pass</tt></dt>
   <dd>the authentication password to use when talking to other CARP-enabled hosts in the redundancy group. This must be the same on all members of the group;</dd>
   <dt><tt>state</tt></dt>
@@ -94,7 +94,7 @@
 
 <h4><a id="carp-4.1.1" name="carp-4.1.1"></a>4.1.1 The demotion counter</h4>
 
-<p>Besides basic configuration, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt> command also allows you to tweak the CARP <dfn>demotion counter</dfn>, which is <q>a measure of how &quot;ready&quot; a host is to become master of a CARP group</q> (the higher the counter, the less ready the host). Let's see it in more detail.</p>
+<p>Besides basic configuration, the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt> command also allows you to tweak the CARP <dfn>demotion counter</dfn>, which is <q>a measure of how &quot;ready&quot; a host is to become master of a CARP group</q> [<a href="http://www.openbsd.org/faq/pf/carp.html">CARPFAQ</a>] (the higher the counter, the less ready the host). Let's see it in more detail.</p>
 <p>CARP interfaces are divided in <dfn>groups</dfn> (by default all <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=carp&amp;sektion=4">carp(4)</a></tt> interfaces are members of the &quot;<tt>carp</tt>&quot; interface group) and each group is assigned a demotion counter, whose value can be viewed by running the following command:</p>
 
 <div class="code">
@@ -144,7 +144,7 @@ morituri: carp demote count 50
   </li>
 </ul>
 
-<p>For further details on the CARP demotion counter, please refer to [<a href="http://openbsd.org/faq/pf/carp.html#forcefail">PFFAQ</a>].</p>
+<p>For further details on the CARP demotion counter, please refer to [<a href="http://openbsd.org/faq/pf/carp.html#forcefail">CARPFAQ</a>].</p>
 
 <h4><a id="carp-4.1.2" name="carp-4.1.2"></a>4.1.2 Load balancing</h4>
 

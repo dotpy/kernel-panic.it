@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - The pfsync protocol</title>
 
@@ -40,7 +40,7 @@
 <h2><a id="carp-5" name="carp-5"></a>5. The pfsync protocol</h2>
 
 <p>Pfsync is the protocol used by <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">Packet Filter</a> to manage and update state tables, which allow for stateful inspection and NAT. By default, state change messages are sent out on the synchronization interface using IP multicast packets. The protocol is IP protocol 240 and the multicast group used is 224.0.0.240. We will use it to synchronize state tables among firewalls of the same redundancy group and, in the event of a failover, allow network traffic to flow uninterrupted through the new master firewall.</p>
-<p><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> is also the name of the pseudo-device on which PF state table changes pass (except states created by rules marked with the <tt>no-sync</tt> keyword or by <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> packets). <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> can be configured with a physical synchronization interface, in order to merge the state tables of multiple firewalls.</p>
+<p><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> is also the name of the pseudo-device on which PF state table changes are sent (except states created by rules marked with the <tt>no-sync</tt> keyword or by <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> packets). <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> can be configured to use a physical interface, in order to merge and keep in sync the state tables among multiple firewalls.</p>
 <p>The physical synchronization interface can be set through <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ifconfig&amp;sektion=8">ifconfig(8)</a></tt>, using the <tt>syncdev</tt> parameter; for example, on our firewalls, we can write:</p>
 
 <div class="code">

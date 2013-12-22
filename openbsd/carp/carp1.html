@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2010 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - Introduction</title>
 
@@ -41,7 +41,7 @@
 
 <p>Firewalls are among the most critical network components, since their failure may cause entire groups of machines to remain offline. The damage may range from the public (web, mail, etc.) servers to become unreachable from the outside world up to being unable to surf this web site!</p>
 <p>Using firewall clusters can dramatically reduce these risks, making the failure of a firewall completely transparent to users. Furthermore, maintenance (patching, upgrading, rebooting...) becomes much easier and faster when relying on a backup machine, thus indirectly increasing systems security and reliability.</p>
-<p>On the other hand, it's true that redundancy raises hardware costs and can't solve each and every problem, like transparent transfer of certain protocols (e.g. <acronym title="Secure SHell">SSH</acronym> or <acronym title="Internet Relay Chat">IRC</acronym>) between systems or synchronizing data between clustered machines (in matter of fact, we will rely on two different protocols for <a href="carp4.html">failover</a> and <a href="carp5.html">synchronization</a>).</p>
+<p>On the other hand, it's true that redundancy increases hardware costs and can't solve each and every problem, like transparent transfer of certain protocols (e.g. <acronym title="Secure SHell">SSH</acronym> or <acronym title="Internet Relay Chat">IRC</acronym>) between systems or synchronizing data between clustered machines (in matter of fact, we will rely on two different protocols for <a href="carp4.html">failover</a> and <a href="carp5.html">synchronization</a>).</p>
 <p>The tools we will use to build our failover cluster are:</p>
 
 <dl class="padded">
@@ -55,7 +55,7 @@
   <dd>the protocol that allows PF state tables to be synchronized between multiple firewalls.</dd>
 </dl>
 
-<p>A good knowledge of OpenBSD and PF is assumed, since we won't dwell much on topics like PF maintenance commands and rules syntax. Anyway, the <a href="carp6.html">appendix</a> contains some useful links for delving into these topics.</p>
+<p>A good knowledge of OpenBSD and PF is assumed, since we won't dwell much on topics like PF maintenance commands and rules syntax. Anyway, the <a href="carp6.html">appendix</a> contains some useful links for more on these topics.</p>
 
   <hr />
 
