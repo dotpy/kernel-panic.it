@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -40,7 +40,7 @@
 
 <h2>3. Retrieving statistics</h2>
 
-<p>Packet Filter collects a variety of statistics about interfaces, rules, tables, addresses and queues; statistics can be retrieved using the appropriate methods provided by the <tt><a href="pf2.html">PacketFilter</a></tt> class, such as <tt>PacketFilter.get_status()</tt>, <tt>PacketFilter.get_tstats()</tt> or <tt>PacketFilter.get_qstats()</tt>. These methods return objects that are basically containers for the internal Packet Filter statistics. These objects will be discussed in the sections below.</p>
+<p>Packet Filter collects a variety of statistics about interfaces, rules, tables, addresses and queues; statistics can be retrieved using the appropriate methods provided by the <tt><a href="pf2.html">PacketFilter</a></tt> class, such as <tt>PacketFilter.get_status()</tt>, <tt>PacketFilter.get_tstats()</tt> or <tt>PacketFilter.get_queues()</tt>. These methods return objects that are basically containers for the internal Packet Filter statistics. These objects will be discussed in the sections below.</p>
 
 <h3><a id="pf-3.1" name="pf-3.1"></a>3.1 PFStatus objects</h3>
 
@@ -188,39 +188,25 @@ print &quot;&quot;&quot;Packets out
 
 <p>Printing a <tt>PFIface</tt> object will produce an output similar to that of the &quot;<tt>pfctl -s Interfaces -vv</tt>&quot; command.</p>
 
-<h3><a id="pf-3.4" name="pf-3.4"></a>3.4 CBQStats, PriQStats and HFSCStats objects</h3>
+<h3><a id="pf-3.4" name="pf-3.4"></a>3.4 PFQueueStats objects</h3>
 
-<p><tt>CBQStats</tt>, <tt>PriQStats</tt> and <tt>HFSCStats</tt> objects contain statistics information for <acronym title="Class-Based Queueing">CBQ</acronym>, <acronym title="Priority queueing">PriQ</acronym> and <acronym title="Hierarchical Fair Service Curve">HFSC</acronym> queues respectively; they are returned by the <tt>PacketFilter.get_qstats()</tt> method and have the following attributes:</p>
+<p><tt>PFQueueStats</tt> objects contain statistics information for queues; they can be retrieved by calling the <tt>PacketFilter.get_queues()</tt> method, which returns a tuple of <tt><a href="pf5.html">PFQueue</a></tt> objects, whose <tt>stats</tt> attributes are <tt>PFQueueStats</tt> instances; they have the following attributes:</p>
 
 <dl class="padded">
-  <dt><tt>CBQStats.<span class="attr">packets</span></tt></dt>
-  <dt><tt>PriQStats.<span class="attr">packets</span></tt></dt>
-  <dt><tt>HFSCStats.<span class="attr">packets</span></tt></dt>
+  <dt><tt>PFQueueStats.<span class="attr">packets</span></tt></dt>
   <dd>Packet counter, i.e. a two-item tuple containing the number of packets transmitted and dropped.</dd>
 
-  <dt><tt>CBQStats.<span class="attr">bytes</span></tt></dt>
-  <dt><tt>PriQStats.<span class="attr">bytes</span></tt></dt>
-  <dt><tt>HFSCStats.<span class="attr">bytes</span></tt></dt>
+  <dt><tt>PFQueueStats.<span class="attr">bytes</span></tt></dt>
   <dd>Byte counter, i.e. a two-item tuple containing the number of bytes transmitted and dropped.</dd>
 
-  <dt><tt>CBQStats.<span class="attr">length</span></tt></dt>
-  <dt><tt>PriQStats.<span class="attr">bytes</span></tt></dt>
-  <dt><tt>HFSCStats.<span class="attr">bytes</span></tt></dt>
+  <dt><tt>PFQueueStats.<span class="attr">qlength</span></tt></dt>
   <dd>The current number of packets held in the queue.</dd>
 
-  <dt><tt>CBQStats.<span class="attr">limit</span></tt></dt>
-  <dt><tt>PriQStats.<span class="attr">bytes</span></tt></dt>
-  <dt><tt>HFSCStats.<span class="attr">bytes</span></tt></dt>
+  <dt><tt>PFQueueStats.<span class="attr">qlimit</span></tt></dt>
   <dd>The maximum number of packets held in the queue.</dd>
-
-  <dt><tt>CBQStats.<span class="attr">borrows</span></tt></dt>
-  <dd>Number of times the queue tried to borrow (<tt>CBQStats</tt> only).</dd>
-
-  <dt><tt>CBQStats.<span class="attr">delays</span></tt></dt>
-  <dd>Number of times the queue invoked delay actions (<tt>CBQStats</tt> only).</dd>
 </dl>
 
-<p>Printing <tt>CBQStats</tt>, <tt>PriQStats</tt> and <tt>HFSCStats</tt> objects will produce an output similar to that of the &quot;<tt>pfctl -s queue -v</tt>&quot; command.</p>
+<p>Printing <tt><a href="pf5.html">PFQueue</a></tt> and the relative <tt>PFQueueStats</tt> objects will produce an output similar to that of the &quot;<tt>pfctl -s queue -v</tt>&quot; command.</p>
 
   <hr />
 

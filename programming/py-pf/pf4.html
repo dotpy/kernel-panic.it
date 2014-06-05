@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -84,10 +84,10 @@
   <dd>The direction of the state; can be either <tt>PF_IN</tt> or <tt>PF_OUT</tt>.</dd>
 
   <dt><tt>PFState.<span class="attr">state_flags</span></tt></dt>
-  <dd>Bitmask of flags for tracking source IP addresses; valid flags are <tt>pf.PFSYNC_FLAG_NATSRCNODE</tt> (corresponding to the &quot;<tt>sticky-address</tt>&quot; option in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>), <tt>pf.PFSYNC_FLAG_SRCNODE</tt> (&quot;<tt>source-track</tt>&quot; option) and <tt>pf.PFSTATE_SLOPPY</tt> (&quot;<tt>sloppy</tt>&quot; option).</dd>
+  <dd>Bitmask of flags for tracking source IP addresses; valid flags are <tt>PFSYNC_FLAG_NATSRCNODE</tt> (corresponding to the &quot;<tt>sticky-address</tt>&quot; option in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>), <tt>PFSYNC_FLAG_SRCNODE</tt> (&quot;<tt>source-track</tt>&quot; option) and <tt>PFSTATE_SLOPPY</tt> (&quot;<tt>sloppy</tt>&quot; option).</dd>
 
   <dt><tt>PFState.<span class="attr">sync_flags</span></tt></dt>
-  <dd>Bitmask of flags for syncing the states among multiple firewalls with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt>; the only valid flag is <tt>pf.PFSTATE_NOSYNC</tt> (corresponding to the &quot;<tt>no-sync</tt>&quot; option in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>).</dd>
+  <dd>Bitmask of flags for syncing the states among multiple firewalls with <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt>; the only valid flag is <tt>PFSTATE_NOSYNC</tt> (corresponding to the &quot;<tt>no-sync</tt>&quot; option in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>).</dd>
 
   <dt><tt>PFState.<span class="attr">src</span></tt></dt>
   <dd>A <tt><a href="#pf-4.3">PFStatePeer</a></tt> instance containing various information about the local endpoint of the connection.</dd>
@@ -113,6 +113,8 @@
   <dd>A two-items tuple of <tt><a href="pf6.html#pf-6.1.1">PFAddr</a></tt> objects.</dd>
   <dt><tt>PFStateKey.<span class="attr">port</span></tt></dt>
   <dd>A two-items tuple of <tt><a href="pf6.html#pf-6.1.2">PFPort</a></tt> objects.</dd>
+  <dt><tt>PFStateKey.<span class="attr">rdomain</span></tt></dt>
+  <dd>The id of the routing domain of the state.</dd>
 </dl>
 
 <p><tt>PFState</tt> objects contain two <tt>PFStateKey</tt> objects, <tt>PFState.nk</tt> and <tt>PFState.sk</tt>, whose interpretation differs depending on the direction of traffic (i.e. the value of <tt>PFState.direction</tt>); for inbound packets (i.e. when <tt>PFState.direction</tt> is <tt>PF_IN</tt>):</p>

@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -78,31 +78,10 @@ except IOError, (err, msg):
   <dd>The path of the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> pseudo-device.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">enable</span>()</tt></dt>
-  <dd>Enable Packet Filtering and <acronym title="Network Address Translation">NAT</acronym>.</dd>
+  <dd>Enable Packet Filtering, <acronym title="Network Address Translation">NAT</acronym> and queueing.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">disable</span>()</tt></dt>
-  <dd>Disable Packet Filtering and <acronym title="Network Address Translation">NAT</acronym>.</dd>
-
-  <dt><tt>PacketFilter.<span class="attr">enable_altq</span>()</tt></dt>
-  <dd>Enable the ALTQ bandwidth control and packet prioritization system. Raise <tt><a href="pf1.html#pf-1.1">PFError</a></tt> if ALTQ is not supported by the system; for example:
-  <div class="code">
-<pre>
-filter = pf.PacketFilter()
-
-<i># Enable packet filtering and NAT</i>
-filter.enable()
-
-<i># Enable bandwidth control</i>
-try:
-    filter.enable_altq()
-except pf.PFError:
-    print &quot;No ALTQ support in kernel&quot;
-</pre>
-  </div>
-  </dd>
-
-  <dt><tt>PacketFilter.<span class="attr">disable_altq</span>()</tt></dt>
-  <dd>Disable the ALTQ bandwidth control and packet prioritization system. Raise <tt><a href="pf1.html#pf-1.1">PFError</a></tt> if ALTQ is not supported by the system.</dd>
+  <dd>Disable Packet Filtering, <acronym title="Network Address Translation">NAT</acronym> and queueing.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">set_debug</span>(<var>level</var>)</tt></dt>
   <dd>Set the debug level. The debug <tt>level</tt> can be either a string (&quot;<tt>emerg</tt>&quot;, &quot;<tt>alert</tt>&quot;, &quot;<tt>crit</tt>&quot;, &quot;<tt>err</tt>&quot;, &quot;<tt>warn</tt>&quot;, &quot;<tt>notice</tt>&quot;, &quot;<tt>info</tt>&quot;, &quot;<tt>debug</tt>&quot;) or a constant (<tt>LOG_EMERG</tt>, <tt>LOG_ALERT</tt>, <tt>LOG_CRIT</tt>, <tt>LOG_ERR</tt>, <tt>LOG_WARNING</tt>, <tt>LOG_NOTICE</tt>, <tt>LOG_INFO</tt>, <tt>LOG_DEBUG</tt>); for example:
@@ -243,17 +222,11 @@ filter.kill_states(src=pf.PFRuleAddr(www_client),
   <dt><tt>PacketFilter.<span class="attr">clear_rules</span>([<var>path</var>])</tt></dt>
   <dd>Clear all rules contained in the anchor <tt>path</tt>; if no anchor is specified, clear all rules from the main ruleset.</dd>
 
-  <dt><tt>PacketFilter.<span class="attr">clear_altqs</span>()</tt></dt>
-  <dd>Clear all ALTQ disciplines and queues.</dd>
+  <dt><tt>PacketFilter.<span class="attr">get_queues</span>()</tt></dt>
+  <dd>Return a tuple of <tt><a href="pf5.html">PFQueue</a></tt> objects representing the currently loaded ALTQ disciplines and queues.</dd>
 
-  <dt><tt>PacketFilter.<span class="attr">get_altqs</span>()</tt></dt>
-  <dd>Return a tuple of <tt><a href="pf5.html">PFAltq*</a></tt> objects representing the currently loaded ALTQ disciplines and queues.</dd>
-
-  <dt><tt>PacketFilter.<span class="attr">add_altqs</span>(<var>*altqs</var>)</tt></dt>
-  <dd>Load an ALTQ discipline and one or more queues on an interface; <tt>altqs</tt> must be <tt><a href="pf5.html">PFAltq*</a></tt> objects. <em>Note:</em> this method doesn't allow you to load just one ALTQ rule on the fly: you need to (re)load the complete set of ALTQ rules for the interface.</dd>
-
-  <dt><tt>PacketFilter.<span class="attr">get_qstats</span>()</tt></dt>
-  <dd>Get statistics information for ALTQ rules; return a tuple of <tt><a href="pf3.html#pf-3.4">CBQStats</a></tt>, <tt><a href="pf3.html#pf-3.5">PriQStats</a></tt>, and/or <tt><a href="pf3.html#pf-3.6">HFSCStats</a></tt> objects, depending on the queueing scheduler(s) in use.</dd>
+  <dt><tt>PacketFilter.<span class="attr">load_queues</span>(<var>*queues</var>)</tt></dt>
+  <dd>Load a set of queues on an interface; <tt>queues</tt> must be <tt><a href="pf5.html">PFQueue</a></tt> objects. <em>Note:</em> this method doesn't allow you to load just one queue rule on the fly: you need to (re)load the complete set of queue rules for the interface.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_ruleset</span>([<var>path</var>[, <var>clear</var>[, <var>**kw></var>]]])</tt></dt>
   <dd>Return a <tt><a href="pf7.html#pf-7.2">PFRuleset</a></tt> object containing the active ruleset; <tt>path</tt> is the name of the anchor to retrieve rules from and defaults to the main ruleset. If set to <tt>True</tt>, <tt>clear</tt> will cause the per-rule statistics to be cleared. Additional keyword arguments can be passed in order to retrieve only rules with specified attribute values; for example:

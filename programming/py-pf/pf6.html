@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -148,14 +148,14 @@ def print_addr(addr):
 
 <div class="code">
 <pre>
-net   = PFAddr(&quot;10.0.0.0/8&quot;)
-rng   = PFAddr(&quot;192.168.1.0 - 192.168.1.31&quot;)
-ifnet = PFAddr(&quot;rl0:network&quot;, af=AF_INET)
-any   = PFAddr()
-tbl   = PFAddr(&quot;&lt;spammers&gt;&quot;)
+net   = pf.PFAddr(&quot;10.0.0.0/8&quot;)
+rng   = pf.PFAddr(&quot;192.168.1.0 - 192.168.1.31&quot;)
+ifnet = pf.PFAddr(&quot;rl0:network&quot;, af=socket.AF_INET)
+any   = pf.PFAddr()
+tbl   = pf.PFAddr(&quot;&lt;spammers&gt;&quot;)
 
-ifnet = PFAddr(type=pf.PF_ADDR_DYNIFTL, ifname=&quot;rl0&quot;,
-               iflags=pf.PFI_AFLAG_NETWORK, af=AF_INET)
+ifnet = pf.PFAddr(type=pf.PF_ADDR_DYNIFTL, ifname=&quot;rl0&quot;,
+                  iflags=pf.PFI_AFLAG_NETWORK, af=socket.AF_INET)
 </pre>
 </div>
 
@@ -186,16 +186,16 @@ ifnet = PFAddr(type=pf.PF_ADDR_DYNIFTL, ifname=&quot;rl0&quot;,
 <div class="code">
 <pre>
 def print_port(port):
-    s = {PF_OP_NONE: &quot;{0[0]}&quot;,
-         PF_OP_IRG:  &quot;{0[0]} &gt;&lt; {0[1]}&quot;,
-         PF_OP_XRG:  &quot;{0[0]} &lt;&gt; {0[1]}&quot;,
-         PF_OP_EQ:   &quot;= {0[0]}&quot;,
-         PF_OP_NE:   &quot;!= {0[0]}&quot;,
-         PF_OP_LT:   &quot;&lt; {0[0]}&quot;,
-         PF_OP_LE:   &quot;&lt;= {0[0]}&quot;,
-         PF_OP_GT:   &quot;&gt; {0[0]}&quot;,
-         PF_OP_GE:   &quot;&gt;= {0[0]}&quot;,
-         PF_OP_RRG:  &quot;{0[0]}:{0[1]}&quot;}
+    s = {pf.PF_OP_NONE: &quot;{0[0]}&quot;,
+         pf.PF_OP_IRG:  &quot;{0[0]} &gt;&lt; {0[1]}&quot;,
+         pf.PF_OP_XRG:  &quot;{0[0]} &lt;&gt; {0[1]}&quot;,
+         pf.PF_OP_EQ:   &quot;= {0[0]}&quot;,
+         pf.PF_OP_NE:   &quot;!= {0[0]}&quot;,
+         pf.PF_OP_LT:   &quot;&lt; {0[0]}&quot;,
+         pf.PF_OP_LE:   &quot;&lt;= {0[0]}&quot;,
+         pf.PF_OP_GT:   &quot;&gt; {0[0]}&quot;,
+         pf.PF_OP_GE:   &quot;&gt;= {0[0]}&quot;,
+         pf.PF_OP_RRG:  &quot;{0[0]}:{0[1]}&quot;}
 
     print s[port.op].format(port.num)
 </pre>
@@ -205,11 +205,11 @@ def print_port(port):
 
 <div class="code">
 <pre>
-p1 = PFPort(&quot;www&quot;, socket.IPPROTO_TCP)
-p2 = PFPort(&quot;&gt; 1024&quot;, socket.IPPROTO_TCP)
-p3 = PFPort(&quot;2000 &gt;&lt; 3000&quot;, socket.IPPROTO_UDP)
-p4 = PFPort(22, socket.IPPROTO_TCP, pf.PF_OP_NE)
-p5 = PFPort((2000, 3000), socket.IPPROTO_TCP, pf.PF_OP_IRG)   <i># Same as p3</i>
+p1 = pf.PFPort(&quot;www&quot;, socket.IPPROTO_TCP)
+p2 = pf.PFPort(&quot;&gt; 1024&quot;, socket.IPPROTO_TCP)
+p3 = pf.PFPort(&quot;2000 &gt;&lt; 3000&quot;, socket.IPPROTO_UDP)
+p4 = pf.PFPort(22, socket.IPPROTO_TCP, pf.PF_OP_NE)
+p5 = pf.PFPort((2000, 3000), socket.IPPROTO_TCP, pf.PF_OP_IRG)   <i># Same as p3</i>
 </pre>
 </div>
 
