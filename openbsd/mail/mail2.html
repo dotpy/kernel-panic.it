@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a mail server - Preliminary installation steps</title>
 
@@ -44,37 +44,11 @@
 <p>We won't cover the installation procedure here, which is documented in full detail on the <a href="http://www.openbsd.org/faq/faq4.html">OpenBSD web site</a>. Just a couple of notes:</p>
 
 <ul>
-  <li>while partitioning the hard drive, bear in mind that we will <a href="mail3.html#mail-3.1">configure Postfix</a> to use <a href="http://www.postfix.org/VIRTUAL_README.html">virtual domains</a> and, consequently, it will store all users' mail folders in a single directory (<tt>/var/vmail</tt>). Therefore, it is recommended to assign a (large) dedicated slice to this filesystem, in order to prevent mails from filling up any critical filesystem, should quotas fail. Furthermore, if you choose to install <a href="mail4.html">MySQL</a> on the mail server itself, it is usually recommended to assign one of the first slices to <tt>/var/mysql</tt>, in order to allow for faster disk access by the database engine;</li>
-  <li>the only file sets we will need to install are those marked as &quot;<b>required</b>&quot; on the <a href="http://www.openbsd.org/faq/faq4.html#FilesNeeded">documentation</a>, i.e. <tt>bsd</tt> (the kernel), <tt>base<var>XX</var>.tgz</tt> (the base system), and <tt>etc<var>XX</var>.tgz</tt> (the configuration files in <tt>/etc</tt>)  plus <tt>comp<var>XX</var>.tgz</tt> (the C compiler), since we will also have to install some <a href="http://www.openbsd.org/ports.html">ports</a> not available as precompiled packages for licensing reasons. <em>Note</em>: since leaving a compiler on a publicly accessible server is a definite security risk, it is recommended that you remove the compiler when the installation is over or that you compile on another machine.</li>
+  <li>while partitioning the hard drive, bear in mind that we will <a href="mail3.html#mail-3.1">configure Postfix</a> to use <a href="http://www.postfix.org/VIRTUAL_README.html">virtual domains</a> and, consequently, it will store all users' mail folders in a single directory (<tt>/var/vmail</tt>). Therefore, it is recommended to assign a (large) dedicated slice to this filesystem, in order to prevent mails from filling up any critical filesystem, should quotas fail;</li>
+  <li>the only file sets we will need to install are those marked as &quot;<b>required</b>&quot; on the <a href="http://www.openbsd.org/faq/faq4.html#FilesNeeded">documentation</a>, i.e. <tt>bsd</tt> (the kernel), <tt>base<var>XX</var>.tgz</tt> (the base system), and <tt>etc<var>XX</var>.tgz</tt> (the configuration files in <tt>/etc</tt>)  plus <tt>comp<var>XX</var>.tgz</tt> (the C compiler), since we will have to install some <a href="http://www.openbsd.org/ports.html">ports</a> not available as precompiled packages for licensing reasons. <em>Note</em>: since leaving a compiler on a publicly accessible server is a definite security risk, it is recommended that you remove the compiler when the installation is over or that you compile on another machine.</li>
 </ul>
 
-<p>After the first reboot, we can disable some default network services managed by <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>inetd(8)</tt></a>:</p>
-
-<div class="code">
-<pre>
-$ <kbd>grep -v ^# /etc/inetd.conf</kbd>
-ident           stream  tcp     nowait  _identd /usr/libexec/identd     identd -el
-ident           stream  tcp6    nowait  _identd /usr/libexec/identd     identd -el
-127.0.0.1:comsat dgram  udp     wait    root    /usr/libexec/comsat     comsat
-[::1]:comsat    dgram   udp6    wait    root    /usr/libexec/comsat     comsat
-daytime         stream  tcp     nowait  root    internal
-daytime         stream  tcp6    nowait  root    internal
-time            stream  tcp     nowait  root    internal
-time            stream  tcp6    nowait  root    internal
-$
-</pre>
-</div>
-
-<p>by commenting them out in <a href="http://www.openbsdorg/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>/etc/inetd.conf</tt></a> and reloading <a href="http://www.openbsdorg/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>inetd(8)</tt></a>:</p>
-
-<div class="code">
-<pre>
-# <kbd>pkill -HUP inetd</kbd>
-</pre>
-</div>
-
-<p>Anyway, OpenBSD is considered secure also with those services turned on and the mail server should be placed behind a firewall; nevertheless, I prefer staying on the safe side and disable them all (including <a href="http://www.openbsdorg/cgi-bin/man.cgi?query=comsat&amp;sektion=8"><tt>comsat(8)</tt></a>, since we won't have any interactive user receiving mail on the system).</p>
-<p>To modify the server network configuration, please refer to the <a href="../carp/carp3.html">appropriate chapter</a> in the previous document about <a href="../carp/">redundant firewalls</a> or to the <a href="http://www.openbsd.org/faq/faq6.html">Networking</a> FAQ.</p>
+<p>Since version 5.4, OpenBSD doesn't start inetd(8) by default, so there are no unnecessary daemons to prevent from running; to modify the server network configuration, please refer to the <a href="../carp/carp3.html">appropriate chapter</a> in the previous document about <a href="../carp/">redundant firewalls</a> or to the <a href="http://www.openbsd.org/faq/faq6.html">Networking</a> FAQ.</p>
 
   <hr />
 

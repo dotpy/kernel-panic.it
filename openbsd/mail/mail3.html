@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a mail server - Postfix</title>
 
@@ -56,9 +56,9 @@
 <p>There are a few packages we need to install:</p>
 
 <ul>
-  <li>mysql-client-<var>x</var>.<var>x</var>.<var>x</var>.tgz</li>
-  <li>pcre-<var>x</var>.<var>x</var>.tgz</li>
-  <li>postfix-<var>x</var>.<var>x</var>.<var>x</var>-mysql.tgz</li>
+  <li>mysql-client</li>
+  <li>pcre</li>
+  <li>postfix-<var>x</var>.<var>x</var>.<var>x</var>-mysql</li>
 </ul>
 
 <p><em>Note</em>: if you're planning to use <a href="mail7.html#mail-7.2">SMTP authentication</a>, you will need to compile Postfix from the ports, because there's no pre-compiled package available with both MySQL and SASL support:</p>
@@ -241,7 +241,7 @@ NOTE: do not forget to add "-a /var/spool/postfix/dev/log" to
 NOTE: do not forget to add postfix to pkg_scripts in
       /etc/rc.conf.local to start postfix automatically.
 
-NOTE: do not forget to remove the "sendmail clientmqueue runner"
+NOTE: do not forget to remove the &quot;sendmail clientmqueue runner&quot;
       from root's crontab.
 </pre>
 </div>
@@ -275,8 +275,6 @@ pkg_scripts=&quot;postfix&quot;
 
 <div class="code">
 <pre>
-# <kbd>chgrp _postdrop /usr/local/sbin/postqueue /usr/local/sbin/postdrop</kbd>
-# <kbd>chmod 2755 /usr/local/sbin/postqueue /usr/local/sbin/postdrop</kbd>
 # <kbd>pkill syslogd</kbd>
 # <kbd>syslogd -a /var/empty/dev/log -a /var/spool/postfix/dev/log</kbd>
 # <kbd>pkill sendmail</kbd>

@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a mail server - Courier-IMAP</title>
 
@@ -46,12 +46,12 @@
 <p>The following is the list of the required packages:</p>
 
 <ul>
-  <li>expect-no_tk</li>
-  <li>gdbm</li>
-  <li>gettext</li>
   <li>libidn</li>
-  <li>libltdl</li>
+  <li>gettext</li>
   <li>tcl</li>
+  <li>expect</li>
+  <li>libltdl</li>
+  <li>gdbm</li>
   <li>courier-authlib</li>
   <li>courier-imap</li>
   <li>courier-authlib-mysql</li>
@@ -110,10 +110,12 @@ MYSQL_QUOTA_FIELD    quota
 
 <div class="code">
 <pre>
-# <kbd>mkdir -p /var/run/courier{,-auth}/</kbd>
-# <kbd>/usr/local/sbin/authdaemond start</kbd>
-# <kbd>/usr/local/libexec/imapd.rc start</kbd>
-# <kbd>/usr/local/libexec/imapd-ssl.rc start</kbd>
+# <kbd>/etc/rc.d/courier_authdaemond start</kbd>
+courier_authdaemond(ok)
+# <kbd>/etc/rc.d/courier_imap start</kbd>
+courier_imap(ok)
+# <kbd>/etc/rc.d/courier_imap_ssl start</kbd>
+courier_imap_ssl(ok)
 </pre>
 </div>
 
@@ -176,8 +178,10 @@ imap_srv.logout()
 <pre>
 # <kbd>/usr/local/sbin/mkpop3dcert</kbd>
 [ ... ]
-# <kbd>/usr/local/libexec/pop3d.rc start</kbd>
-# <kbd>/usr/local/libexec/pop3d-ssl.rc start</kbd>
+# <kbd>/etc/rc.d/courier_pop3 start</kbd>
+courier_pop3(ok)
+# <kbd>/etc/rc.d/courier_pop3_ssl start</kbd>
+courier_pop3_ssl(ok)
 </pre>
 </div>
 

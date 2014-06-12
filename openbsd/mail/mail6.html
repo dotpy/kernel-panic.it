@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,mail,server,Postfix,MySQL,Courier,IMAP,POP3,SASL,SpamAssassin,ClamAV,SquirrelMail,PHP,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2012 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
 
   <title>OpenBSD as a mail server - Content filtering</title>
 
@@ -57,8 +57,7 @@
   <li>p5-Crypt-OpenSSL-RSA</li>
   <li>p5-Crypt-OpenSSL-Random</li>
   <li>p5-Digest-HMAC</li>
-  <li>p5-Digest-SHA1</li>
-  <li>p5-Error</li>
+    <li>p5-Error</li>
   <li>p5-Geography-Countries</li>
   <li>p5-HTML-Parser</li>
   <li>p5-HTML-Tagset</li>
@@ -71,7 +70,6 @@
   <li>p5-Mail-Tools</li>
   <li>p5-Net-DNS</li>
   <li>p5-Net-DNS-Resolver-Programmable</li>
-  <li>p5-Net-SSLeay</li>
   <li>p5-NetAddr-IP</li>
   <li>p5-Socket6</li>
   <li>p5-Time-TimeDate</li>
@@ -99,7 +97,7 @@ required_score	8.0
 
 <div class="code">
 <pre>
-# <kbd>/usr/local/bin/spamd -d -u _spamdaemon -P</kbd>
+# <kbd>/etc/rc.d/spamassassin start</kbd>
 # <kbd>install -o _postfix -g _postfix -d /var/spool/postfix/var/run/milter-spamd</kbd>
 # <kbd>/usr/local/libexec/milter-spamd -p /var/spool/postfix/var/run/milter-spamd/spamd.sock -u _postfix</kbd>
 </pre>
@@ -160,8 +158,8 @@ pkg_scripts=&quot;mysqld
 <ul>
   <li>arc</li>
   <li>lha</li>
+  <li>libxml</li>
   <li>unzip</li>
-  <li>zoo</li>
   <li>clamav</li>
 </ul>
 
@@ -251,9 +249,9 @@ LogFacility     LOG_MAIL
 
 <div class="code">
 <pre>
-# <kbd>clamd</kbd>
+# <kbd>/etc/rc.d/clamd start</kbd>
 # <kbd>install -o _postfix -g _postfix -d /var/spool/postfix/var/run/milter-clamav</kbd>
-# <kbd>clamav-milter</kbd>
+# <kbd>/etc/rc.d/clamav_milter start</kbd>
 </pre>
 </div>
 
