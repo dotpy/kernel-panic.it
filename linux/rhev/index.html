@@ -25,7 +25,7 @@
     <ul>
       <li class="prev"><span class="nav-list" ><span>Previous</span></span></li>
       <li class="up"><a class="nav-list" href="../../linux.html"><span>Up</span></a></li>
-      <li class="prev"><span class="nav-list" ><span>Next</span></span></li>
+      <li class="next"><span class="nav-list" ><span>Next</span></span></li>
       <li class="home"><a class="nav-list" href="../../index.html"><span>Home</span></a></li>
     </ul>
     <h3>Automatic Virtual Machine deployment using the RHEV API and Python</h3>
@@ -35,7 +35,10 @@
 
   <hr />
 
-<h2>Automatic Virtual Machine deployment using the RHEV API and Python</h2>
+<h1>Automatic Virtual Machine deployment using the RHEV API and Python</h1>
+  <div id="subtitle">Author: <a href="mailto:danix@kernel-panic.it">Daniele Mazzocchio</a><br />
+                     Last update: Sep 8, 2014
+  </div>
 
 <p>The purpose of this document is to give a quick overview of the Python <acronym title="RedHat Enterprise Virtualization">RHEV</acronym> <acronym title="Application Programming Interface">API</acronym>, by creating a basic script for deploying new <acronym title="RedHat Enterprise Linux">RHEL</acronym> virtual machines; such a script could be used for faster VM creation (by bypassing the web interface completely) or for automating the deployment process.</p>
 <p>So let's talk prerequisites. The first choice is whether to create new virtual machines using templates or kickstart (i.e. network installation); though the most natural choice would be using templates, there are a number of reasons why I prefer the kickstart installation method:</p>
