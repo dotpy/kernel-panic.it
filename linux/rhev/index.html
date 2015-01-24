@@ -112,11 +112,11 @@ api.vms.add(params.VM(name=VM_NAME,
 <pre>
 import time
 
-def wait_state(vm_name, state):
+def wait_vm_state(vm_name, state):
     while api.vms.get(vm_name).status.state != state:
         time.sleep(1)
 
-wait_state(VM_NAME, &quot;down&quot;)
+wait_vm_state(VM_NAME, &quot;down&quot;)
 </pre>
 </div>
 
@@ -196,7 +196,7 @@ vm.start()
 <div class="code">
 <pre>
 </i># Wait for machine to power off</i>
-wait_state(VM_NAME, &quot;down&quot;)
+wait_vm_state(VM_NAME, &quot;down&quot;)
 <i># Remove boot parameters</i>
 vm.set_os(params.OperatingSystem(kernel=&quot;&quot;, initrd=&quot;&quot;, cmdline=&quot;&quot;))
 vm.update()
