@@ -10,7 +10,7 @@
   <meta name="keywords" content="Linux,Redhat,Enterprise,Virtualization,RHEV,RHEL,API,Python,Deployment,Automation,Kickstart" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2011 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2015 by Kernel-Panic.it." />
 
   <title>Automatic Virtual Machine deployment using the RHEV API and Python</title>
 
@@ -120,11 +120,22 @@ wait_state(VM_NAME, &quot;down&quot;)
 </pre>
 </div>
 
+<p>A similar function can be used to monitor the state of virtual disks:</p>
+
+<div class="code">
+<pre>
+def wait_disk_state(disk_name, state):
+    while api.disks.get(disk_name).status.state != state:
+        time.sleep(1)
+</pre>
+</div>
+
 <p>Once the machine has been created and is in <em>down</em> state, we can add one or more disks and network cards; in this example, we will add a 20GB thin-provisioned disk (Copy-On-Write) and one <acronym title="Network Interface Card">NIC</acronym>:</p>
 
 <div class="code">
 <pre>
 STG_DOMAIN = &quot;my_stg_domain&quot;
+DSK_NAME = &quot;disk1&quot;
 NIC_NAME = &quot;nic1&quot;
 NET_NAME = &quot;my_network&quot;
 
@@ -132,13 +143,16 @@ vm = api.vms.get(VM_NAME)
 stg_domain = api.storagedomains.get(STG_DOMAIN)
 stg_parms = params.StorageDomains(storage_domain=[stg_domain])
 <i># Boot disk</i>
-vm.disks.add(params.Disk(storage_domains=stg_parms,
+vm.disks.add(params.Disk(name=DSK_NAME,
+                         storage_domains=stg_parms,
                          size=20*GB,
                          status=None,
                          interface='virtio',
                          format='cow',
                          sparse=False,
                          bootable=True))
+wait_disk_state(DSK_NAME, &quot;ok&quot;)
+
 <i># Boot NIC</i>
 vm.nics.add(params.NIC(name=NIC_NAME,
                        network=params.Network(name=NET_NAME),
@@ -154,14 +168,14 @@ boot_if = vm.nics.get(NIC_NAME).mac.address
 
 <div class="code">
 <pre>
-boot_params = {&quot;ks&quot;: &quot;http://<satellite-server>/ks&quot;,
+boot_params = {&quot;ks&quot;: &quot;http://&lt;<var>satellite-server</var>&gt;/ks&quot;,
                &quot;ksdevice&quot;: boot_if,
                &quot;dns&quot;: &quot;1.2.3.4,1.2.3.5&quot;,
                &quot;ip&quot;: &quot;10.9.8.7&quot;,
                &quot;netmask&quot;: &quot;255.255.255.0&quot;,
                &quot;gateway&quot;: &quot;10.9.8.1&quot;,
                &quot;hostname&quot;: &quot;{0}.my.domain&quot;.format(VM_NAME)}
-cmdline = &quot; &quot;.join(map(&quot;{0[0]}={0[1]}&quot;.format, d.iteritems()))
+cmdline = &quot; &quot;.join(map(&quot;{0[0]}={0[1]}&quot;.format, boot_params.iteritems()))
 vm.set_os(params.OperatingSystem(kernel=&quot;iso://vmlinuz&quot;,
                                  initrd=&quot;iso://initrd.img&quot;,
                                  cmdline=cmdline))
@@ -181,12 +195,11 @@ vm.start()
 
 <div class="code">
 <pre>
-wait_state(VM_NAME, &quot;up&quot;)
+</i># Wait for machine to power off</i>
+wait_state(VM_NAME, &quot;down&quot;)
 <i># Remove boot parameters</i>
 vm.set_os(params.OperatingSystem(kernel=&quot;&quot;, initrd=&quot;&quot;, cmdline=&quot;&quot;))
 vm.update()
-</i># Wait for machine to power off</i>
-wait_state(VM_NAME, &quot;down&quot;)
 <i># Start the VM after the installation</i>
 vm.start()
 api.disconnect()
