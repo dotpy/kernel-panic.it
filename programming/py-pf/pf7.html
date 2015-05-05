@@ -264,8 +264,11 @@
   <dd></dd>
 -->
 
-  <dt><tt>PFRule.<span class="attr">prio</span></tt></dt>
+  <dt><tt>PFRule.<span class="attr">set_prio</span></tt></dt>
   <dd>A two-items tuple to assign a specific queueing priority to packets matching this rule; priorities are assigned as integers <tt>0</tt> through <tt>7</tt>, with a default priority of <tt>3</tt>. The second item, if different from the first, allows you to specify a different priority for packets which have a TOS of lowdelay and TCP ACKs with no data payload.</dd>
+
+  <dt><tt>PFRule.<span class="attr">prio</span></tt></dt>
+  <dd>An integer (<tt>0</tt> through <tt>7</tt>) that allows PF to match only packets with that queueing priority.</dd>
 
   <dt><tt>PFRule.<span class="attr">divert</span></tt></dt>
   <dd>A two-items tuple (<a href="pf6.html#pf-6.1.1"><tt>PFAddr</tt></a>, <a href="pf6.html#pf-6.1.2"><tt>PFPort</tt></a>) used to redirect packets to a local socket bound to that address and port. You can set <tt>address</tt> to <tt>None</tt> in order to receive replies for sockets that are bound to addresses which are not local to the machine (<tt>divert-reply</tt> parameter in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a>).</dd>
