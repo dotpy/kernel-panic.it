@@ -264,7 +264,7 @@ filter.add_tables(goodguys)
   </dd>
 
   <dt><tt>PacketFilter.<span class="attr">clear_tables</span>([<var>filter</var>])</tt></dt>
-  <dd>Clear all tables in a specified anchor; <tt>filter</tt> is a <tt><a href="pf5.html#pf-5.3.1">PFTable</a></tt> object that allows you to specify the anchor in which to delete all tables. Return the number of tables deleted; for example:
+  <dd>Clear all tables in a specified anchor (<tt>/</tt> by default); <tt>filter</tt> is a <tt><a href="pf5.html#pf-5.3.1">PFTable</a></tt> object that allows you to specify the anchor in which to delete all tables. Return the number of tables deleted; for example:
   <div class="code">
 <pre>
 filter = pf.PacketFilter()
