@@ -264,7 +264,7 @@ filter.add_tables(goodguys)
   </dd>
 
   <dt><tt>PacketFilter.<span class="attr">clear_tables</span>([<var>filter</var>])</tt></dt>
-  <dd>Clear all tables; <tt>filter</tt> is a <tt><a href="pf5.html#pf-5.3.1">PFTable</a></tt> object that allows you to specify the attributes (<tt>name</tt> and/or <tt>anchor</tt>) of the tables to delete. Return the number of tables deleted; for example:
+  <dd>Clear all tables in a specified anchor; <tt>filter</tt> is a <tt><a href="pf5.html#pf-5.3.1">PFTable</a></tt> object that allows you to specify the anchor in which to delete all tables. Return the number of tables deleted; for example:
   <div class="code">
 <pre>
 filter = pf.PacketFilter()
@@ -280,7 +280,7 @@ filter.clear_tables(pf.PFTable(anchor=&quot;/relayd&quot;))
   <dd>Delete one or more tables; <tt>tables</tt> must be <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> objects. Return the number of tables deleted.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_tables</span>([<var>filter</var>])</tt></dt>
-  <dd>Get the list of all tables; <tt>filter</tt> is a <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> object that allows you to specify the attributes (<tt>name</tt> and/or <tt>anchor</tt>) of the tables to retrieve. Return a tuple of <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> objects containing the currently-loaded tables.</dd>
+  <dd>Get all the tables in the specified anchor (<tt>/</tt> by default); <tt>filter</tt> is a <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> object that allows you to specify the anchor from which to retrieve the tables. Return a tuple of <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> objects containing the currently-loaded tables.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">add_addrs</span>(<var>table</var>, <var>*addrs</var>)</tt></dt>
   <dd>Add one or more addresses to a table; <tt>table</tt> can be either a <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> instance or a string containing the table name; <tt>addrs</tt> can be either <tt><a href="pf6.html#pf-6.3.2">PFTableAddr</a></tt> instances or strings. Return the number of addresses effectively added; for example:
@@ -305,7 +305,7 @@ filter.add_addrs(&quot;mytable&quot;, &quot;192.168.30.18&quot;, &quot;192.168.3
   <dd>Get all the addresses of the specified table; <tt>table</tt> can be either a <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> instance or a string containing the table name. Return a tuple of <tt><a href="pf6.html#pf-6.3.2">PFTableAddr</a></tt> objects.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_tstats</span>([<var>filter</var>])</tt></dt>
-  <dd>Get statistics information for one or more tables; <tt>filter</tt> is a <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> object that allows you to specify the attributes of the table(s) to retrieve statistics for. Return a tuple of <tt><a href="pf3.html#pf-3.2">PFTStats</a></tt> objects; example:
+  <dd>Get statistics information for tables in a specified anchor (<tt>/</tt> by default); <tt>filter</tt> is a <tt><a href="pf6.html#pf-6.3.1">PFTable</a></tt> object that allows you to specify the anchor containing the table(s) to retrieve statistics for. Return a tuple of <tt><a href="pf3.html#pf-3.2">PFTStats</a></tt> objects; example:
 
   <div class="code">
 <pre>
