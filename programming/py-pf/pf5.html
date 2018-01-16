@@ -83,6 +83,9 @@
 
   <dt><tt>PFQueue.<span class="attr">upperlimit</span></tt></dt>
   <dd>A <tt><a href="#pf-5.2">ServiceCurve</a></tt> object specifying the maximum bandwidth that should be assigned to the queue</dd>
+
+  <dt><tt>PFQueue.<span class="attr">flowqueue</span></tt></dt>
+  <dd>A <tt><a href="#pf-5.3">FlowQueue</a></tt> object specifying the parameters for the flow queue manager.</dd>
 </dl>
 
 <h3><a id="pf-5.2" name="pf-5.2"></a>5.2 ServiceCurve objects</h3>
@@ -107,7 +110,39 @@
   <dd>An integer specifying the time, in milliseconds, for which the <tt>burst</tt> bandwidth must be assigned.</dd>
 </dl>
 
-<h3><a id="pf-5.3" name="pf-5.3"></a>5.3 Packet queueing in action</h3>
+<h3><a id="pf-5.3" name="pf-5.3"></a>5.3 FlowQueue objects</h3>
+
+<p><tt>FlowQueue</tt> objects allow you to tweak how multiple connections, assigned to the same queue, share the queue bandwidth.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">FlowQueue</span>(<var>flows</var>[, <var>quantum</var>[, <var>target</var>[, <var>interval</var>]]])</tt><dt>
+  <dd>The <tt>flows</tt> argument is an integer containing the number of flows, <tt>quantum</tt> specifies the quantum of service for the flow queue manager, <tt>target</tt> is the queueing delay target in milliseconds, <tt>interval</tt> is the tracking interval in milliseconds.</dd>
+</dl>
+
+<p><tt>FlowQueue</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>FlowQueue.<span class="attr">flows</span></tt></dt>
+  <dd>An integer specifying the number of flows.</dd>
+
+  <dt><tt>FlowQueue.<span class="attr">quantum</span></tt></dt>
+  <dd>An integer specifying the quantum of service for the flow queue manager. The lower the quantum size the more advantage is given to streams of smaller packets at the expense of bulk transfers.</dd>
+
+  <dt><tt>FlowQueue.<span class="attr">target</span></tt></dt>
+  <dd>Queueing delay target in milliseconds.</dd>
+
+  <dt><tt>FlowQueue.<span class="attr">interval</span></tt></dt>
+  <dd>Tracking interval in milliseconds.</dd>
+</dl>
+
+
+<p><tt>PFQueue</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFQueue.<span class="attr">qname</span></tt></dt>
+  <dd>String containing the name of the queue.</dd>
+
+<h3><a id="pf-5.4" name="pf-5.4"></a>5.4 Packet queueing in action</h3>
 
 <p>When adding queues to Packet Filter, please keep in mind that queues are arranged in a hierarchical manner (i.e. in a inverted-tree structure); therefore, you need to create an additional (root) queue that will be parent for the other queues: <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt> manages this automatically by creating a parent queue named &quot;root_<var>ifname</var>&quot;, so you may want to stick to the same naming convention.</p>
 <p>For child queues, the <tt>parent</tt> attribute (i.e. the name of their parent queue) must be explicitly set, for PF to correctly build the queue tree; also note that the hierarchy can be further expanded by defining queues within queues.</p>
@@ -124,7 +159,7 @@ MB = 10**6
 #   queue ssh parent std bandwidth 10M burst 90M for 100ms
 #   queue mail parent std bandwidth 10M, min 5M, max 25M
 #   queue http parent std bandwidth 80M default</i>
-queues = [pf.PFQueue(qname=root, ifname=ifname),    <i># Root queue</i>
+queues = [pf.PFQueue(qname=root, ifname=ifname, flags==pf.PFQS_ROOTCLASS),    <i># Root queue</i>
           pf.PFQueue(qname="std", parent=root, ifname=ifname,
                      linkshare=pf.ServiceCurve(bandwidth=100*MB)),
           pf.PFQueue(qname="ssh", parent="std", ifname=ifname,
@@ -135,7 +170,7 @@ queues = [pf.PFQueue(qname=root, ifname=ifname),    <i># Root queue</i>
                      upperlimit=pf.ServiceCurve(bandwidth=25*MB)),
           pf.PFQueue(qname="http", parent="std", ifname=ifname,
                      linkshare=pf.ServiceCurve(bandwidth=80*MB),
-                     flags=pf.HFSC_DEFAULTCLASS)]
+                     flags=pf.PFQS_DEFAULT)]
 
 <i># Load the queues on the system</i>
 filter = pf.PacketFilter()
