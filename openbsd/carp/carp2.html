@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - Network layout</title>
 
@@ -54,11 +54,11 @@
   <img src="net.png" alt="Network Topology" />
 </div>
 
-<p>The utmost merit of this topology is that, needing two groups of firewalls, it will allow us to look over two slightly different cluster configurations. Jokes apart, these are some of its major benefits:</p>
+<p>The great advantage of this topology is that it needs two firewall clusters, thus allowing us to look over two slightly different cluster configurations. Jokes apart, these are some of its major benefits:</p>
 
 <ul>
-  <li>in case of a firewall compromise, the LAN is protected by an additional layer of filtering (though it would be preferable to use different firewall platforms, to prevent attackers from compromising the internal firewalls with the same technique [<a href="http://www.ed-diamond.com/produit.php?ref=misc17">MISC17</a>]);</li>
-  <li>a single (clustered) firewall, filtering both LAN and DMZ traffic, is a single point of failure;</li>
+  <li>in case of a firewall compromise, the LAN is protected by an additional layer of filtering (though it would be better to use different firewall platforms, to prevent attackers from compromising the internal firewalls with the same technique);</li>
+  <li>a single (though clustered) firewall, filtering both LAN and DMZ traffic, is a single point of failure;</li>
   <li>on each firewall, rules apply only to LAN or DMZ traffic, thus making PF rulesets cleaner and easier to maintain;</li>
 </ul>
 
