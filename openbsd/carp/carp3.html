@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - Base configuration</title>
 
@@ -40,60 +40,54 @@
 <h2>3. Base configuration</h2>
 
 <p>Let's take a brief look at the base system configuration, which applies to all of our firewalls.</p>
-<p>We won't go through the installation of the operating system, which is deeply documented on the <a href="http://www.openbsd.org/faq/faq4.html">OpenBSD web site</a>. The only (obvious) remark is that you should install only the bare minimum, to prevent firewall security and reliability from being compromised by unnecessary software. Therefore, during installation, you only need to select file sets marked as <q><b>Required</b></q> by the <a href="http://www.openbsd.org/faq/faq4.html#FilesNeeded">documentation</a>, i.e.:</p>
+<p>We won't go through the installation of the operating system, which is very well documented on the <a href="http://www.openbsd.org/faq/faq4.html">OpenBSD web site</a>. The only note is that you should install only the bare minimum, to prevent firewall security and reliability from being compromised by unnecessary software. Therefore, during installation, you only need to select file sets marked as <q><b>Required</b></q> by the <a href="http://www.openbsd.org/faq/faq4.html#FilesNeeded">documentation</a>, i.e.:</p>
 
 <ul>
   <li><tt>bsd</tt>, the kernel;</li>
   <li><tt>base<var>XX</var>.tgz</tt>, the base system;</li>
-  <li><tt>etc<var>XX</var>.tgz</tt>, the configuration files in <tt>/etc</tt>.</li>
 </ul>
 
 <p>There should be no need to install the compiler (<tt>comp<var>XX</var>.tgz</tt>), also to avoid providing such a useful tool to possible intruders (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
-<p>After the first reboot, we can start doing some basic configuration; since version 5.4, OpenBSD doesn't start  <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=inetd&amp;sektion=8"><tt>inetd(8)</tt></a> by default, so there are no unnecessary daemons to prevent from running. It's also a good practice to edit the <tt>/etc/motd</tt> file to give as few information as possible about the system and to warn users, whether legitimate or not, that all access is being logged and that any unauthorized access will be prosecuted (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
+<p>After the first reboot, we can start doing some basic configuration; by default, OpenBSD doesn't start unnecessary daemons, though I guess we can stop <tt><a href="https://man.openbsd.org/sndiod">sndiod(8)</a></tt> on a firewall. It's also a good practice to edit the <tt>/etc/motd</tt> file to give as few information as possible about the system and to warn users, whether legitimate or not, that all access is being logged and that any unauthorized access will be prosecuted (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
 <p>You should already have configured the network during installation; anyway, if you need to make some changes, these are the main files to edit:</p>
 
 <dl>
-  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hostname.if&amp;sektion=5">/etc/hostname.<var>if</var>(5)</a></tt></dt>
+  <dt><tt><a href="https://man.openbsd.org/hostname.if">/etc/hostname.<var>if</var>(5)</a></tt></dt>
   <dd>containing information regarding the configuration of each network interface (address, netmask, etc.);</dd>
-  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=mygate&amp;sektion=5">/etc/mygate(5)</a></tt></dt>
+  <dt><tt><a href="https://man.openbsd.org/mygate">/etc/mygate(5)</a></tt></dt>
   <dd>containing the address of the gateway host;</dd>
-  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=myname&amp;sektion=5">/etc/myname(5)</a></tt></dt>
+  <dt><tt><a href="https://man.openbsd.org/myname">/etc/myname(5)</a></tt></dt>
   <dd>containing the symbolic hostname (<acronym title="Fully Qualified Domain Name">FQDN</acronym>) of the machine;</dd>
-  <dt><tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=resolv.conf&amp;sektion=5">/etc/resolv.conf(5)</a></tt></dt>
+  <dt><tt><a href="https://man.openbsd.org/resolv.conf">/etc/resolv.conf(5)</a></tt></dt>
   <dd>containing the resolver configuration settings (name servers, local domain name, etc.).</dd>
 </dl>
 
-<p>Considering the large amount of DNS-based attacks, it is also preferable, especially on firewalls, not to rely on DNS to resolve names and addresses of the most critical systems, but rather inserting them into the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hosts&amp;sektion=5">/etc/hosts(5)</a></tt> file. To make sure the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=hosts&amp;sektion=5">/etc/hosts(5)</a></tt> file has a higher priority than DNS, just make sure that the first line in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=resolv.conf&amp;sektion=5">/etc/resolv.conf(5)</a></tt> is:</p>
+<p>Considering the large amount of DNS-based attacks, it is also preferable, especially on firewalls, not to rely on DNS to resolve names and addresses of the most critical systems, but rather inserting them into the <tt><a href="https://man.openbsd.org/hosts">/etc/hosts(5)</a></tt> file; to make sure this file has a higher priority than DNS, just make sure that <tt><a href="https://man.openbsd.org/resolv.conf">/etc/resolv.conf(5)</a></tt> contains the line:</p>
 
 <div class="code">
   <div>/etc/resolv.conf</div>
   <pre>lookup file bind</pre>
 </div>
 
-<p>Packet Filter is enabled by default and loads rules from the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">/etc/pf.conf(5)</a></tt> file; a different path can be specified by assigning it to the <tt>pf_rules</tt> variable in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=rc.conf&amp;sektion=8">/etc/rc.conf.local(8)</a></tt>.</p>
-
-<div class="code">
-  <div>/etc/rc.conf.local</div>
-<pre>
-pf_rules=/new/path/to/pf.conf</pre>
-</div>
-
-<p>You may also set <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pflogd&amp;sektion=8">pflogd(8)</a></tt> flags in the variable <tt>pflogd_flags</tt>. Last, don't forget to enable IP forwarding by issuing the command:</p>
+<p>Packet Filter is enabled by default and loads its rules from the <tt><a href="https://man.openbsd.org/pf.conf">/etc/pf.conf(5)</a></tt> file; you may also want to change the <tt><a href="https://man.openbsd.org/pflogd">pflogd(8)</a></tt> flags in the variable <tt>pflogd_flags</tt>. Last, don't forget to enable IP and IPv6 forwarding by issuing the command:</p>
 
 <div class="code">
 <pre>
 # <kbd>sysctl net.inet.ip.forwarding=1</kbd>
 net.inet.ip.forwarding: 0 -&gt; 1
+# <kbd>sysctl net.inet.ip6.forwarding=1</kbd>
+net.inet.ip6.forwarding: 0 -&gt; 1
 #
 </pre>
 </div>
 
-<p>and to uncomment the following line in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=sysctl.conf&amp;sektion=5">/etc/sysctl.conf(5)</a></tt> to re-enable it after reboot:</p>
+<p>and to add the following lines to <tt><a href="https://man.openbsd.org/sysctl.conf">/etc/sysctl.conf(5)</a></tt> to re-enable forwarding after reboot:</p>
 
 <div class="code">
   <div>/etc/sysctl.conf</div>
 <pre>
 net.inet.ip.forwarding=1
+net.inet.ip6.forwarding=1
 </pre>
 </div>
 

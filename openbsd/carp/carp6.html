@@ -10,7 +10,7 @@
   <meta name="keywords" content="kernel,panic,OpenBSD,firewall,cluster,PF,CARP,pfsync,security,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>Redundant firewalls with OpenBSD, CARP and pfsync - PF rules!</title>
 
@@ -115,8 +115,8 @@ web_srv  = &quot;{ www1.kernel-panic.it, www2.kernel-panic.it }&quot;     <i># W
 dns_srv  = &quot;{ dns1.isp.com, dns2.isp.com }&quot;                     <i># DNS servers</i>
 int_fw   = &quot;{ mickey.kernel-panic.it, minnie.kernel-panic.it }&quot; <i># Internal fw</i>
 
-mail_ports = &quot;{ smtp, imap, imaps }&quot;    <i># Mail server ports</i>
-web_ports  = &quot;{ www, https }&quot;           <i># Web server ports</i>
+mail_ports = &quot;{ smtp, submission, imap, imaps }&quot;    <i># Mail server ports</i>
+web_ports  = &quot;{ www, https }&quot;                       <i># Web server ports</i>
 
 <i># Allowed incoming ICMP types</i>
 icmp_types = &quot;{ echoreq, timex, paramprob, unreach code needfrag }&quot;
@@ -130,6 +130,7 @@ priv_nets = &quot;{ 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 }&quo
 
 set block-policy drop
 set loginterface $ext_if
+set syncookies always
 set skip on lo
 
 <i># NAT outgoing connections</i>
