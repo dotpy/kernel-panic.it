@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -59,7 +59,7 @@
 
 <dl class="padded">
   <dt>class <tt>pf.PFAddr([<var>addr</var>[, <var>af</var>[, <var>**kw</var>]]])</tt><dt>
-  <dd>The optional <tt>addr</tt> argument is the string representation of the address in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt> format; if omitted, the object will match <em>any</em> address. <tt>af</tt> is the address family, which must be specified if not ascertainable from <tt>addr</tt>. The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
+  <dd>The optional <tt>addr</tt> argument is the string representation of the address in <tt><a href="https://man.openbsd.org/pf.conf.5">pf.conf(5)</a></tt> format; if omitted, the object will match <em>any</em> address. <tt>af</tt> is the address family, which must be specified if not ascertainable from <tt>addr</tt>. The <tt>**kw</tt> parameter allows you to specify the value of any attribute by passing it as a keyword.</dd>
 </dl>
 
 <p><tt>PFAddr</tt> instances have the following attributes:</p>
@@ -274,7 +274,7 @@ not_spam = pf.PFRuleAddr(spam_tbl, neg=True)
   <dd>A <tt><a href="#pf-6.1.2">PFPort</a></tt> instance containing the range of port numbers (or, if the port numbers are the same, the single port) to use for <tt>pf.PF_POOL_NAT</tt> and <tt>pf.PF_POOL_RDR</tt> pools; by default, the port range for NAT is from <tt>pf.PF_NAT_PROXY_PORT_LOW</tt> to <tt>pf.PF_NAT_PROXY_PORT_HIGH</tt>. If both port numbers are <tt>0</tt>, the original port is kept.</dd>
 
   <dt><tt>PFPool.<span class="attr">opts</span></tt></dt>
-  <dd>A bitmask specifying the options applied to the pool; it must be ANDed with the <tt>pf.PF_POOL_TYPEMASK</tt> constant before testing its value. Valid flags are <tt>pf.PF_POOL_BITMASK</tt> (corresponding to the &quot;<tt>bitmask</tt>&quot; option in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>), <tt>pf.PF_POOL_RANDOM</tt> (&quot;<tt>random</tt>&quot; option), <tt>pf.PF_POOL_SRCHASH</tt> (&quot;<tt>source-hash</tt>&quot; option) and <tt>pf.PF_POOL_ROUNDROBIN</tt> (&quot;<tt>round-robin</tt>&quot; option); <tt>pf.PF_POOL_RANDOM</tt> and <tt>pf.PF_POOL_ROUNDROBIN</tt> pools allow the setting of the <tt>pf.PF_POOL_STICKYADDR</tt> flag (&quot;<tt>sticky-address</tt>&quot; option).</dd>
+  <dd>A bitmask specifying the options applied to the pool; it must be ANDed with the <tt>pf.PF_POOL_TYPEMASK</tt> constant before testing its value. Valid flags are <tt>pf.PF_POOL_BITMASK</tt> (corresponding to the &quot;<tt>bitmask</tt>&quot; option in <tt><a href="https://man.openbsd.org/pf.conf.5">pf.conf(5)</a></tt>), <tt>pf.PF_POOL_RANDOM</tt> (&quot;<tt>random</tt>&quot; option), <tt>pf.PF_POOL_SRCHASH</tt> (&quot;<tt>source-hash</tt>&quot; option) and <tt>pf.PF_POOL_ROUNDROBIN</tt> (&quot;<tt>round-robin</tt>&quot; option); <tt>pf.PF_POOL_RANDOM</tt> and <tt>pf.PF_POOL_ROUNDROBIN</tt> pools allow the setting of the <tt>pf.PF_POOL_STICKYADDR</tt> flag (&quot;<tt>sticky-address</tt>&quot; option).</dd>
 </dl>
 
 <p>Below are a few examples of creating and managing address pools:</p>
@@ -394,6 +394,50 @@ for table in filter.get_tables():
   <dt><tt>PFUid.<span class="attr">op</span></tt></dt>
   <dt><tt>PFGid.<span class="attr">op</span></tt></dt>
   <dd>The comparison operator; it must be one of the <tt>PF_OP_*</tt> constants.</dd>
+</dl>
+
+<h3><a id="pf-6.5" name="pf-6.5"></a>6.5 PFDivert objects</h3>
+
+<p></p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFDivert</span>([<var>type</var>[, <var>addr</var>[, <var>port</var>]]])</tt><dt>
+  <dd>The <tt>type </tt> parameter allows you to specify the type of divert rule; valid values are <tt>PF_DIVERT_NONE</tt>, <tt>PF_DIVERT_TO</tt> , <tt>PF_DIVERT_REPLY</tt> and <tt>PF_DIVERT_PACKET</tt>. Depending on the type of divert rule, you may have to specify an address (for <tt>divert-to</tt> rules) and/or a port (for <tt>divert-to</tt> and <tt>divert-packet</tt> rules).</dd>
+</dl>
+
+<p><tt>PFDivert</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFDivert.<span class="attr">type</span></tt></dt>
+  <dd>A constant specifying the <tt>type</tt> of divert action; valid values are <tt>PF_DIVERT_NONE</tt>, <tt>PF_DIVERT_TO</tt>, <tt>PF_DIVERT_REPLY</tt> and <tt>PF_DIVERT_PACKET</tt>.</dd>
+  <dt><tt>PFDivert.<span class="attr">addr</span></tt></dt>
+  <dd>The address for <tt>divert-to</tt> rules.</dd>
+  <dt><tt>PFDivert.<span class="attr">port</span></tt></dt>
+  <dd>The port number, for <tt>divert-to</tt> and <tt>divert-packet</tt> rules.</dd>
+</dl>
+
+<h3><a id="pf-6.6" name="pf-6.6"></a>6.6 PFThreshold objects</h3>
+
+<p>A <tt>PFThreshold</tt> object measures the rate of packets matching the rule and states created by it. It also allows you to define a limit, in number of packets per time interval, after which the rule will stop matching.</p>
+
+<dl class="padded">
+  <dt>class <tt>pf.<span class="attr">PFThreshold</span>(<var>limit</var>, <var>seconds</var>)</tt><dt>
+  <dd>The <tt>limit</tt> parameter is the number of packets that must be matched in the specified interval (<tt>seconds</tt>) for the rule to stop matching.</dd>
+</dl>
+
+<p><tt>PFThreshold</tt> instances have the following attributes:</p>
+
+<dl class="padded">
+  <dt><tt>PFDivert.<span class="attr">limit</span></tt></dt>
+  <dd>The number of packets after which the rule will stop matching.</dd>
+  <dt><tt>PFDivert.<span class="attr">seconds</span></tt></dt>
+  <dd>The interval (in seconds) in which the packets rate must be exceeded for the rule to stop matching.</dd>
+  <dt><tt>PFDivert.<span class="attr">count</span></tt></dt>
+  <dd>The current number of matching packets</dd>
+<!--
+  <dt><tt>PFDivert.<span class="attr">last</span></tt></dt>
+  <dd></dd>
+-->
 </dl>
 
   <hr />

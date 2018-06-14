@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -40,14 +40,14 @@
 
 <h2>2. The PacketFilter class</h2>
 
-<p>The <tt>pf</tt> module defines the <tt>PacketFilter</tt> class which represents the kernel's packet filtering subsystem and provides a set of methods that allow you to send commands to the kernel through the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ioctl&amp;sektion=2">ioctl(2)</a></tt> interface provided by the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> pseudo-device.</p>
+<p>The <tt>pf</tt> module defines the <tt>PacketFilter</tt> class which represents the kernel's packet filtering subsystem and provides a set of methods that allow you to send commands to the kernel through the <tt><a href="https://man.openbsd.org/ioctl.2">ioctl(2)</a></tt> interface provided by the <tt><a href="https://man.openbsd.org/pf.4">pf(4)</a></tt> pseudo-device.</p>
 
 <dl>
   <dt>class <tt>pf.<span class="attr">PacketFilter</span>([<var>dev</var>])</tt></dt>
-  <dd>The optional <tt>dev</tt> argument allows you to specify a different path for the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> pseudo-device.</dd>
+  <dd>The optional <tt>dev</tt> argument allows you to specify a different path for the <tt><a href="https://man.openbsd.org/pf.4">pf(4)</a></tt> pseudo-device.</dd>
 </dl>
 
-<p>Basically, all methods in this class are just wrappers to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ioctl&amp;sektion=2">ioctl(2)</a></tt> calls and therefore may raise an <tt>IOError</tt> exception if the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ioctl&amp;sektion=2">ioctl(2)</a></tt> call fails. In this case, you can get information about what caused the exception by examining the value of the <tt>errno</tt> variable and the error string provided by the exception. For example:</p>
+<p>Basically, all methods in this class are just wrappers to <tt><a href="https://man.openbsd.org/ioctl.2">ioctl(2)</a></tt> calls and therefore may raise an <tt>IOError</tt> exception if the <tt><a href="https://man.openbsd.org/ioctl.2">ioctl(2)</a></tt> call fails. In this case, you can get information about what caused the exception by examining the value of the <tt>errno</tt> variable and the error string provided by the exception. For example:</p>
 
 <div class="code">
 <pre>
@@ -75,7 +75,7 @@ except IOError, (err, msg):
 
 <dl class="padded">
   <dt><tt>PacketFilter.<span class="attr">dev</span></tt></dt>
-  <dd>The path of the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> pseudo-device.</dd>
+  <dd>The path of the <tt><a href="https://man.openbsd.org/pf.4">pf(4)</a></tt> pseudo-device (defaults to <tt>/dev/pf</tt>).</dd>
 
   <dt><tt>PacketFilter.<span class="attr">enable</span>()</tt></dt>
   <dd>Enable Packet Filtering, <acronym title="Network Address Translation">NAT</acronym> and queueing.</dd>
@@ -96,7 +96,7 @@ filter.set_debug(pf.LOG_DEBUG)
   </dd>
 
   <dt><tt>PacketFilter.<span class="attr">set_hostid</span>(<var>id</var>)</tt></dt>
-  <dd>Set the host ID, used by <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> to identify the host that created a state table entry. <tt>id</tt> must be a 32-bit unsigned integer.</dd>
+  <dd>Set the host ID, used by <tt><a href="https://man.openbsd.org/pfsync.4">pfsync(4)</a></tt> to identify the host that created a state table entry. <tt>id</tt> must be a 32-bit unsigned integer.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">set_reassembly</span>(<var>reassembly</var>)</tt></dt>
   <dd>Enable reassembly of network traffic. The <tt>reassembly</tt> argument specifies the flags for the reassembly operation; available flags are <tt>PF_REASS_ENABLED</tt> (to enable packets reassembly) and <tt>PF_REASS_NODF</tt> (to enable the reassembly of fragments with the <tt>dont-fragment</tt> bit set). Mulitple flags must be ORed together; for example:
@@ -109,10 +109,10 @@ filter.set_reassembly(pf.PF_REASS_ENABLED|pf.PF_REASS_NODF)
   </dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_limit</span>([<var>limit</var>])</tt></dt>
-  <dd>Return the hard limits on the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pool&amp;sektion=9">memory pools</a> used by Packet Filter. <tt>limit</tt> can be either one of the <tt>PF_LIMIT_*</tt> constants or a string; return the value of the requested limit (<tt>pf.UINT_MAX</tt> means unlimited) or, if called with no arguments, a dictionary containing all the available limits.</dd>
+  <dd>Return the hard limits on the <a href="https://man.openbsd.org/pool.9">memory pools</a> used by Packet Filter. <tt>limit</tt> can be either one of the <tt>PF_LIMIT_*</tt> constants or a string; return the value of the requested limit (<tt>pf.UINT_MAX</tt> means unlimited) or, if called with no arguments, a dictionary containing all the available limits.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">set_limit</span>(<var>limit</var>, <var>value</var>)</tt></dt>
-  <dd>Set hard limits on the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pool&amp;sektion=9">memory pools</a> used by Packet Filter. <tt>limit</tt> can be either one of the <tt>PF_LIMIT_*</tt> constants or a string; a <tt>value</tt> of <tt>pf.UINT_MAX</tt> means unlimited. Raise <tt><a href="pf1.html#pf-1.1">PFError</a></tt> if the current pool size exceeds the requested hard limit; for example:
+  <dd>Set hard limits on the <a href="https://man.openbsd.org/pool.9">memory pools</a> used by Packet Filter. <tt>limit</tt> can be either one of the <tt>PF_LIMIT_*</tt> constants or a string; a <tt>value</tt> of <tt>pf.UINT_MAX</tt> means unlimited. Raise <tt><a href="pf1.html#pf-1.1">PFError</a></tt> if the current pool size exceeds the requested hard limit; for example:
   <div class="code">
 <pre>
 filter = pf.PacketFilter()
@@ -147,13 +147,13 @@ print &quot;Interval changed from {} to {} seconds&quot;.format(old_intv, new_in
   </dd>
 
   <dt><tt>PacketFilter.<span class="attr">set_optimization</span>([<var>opt</var>])</tt></dt>
-  <dd>Optimize state timeouts based on the network environment (similarly to the <tt>set optimization</tt> directive in <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5">pf.conf(5)</a></tt>); valid options are &quot;<tt>aggressive</tt>&quot;, &quot;<tt>conservative</tt>&quot;, &quot;<tt>high-latency</tt>&quot;, &quot;<tt>normal</tt>&quot; (default) and &quot;<tt>satellite</tt>&quot;.</dd>
+  <dd>Optimize state timeouts based on the network environment (similarly to the <tt>set optimization</tt> directive in <tt><a href="https://man.openbsd.org/pf.conf.5=5">pf.conf(5)</a></tt>); valid options are &quot;<tt>aggressive</tt>&quot;, &quot;<tt>conservative</tt>&quot;, &quot;<tt>high-latency</tt>&quot;, &quot;<tt>normal</tt>&quot; (default) and &quot;<tt>satellite</tt>&quot;.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_optimization</span>()</tt></dt>
   <dd>Return the name of the current state timeouts optimization profile.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_ifaces</span>([<var>ifname</var>])</tt></dt>
-  <dd>Get the list of interfaces and interface drivers known to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt>. Return a tuple of <tt><a href="pf3.html#pf-3.3">PFIface</a></tt> objects, or a single <tt><a href="pf3.html#pf-3.3">PFIface</a></tt> instance if a specific <tt>ifname</tt> is specified.</dd>
+  <dd>Get the list of interfaces and interface drivers known to <tt><a href="https://man.openbsd.org/pf.4">pf(4)</a></tt>. Return a tuple of <tt><a href="pf3.html#pf-3.3">PFIface</a></tt> objects, or a single <tt><a href="pf3.html#pf-3.3">PFIface</a></tt> instance if a specific <tt>ifname</tt> is specified.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">set_ifflags</span>(<var>ifname</var>, <var>flags</var>)</tt></dt>
   <dd>Set the user settable flags on the interface <tt>ifname</tt>; the only valid flag is <tt>PFI_IFLAG_SKIP</tt>, which tells PF to skip filtering on the interface.</dd>
@@ -181,6 +181,24 @@ except pf.PFError:
 
   <dt><tt>PacketFilter.<span class="attr">clear_status</span>([<var>ifname</var>])</tt></dt>
   <dd>Clear the internal packet filter statistics. An optional <tt>ifname</tt> can be specified in order to clear statistics only for a specific interface.</dd>
+
+  <dt><tt>PacketFilter.<span class="attr">set_syncookies</span>(<var>mode</var>)</tt></dt>
+  <dd>Set the syncookies mode. Valid modes are &quot;<tt>never</tt>&quot;, &quot;<tt>always</tt>&quot; and &quot;<tt>adaptive</tt>&quot;, or the corresponding constants: <tt>PF_SYNCOOKIES_NEVER</tt>, <tt>PF_SYNCOOKIES_ALWAYS</tt>, <tt>PF_SYNCOOKIES_ADAPTIVE</tt>.</dd>
+
+  <dt><tt>PacketFilter.<span class="attr">set_synflood_watermarks</span>([<var>start</var>[, <var>end</var>]])</tt></dt>
+  <dd>In &quot;adaptive&quot; mode, Packet Filter will enable syncookies when a given percentage of the state table is used up
+by half-open TCP connections. This method allows you to set the percentage at which to start and end syncookie mode; percentageis on a 1-to-1000 scale:
+  <div class="code">
+<pre>
+# set syncookies adaptive (start 25%, end 12%)
+filter.set_syncookies(&quot;adaptive&quot;)
+filter.set_synflood_watermarks(2500, 1200)
+</pre>
+  </div>
+  </dd>
+
+  <dt><tt>PacketFilter.<span class="attr">get_synflood_watermarks</span>()</tt></dt>
+  <dd>In &quot;adaptive&quot; mode, retrieve the current percentages for entering and leaving syncookie mode.</dd>
 
   <dt><tt>PacketFilter.<span class="attr">get_states</span>()</tt></dt>
   <dd>Retrieve Packet Filter's state table entries. Return a tuple of <tt><a href="pf4.html#pf-4.1">PFState</a></tt> objects representing the states currently tracked by PF.</dd>

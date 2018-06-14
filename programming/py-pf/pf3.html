@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -68,7 +68,7 @@
   <dd>The debug level as an integer (see the <a href="pf2.html">previous chapter</a> for a list of the debug level constants).</dd>
 
   <dt><tt>PFStatus.<span class="attr">hostid</span></tt></dt>
-  <dd>The host ID, used by <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4">pfsync(4)</a></tt> to identify the host that created a state table entry.</dd>
+  <dd>The host ID, used by <tt><a href="https://man.openbsd.org/pfsync.4">pfsync(4)</a></tt> to identify the host that created a state table entry.</dd>
 
   <dt><tt>PFStatus.<span class="attr">reass</span></tt></dt>
   <dd>A bitmask containing the reassembly flags (as set with <tt>PacketFilter.set_reassembly()</tt>).</dd>
@@ -131,7 +131,7 @@ print &quot;&quot;&quot;Packets out
   </dd>
 </dl>
 
-<p>Printing a <tt>PFStatus</tt> object will produce an output similar to that of the &quot;<tt>pfctl -s info -v</tt>&quot; command.</p>
+<p>Printing a <tt>PFStatus</tt> object will produce an output similar to that of the &quot;<tt>pfctl -s info -v</tt>&quot; command (except for the &quot;Adaptive Syncookies Watermarks&quot; part).</p>
 
 <h3><a id="pf-3.2" name="pf-3.2"></a>3.2 PFTStats objects</h3>
 

@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -53,8 +53,8 @@
 </ul>
 
 <p>py-pf allows you to control all these functions from Python in a very simple and flexible way.</p>
-<p>Well, you might object that OpenBSD already provides a powerful utility for controlling Packet Filter, <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt>, which covers the most commonly used functions. It's true, but nevertheless, py-pf aims to provide something different: a scripting tool that brings together the flexibility of Packet Filter's C API and the power of Python, making it easier to parse and manage <acronym title="Packet Filter">PF</acronym> data (such as addresses, rules, state tables) and to integrate firewalling capabilities in more complex applications.</p>
-<p>Similarly to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt>, py-pf sends commands to the kernel through the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=ioctl&amp;sektion=2">ioctl(2)</a></tt> interface provided by the <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt> pseudo-device; this allows Python to natively communicate with the kernel, thanks to the <tt><a href="http://docs.python.org/lib/module-fcntl.html">fcntl</a></tt> and <tt><a href="http://docs.python.org/lib/module-ctypes.html">ctypes</a></tt> modules, with no need to write a specific C extension module.</p>
+<p>Well, you might object that OpenBSD already provides a powerful utility for controlling Packet Filter, <tt><a href="https://man.openbsd.org/pfctl.8">pfctl(8)</a></tt>, which covers the most commonly used functions. It's true, but nevertheless, py-pf aims to provide something different: a scripting tool that brings together the flexibility of Packet Filter's C API and the power of Python, making it easier to parse and manage <acronym title="Packet Filter">PF</acronym> data (such as addresses, rules, state tables) and to integrate firewalling capabilities in more complex applications.</p>
+<p>Similarly to <tt><a href="https://man.openbsd.org/pfctl.8">pfctl(8)</a></tt>, py-pf sends commands to the kernel through the <tt><a href="https://man.openbsd.org/ioctl.2">ioctl(2)</a></tt> interface provided by the <tt><a href="https://man.openbsd.org/pf.4">pf(4)</a></tt> pseudo-device; this allows Python to natively communicate with the kernel, thanks to the <tt>fcntl</tt> and <tt>ctypes</tt> modules, with no need to write a specific C extension module.</p>
 <p>py-pf is still under development, but already supports most of Packet Filter's functionalities, including:</p>
 
 <ul>

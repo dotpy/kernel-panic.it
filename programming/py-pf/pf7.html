@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -64,7 +64,7 @@
   <dd>A bitmask containing the logging flags; valid flags are <tt>pf.PF_LOG</tt> (log the packet that establishes the state), <tt>pf.PF_LOG_ALL</tt> (log all packets for the connection) and <tt>pf.PF_LOG_SOCKET_LOOKUP</tt> (additionally log the user ID and PID of the process that the socket belongs to).</dd>
 
   <dt><tt>PFRule.<span class="attr">logif</span></tt></dt>
-  <dd>The number of the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pflog&amp;sektion=4"><tt>pflog(4)</tt></a> interface where logs should be sent (e.g. <tt>0</tt> for <tt>pflog0</tt>).</dd>
+  <dd>The number of the <a href="https://man.openbsd.org/pflog.4"><tt>pflog(4)</tt></a> interface where logs should be sent (e.g. <tt>0</tt> for <tt>pflog0</tt>).</dd>
 
   <dt><tt>PFRule.<span class="attr">quick</span></tt></dt>
   <dd>A boolean value that, if <tt>True</tt>, forces Packet Filter to skip the evaluation of subsequent rules if the packet matches the current rule.</dd>
@@ -88,10 +88,10 @@
   <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for filtering rules with <tt>PFRule.rt</tt> set to <tt>pf.PF_ROUTETO</tt>, <tt>pf.PF_DUPTO</tt> or <tt>pf.PF_REPLYTO</tt>.</dd>
 
   <dt><tt>PFRule.<span class="attr">nat</span></tt></dt>
-  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for <acronym title="Network Address Translation">NAT</acronym>ting rules (i.e. the target of the <tt>nat-to</tt> option in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a> format).</dd>
+  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for <acronym title="Network Address Translation">NAT</acronym>ting rules (i.e. the target of the <tt>nat-to</tt> option in <a href="https://man.openbsd.org/pf.conf.5"><tt>pf.conf(5)</tt></a> format).</dd>
 
   <dt><tt>PFRule.<span class="attr">rdr</span></tt></dt>
-  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for redirection rules (i.e. the target of the <tt>rdr-to</tt> option in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a> format).</dd>
+  <dd>A <a href="pf5.html#pf-5.2.1"><tt>PFPool</tt></a> object specifying the address pool for redirection rules (i.e. the target of the <tt>rdr-to</tt> option in <a href="https://man.openbsd.org/pf.conf.5"><tt>pf.conf(5)</tt></a> format).</dd>
 
   <dt><tt>PFRule.<span class="attr">af</span></tt></dt>
   <dd>The address family; it can be one of <tt>AF_INET</tt> (IPv4), <tt>AF_INET6</tt> (IPv6) or <tt>AF_UNSPEC</tt> (address family not specified); these constants are available through the <tt>socket</tt> module.</dd>
@@ -129,7 +129,7 @@
   <dt><tt>PFRule.<span class="attr">rule_flag</span></tt></dt>
   <dd>A bitmask containing various rule options, including:
     <ul>
-      <li>stateful tracking options: <tt>pf.PFRULE_NOSYNC</tt> (don't synchronize state changes with <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfsync&amp;sektion=4"><tt>pfsync(4)</tt></a>), <tt>pf.PFRULE_SRCTRACK</tt> (track the number of states per source IP) and <tt>pf.PFRULE_RULESRCTRACK</tt> (the maximum number of states created by this rule is limited by the rules's <tt>PFRule.max_src_nodes</tt> and <tt>PFRule.max_src_states</tt> attributes).</li>
+      <li>stateful tracking options: <tt>pf.PFRULE_NOSYNC</tt> (don't synchronize state changes with <a href="https://man.openbsd.org/pfsync.4"><tt>pfsync(4)</tt></a>), <tt>pf.PFRULE_SRCTRACK</tt> (track the number of states per source IP) and <tt>pf.PFRULE_RULESRCTRACK</tt> (the maximum number of states created by this rule is limited by the rules's <tt>PFRule.max_src_nodes</tt> and <tt>PFRule.max_src_states</tt> attributes).</li>
       <li>block-policy options: <tt>pf.PFRULE_DROP</tt> (silently drop the packet), <tt>pf.PFRULE_RETURNRST</tt> (for TCP packets, issue a RST to close the connection), <tt>pf.PFRULE_RETURNICMP</tt> (return ICMP messages for packets matching this rule) and <tt>pf.PFRULE_RETURN</tt> (return a TCP RST for TCP packets and an ICMP UNREACHABLE message for other packets).</li>
     </ul>
   </dd>
@@ -206,7 +206,10 @@
   <dt><tt>PFRule.<span class="attr">flush</span></tt></dt>
   <dd>A bitmask specifying the flush options for hosts added to the table specified by <tt>PFRule.overload_tblname</tt>; valid flags are: <tt>pf.PF_FLUSH</tt> (kill all states created by this rule and originating from the offending host) and <tt>pf.PF_FLUSH_GLOBAL</tt> (kill all states originating from the offending host).</dd>
  
- <dt><tt>PFRule.<span class="attr">evaluations</span></tt></dt>
+  <dt><tt>PFRule.<span class="attr">pktrate</span></tt></dt>
+  <dd>A <tt><a href="pf6.html#pf-6.6">PFThreshold</a></tt> object specifying after how many matching packets in a certain time, the rule will stop maching.</dd>
+
+  <dt><tt>PFRule.<span class="attr">evaluations</span></tt></dt>
   <dd>The number of evaluations for this rule.</dd>
 
   <dt><tt>PFRule.<span class="attr">packets</span></tt></dt>
@@ -271,14 +274,10 @@
   <dd>An integer (<tt>0</tt> through <tt>7</tt>) that allows PF to match only packets with that queueing priority.</dd>
 
   <dt><tt>PFRule.<span class="attr">divert</span></tt></dt>
-  <dd>A two-items tuple (<a href="pf6.html#pf-6.1.1"><tt>PFAddr</tt></a>, <a href="pf6.html#pf-6.1.2"><tt>PFPort</tt></a>) used to redirect packets to a local socket bound to that address and port. You can set <tt>address</tt> to <tt>None</tt> in order to receive replies for sockets that are bound to addresses which are not local to the machine (<tt>divert-reply</tt> parameter in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a>).</dd>
-
-  <dt><tt>PFRule.<span class="attr">divert_packet</span></tt></dt>
-  <dd>A <a href="pf6.html#pf-6.1.2"><tt>PFPort</tt></a> instance with the port number of the <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=divert&amp;sektion=4"><tt>divert(4)</tt></a> socket to which to send matching packets.</dd>
-
+  <dd>A <tt><a href="pf6.html#pf-6.5">PFDivert</a></tt> object holding divert information.</dd>
 </dl>
 
-<p>Below are a few examples; for each example, the same rule in <a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf.conf&amp;sektion=5"><tt>pf.conf(5)</tt></a> format is provided:</p>
+<p>Below are a few examples; for each example, the same rule in <a href="https://man.openbsd.org/pf.conf.5"><tt>pf.conf(5)</tt></a> format is provided:</p>
 
 <div class="code">
 <pre>

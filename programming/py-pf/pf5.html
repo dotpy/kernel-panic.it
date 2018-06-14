@@ -10,7 +10,7 @@
   <meta name="keywords" content="py-pf,Python,Packet,Filter,PF,firewall,OpenBSD,docs" />
   <meta name="distribution" content="global" />
   <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2014 by Kernel-Panic.it." />
+  <meta name="copyright" content="This document copyright 2005-2018 by Kernel-Panic.it." />
 
   <title>py-pf - Managing OpenBSD's Packet Filter with Python</title>
 
@@ -144,7 +144,7 @@
 
 <h3><a id="pf-5.4" name="pf-5.4"></a>5.4 Packet queueing in action</h3>
 
-<p>When adding queues to Packet Filter, please keep in mind that queues are arranged in a hierarchical manner (i.e. in a inverted-tree structure); therefore, you need to create an additional (root) queue that will be parent for the other queues: <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pfctl&amp;sektion=8">pfctl(8)</a></tt> manages this automatically by creating a parent queue named &quot;root_<var>ifname</var>&quot;, so you may want to stick to the same naming convention.</p>
+<p>When adding queues to Packet Filter, please keep in mind that queues are arranged in a hierarchical manner (i.e. in a inverted-tree structure); therefore, you need to create an additional (root) queue that will be parent for the other queues: <tt><a href="https://man.openbsd.org/pfctl.8">pfctl(8)</a></tt> manages this automatically by creating a parent queue named &quot;root_<var>ifname</var>&quot;, so you may want to stick to the same naming convention.</p>
 <p>For child queues, the <tt>parent</tt> attribute (i.e. the name of their parent queue) must be explicitly set, for PF to correctly build the queue tree; also note that the hierarchy can be further expanded by defining queues within queues.</p>
 
 <div class="code">
