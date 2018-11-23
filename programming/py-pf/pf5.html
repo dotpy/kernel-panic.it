@@ -159,7 +159,9 @@ MB = 10**6
 #   queue ssh parent std bandwidth 10M burst 90M for 100ms
 #   queue mail parent std bandwidth 10M, min 5M, max 25M
 #   queue http parent std bandwidth 80M default</i>
-queues = [pf.PFQueue(qname=root, ifname=ifname, flags==pf.PFQS_ROOTCLASS),    <i># Root queue</i>
+queues = [pf.PFQueue(qname=root, ifname=ifname,
+                     linkshare=pf.ServiceCurve(bandwidth=100*MB),
+                     flags==pf.PFQS_ROOTCLASS),                 <i># Root queue</i>
           pf.PFQueue(qname="std", parent=root, ifname=ifname,
                      linkshare=pf.ServiceCurve(bandwidth=100*MB)),
           pf.PFQueue(qname="ssh", parent="std", ifname=ifname,
