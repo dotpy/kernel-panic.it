@@ -1,200 +1,40 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/fonts.css">
+    <link rel="stylesheet" href="css/kp.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 
-<head>
+    <meta name="description" content="This site is dedicated to Open Source and sharing information, knowledge and software projects of any kind." />
+    <meta name="keywords" content="kernel,panic,OpenBSD,Linux,open,source,e-mail,programming,development,security,docs" />
+    <meta name="distribution" content="Global" />
+    <meta name="author" content="Daniele Mazzocchio, danix@kernel-panic.it" />
+    <meta name="copyright" content="This document copyright 2005-2021 by Kernel-Panic.it." />
 
-  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <meta name="resource-type" content="document" />
-  <meta name="description" content="This site is dedicated to Open Source and sharing information, knowledge and software projects of any kind." />
-  <meta name="keywords" content="kernel,panic,OpenBSD,Linux,open,source,programming,development,security,docs" />
-  <meta name="distribution" content="global" />
-  <meta name="author" content="Daniele Mazzocchio" />
-  <meta name="copyright" content="This document copyright 2005-2007 by Kernel-Panic.it." />
-
-  <title>.: Kernel Panic - Be Unix :.</title>
-
-  <link rel="stylesheet" type="text/css" href="css/menu.css" />
-  <link rel="stylesheet" type="text/css" href="css/kp.css" />
-  <link rel="stylesheet" type="text/css" href="css/index.css" />
-  <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-
-</head>
-
-<body>
-
-  <table id="container">
-
-    <tr>
-      <td id="header" colspan="2">
-        <h1>Kernel Panic</h1>
-      </td>
-      <td id="flags">
-      </td>
-    </tr>
-
-    <tr>
-      <td class="top" colspan="2"></td>
-      <td class="right-col"></td>
-    </tr>
-
-    <tr>
-      <td class="left-col" rowspan="2">
-        <ul>
-          <li id="home"><a class="menu" href="index.html"><span>Home</span></a>
-            <ul id="submenu">
-              <li><a href="#news">News</a></li>
-              <li><a href="#contacts">Contacts</a></li>
-            </ul>
-          </li>
-          <li id="openbsd"><a class="menu" href="openbsd.html"><span>OpenBSD</span></a></li>
-          <li id="linux"><a class="menu" href="linux.html"><span>Linux</span></a></li>
-          <li id="programming"><a class="menu" href="programming.html"><span>Programming</span></a></li>
-          <li id="security"><a class="menu" href="security.html"><span>Security</span></a></li>
-          <li id="software"><a class="menu" href="software.html"><span>Software</span></a></li>
-          <li id="fun"><a class="menu" href="fun.html"><span>Fun</span></a></li>
-        </ul>
-      </td>
-
-      <td class="main" rowspan="2">
-        <p>Welcome to Kernel Panic!<br />This site is dedicated to Open Source and sharing of information, experience and software projects of any kind, because we believe that sharing of knowledge is the best way not to keep reinventing the wheel.</p>
-        <p>Our favourite topics are OpenBSD, Linux, security, programming and open source software. All <a href="mailto:info@kernel-panic.it">feedback</a> is greatly appreciated!</p>
-
-        <a id="news" name="news"></a>
-        <div class="separator"><h2 id="news-header"><span>News</span></h2></div>
-
-        <dl>
-          <dt>Sep 6, 2014</dt>
-          <dd>Added document &quot;<a href="linux.html#rhev">Automatic Virtual Machine deployment using the RHEV API and Python</a>&quot; in the <a href="linux.html">Linux</a> section.</dd>
-
-          <dt>Dec 6, 2012</dt>
-          <dd>Website versioning migrated to <a href="https://github.com/dotpy/kernel-panic.it">GitHib</a>.</dd>
-
-          <dt>Apr 26, 2008</dt>
-          <dd>Added document &quot;<a href="programming.html#py-pf">Py-PF - Managing OpenBSD's Packet Filter with Python</a>&quot; in the <a href="programming.html">Programming</a> section.</dd>
-
-          <dt>Apr 26, 2008</dt>
-          <dd>Uploaded &quot;<a href="software.html#py-pf">py-PF</a>&quot; in the <a href="software.html">software</a> section: a pure-Python module for managing OpenBSD's Packet Filter.</dd>
-
-          <dt>Nov 11, 2007</dt>
-          <dd>Added document &quot;<a href="openbsd.html#vpn">Building VPNs on OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Apr 16, 2007</dt>
-          <dd>Added document &quot;<a href="openbsd.html#pdc">OpenBSD as a Primary Domain Controller</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Jan 23, 2007</dt>
-          <dd>Added document &quot;<a href="openbsd.html#nagios">Network monitoring with Nagios and OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Jul 9, 2006</dt>
-          <dd>Added document &quot;<a href="openbsd.html#dns">OpenBSD as a domain name server</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Mar 19, 2006</dt>
-          <dd>Added document &quot;<a href="openbsd.html#proxy">The Squid and the Blowfish</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Nov 19, 2005</dt>
-          <dd>Uploaded &quot;<a href="software.html#bowlfish">BowlFish</a>&quot; in the <a href="software.html">software</a> section: an OpenBSD installer for embedded systems.</dd>
-
-          <dt>Oct 16, 2005</dt>
-          <dd>Added document on &quot;<a href="openbsd.html#embedded">Embedded OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Sep 17, 2005</dt>
-          <dd>Uploaded &quot;<a href="software.html#sudokiller">SudoKiller</a>&quot; in the <a href="software.html">software</a> section: for those who have much more fun solving SuDoku this way!</dd>
-
-          <dt>Jul 30, 2005</dt>
-          <dd>Added the &quot;<a href="programming.html#xhtml">XHTML 1.0 crib sheet</a>&quot; in the <a href="programming.html">programming</a> section.</dd>
-
-          <dt>Jun 20, 2005</dt>
-          <dd>All the pages on the web site have been ported to xhtml and css, resulting in cleaner code and increased compatibility and flexibility!</dd>
-
-          <dt>Jun 11, 2005</dt>
-          <dd>Added document on &quot;<a href="openbsd.html#mail">OpenBSD as a mail server</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>May 15, 2005</dt>
-          <dd>Added document on &quot;<a href="openbsd.html#carp">Redundant firewalls with OpenBSD, CARP and pfsync</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
-
-          <dt>Apr 27, 2005</dt>
-          <dd>Uploaded &quot;<a href="software.html#stdiff">Spot the difference</a>&quot; in the <a href="software.html">software</a> section: a fast, portable and easy to use file integrity checker.</dd>
-
-          <dt>Apr 26, 2005</dt>
-          <dd>Added document on &quot;<a href="security.html#shellcode">Writing shellcode for Linux and *BSD</a>&quot; in the <a href="security.html">security</a> section.</dd>
-
-          <dt>Apr 18, 2005</dt>
-          <dd>The most important things first! Four JavaScript games uploaded in the <a href="fun.html">fun</a> section.</dd>
-
-          <dt>Apr 14, 2005</dt>
-          <dd>It is born! It is born! It's a beautiful site of a few kb, come into the world after many delays and an endless childbirth! Congratulations!</dd>
-        </dl>
-
-        <a id="contacts" name="contacts"></a>
-        <div class="separator"><h2 id="contacts-header"><span>Contacts</span></h2></div>
-
-        <p>Please feel free to send any feedback, contributions or suggestion to <a class="address" href="mailto:info@kernel-panic.it">info@kernel-panic.it</a> or, if you're mad at someone specific, you can get mad at <a href="mailto:danix@kernel-panic.it">Daniele Mazzocchio</a> or <a href="mailto:melix@kernel-panic.it">Melina Proto</a>.</p>
-      </td>
-
-      <td class="right-col">
-        <h2 id="links"><span>Links</span></h2>
-        <ul>
-          <li><a href="http://www.openbsd.org/">OpenBSD</a></li>
-          <li><a href="http://www.openbsd.org/faq/">OpenBSD FAQ</a></li>
-          <li><a href="http://undeadly.org/">OpenBSD Journal</a></li>
-          <li><a href="http://www.openbsdsupport.org/">OpenBSDsupport</a></li>
-        </ul>
-        <ul>
-          <li><a href="http://www.kernel.org/">Kernel.org</a></li>
-          <li><a href="http://www.debian.org/">Debian</a></li>
-          <li><a href="http://www.slackware.com/">Slackware</a></li>
-        </ul>
-        <ul>
-          <li><a href="http://www.python.org/">Python</a></li>
-          <li><a href="http://www.php.net/">PHP</a></li>
-          <li><a href="http://www.w3c.org/">W3C</a></li>
-        </ul>
-        <ul>
-          <li><a href="http://www.securityfocus.com/">Security Focus</a></li>
-          <li><a href="http://www.cve.mitre.org/">CVE</a></li>
-        </ul>
-        <ul>
-          <li><a href="http://github.com/">GitHub</a></li>
-          <li><a href="http://sourceforge.net/">SourceForge</a></li>
-          <li><a href="http://freecode.com/">Freecode</a></li>
-        </ul>
-
-        <h2 id="search"><span>Search</span></h2>
-        <form action="http://www.google.com/search" method="get">
-        <div>
-          <input type="text" name="q" maxlength="255" size="10" value="" />
-          <input type="hidden" name="domains" value="kernel-panic.it" />
-          <input type="hidden" name="sitesearch" value="kernel-panic.it" />
-          <input type="image" src="images/go.png" alt="go" class="submit" />
+    <title>.: Kernel Panic - Be Unix :.</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div id="header" class="col">Kernel Panic</div>
+      </div>
+      <div class="row">
+        <div id="sidebar" class="col-auto">
         </div>
-        </form>
-      </td>
-    </tr>
-
-    <tr>
-      <td class="validators">
-        <form action="https://www.paypal.com/cgi-bin/webscr" method="post">  
-          <div>
-            <input type="hidden" name="cmd" value="_s-xclick" />                 
-            <input type="image" src="images/donate.gif" name="submit" alt="Donate" />
-            <img src="https://www.paypal.com/it_IT/i/scr/pixel.gif" alt="" width="1" height="1" />  
-            <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----" />  
-          </div>
-        </form>
-        <p><a href="http://validator.w3.org/check?uri=referer"><img src="images/xhtml10.png" alt="Valid XHTML 1.0!" height="31" width="88" /></a></p>
-        <p><a href="http://jigsaw.w3.org/css-validator/"><img src="images/vcss.png" alt="Valid CSS!" height="31" width="88" /></a></p>
-      </td>
-    </tr>
-
-    <tr>
-      <td class="bottom" colspan="2"><address>Designed by kernel-panic.it</address></td>
-      <td class="right-col"></td>
-    </tr>
-
-  </table>
-
-</body>
-
+        <div id="main" class="col">
+        </div>
+      </div>
+      <div class="row">
+        <div id="footer" class="col">
+          Designed by kernel-panic.it
+        </div>
+      </div>
+    </div>
+    <script src="js/jquery.slim.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+  </body>
 </html>
-
