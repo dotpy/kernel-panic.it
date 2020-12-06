@@ -65,7 +65,6 @@ img {
 }
 
 #sidebar li {
-  height: 40px;
   margin: 1px 0px;
 }
 
@@ -82,7 +81,7 @@ a.menu {
 }
 
 a.menu span {
-  visibility: hidden;
+  display: none;
 }
 
 /************************************ Main ************************************/
