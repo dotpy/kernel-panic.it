@@ -17,6 +17,7 @@ body {
 
 a {
   color: #000;
+  text-decoration: underline;
 }
 
 img {
@@ -26,6 +27,7 @@ img {
 /***************************** Global container *******************************/
 .container {
   margin-top: 10px;
+  margin-bottom: 10px;
   border: 1px solid #28394f;
   min-height: 100%;
   background-image: url('../images/bottom-left.png'), url('../images/bottom-right.png'), url('../images/left.png');
@@ -76,6 +78,7 @@ a.menu {
   height: 40px;
   width: 40px;
   display: block;
+  text-decoration: none;
 }
 
 a.menu span {
@@ -86,6 +89,7 @@ a.menu span {
 #main {
   border-top: 1px solid #28394f;
   padding-top: 20px;
+  padding-left: 0px;
   background: transparent url('../images/top-right.png') no-repeat top right;
 }
 
@@ -112,6 +116,7 @@ a.menu span {
 }
 
 @media (min-width: 768px) {
+  /* Header */
   #header {
     background-position: 30px, top right, center;
   }
@@ -130,15 +135,17 @@ a.menu span {
     background: transparent url('../images/tile_over.png') left center no-repeat;
     color: #000;
     padding-top: 1px;
-    text-decoration: none;
   }
 
   a.menu span {
     visibility: visible;
-    padding: 4px 0px 0px 38px;
-    margin-left: 6px;
-    display: block;
     padding-top: 2px;
+    display: block;
+  }
+
+  /* Main */
+  #main {
+    padding-left: 20px;
   }
 }
 

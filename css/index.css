@@ -1,4 +1,26 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                          Styles for index pages                            *
+ ******************************************************************************/
+
 p:first-letter {
   font: bold 180% serif;
   float: left;
+}
+
+dt {
+  font-size: 80%;
+  font-style: italic;
+  font-weight: normal;
+}
+
+dd {
+  padding-bottom: 0px;
+  padding-left: 40px;
+}
+ 
+a.address {
+  display: block;
+  text-align: center;
+  padding: 10px;
 }
