@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="../../css/fonts.css">
+    <link rel="stylesheet" href="../../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/kp.css" />
+    <link rel="stylesheet" href="../../css/docs.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+    <meta name="description" content="This website is dedicated to open-source and sharing information, knowledge and software projects of any kind." />
+    <meta name="keywords" content="kernel,panic,OpenBSD,Linux,open,source,email,programming,development,security,docs" />
+    <meta name="distribution" content="Global" />
+    <meta name="author" content="Daniele Mazzocchio, danix@kernel-panic.it" />
+    <meta name="copyright" content="This document copyright 2005-2021 by Kernel-Panic.it." />
+
+    <title>Redundant firewalls with OpenBSD, CARP and pfsync - Table of contents</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div id="header" class="col">Kernel Panic</div>
+      </div>
+      <div class="row">
+        <div id="sidebar" class="col-auto">
+          <ul>
+            <li id="home"><a class="menu" href="../../index.html"><img src="../../images/home_icon.png" /><span>Home</span></a></li>
+            <li id="openbsd"><a class="menu" href="../../openbsd.html"><img src="../../images/obsd_icon.png" /><span>OpenBSD</span></a></li>
+            <li id="linux"><a class="menu" href="../../linux.html"><img src="../../images/linux_icon.png" /><span>Linux</span></a></li>
+            <li id="email"><a class="menu" href="../../email.html"><img src="../../images/email_icon.png" /><span>Email</span></a></li>
+            <li id="security"><a class="menu" href="../../security.html"><img src="../../images/lock_icon.png" /><span>Security</span></a></li>
+            <li id="programming"><a class="menu" href="../../programming.html"><img src="../../images/coffee_icon.png" /><span>Programming</span></a></li>
+          </ul>
+        </div>
+        <div id="main" class="col">
+          <div id="nav" class="row">
+            <div id="nav-back" class="col-4 text-left"><img src="../../images/left_arrow.png"/><a href="index.html">Table of contents</a></div>
+            <div id="nav-up" class="col-4 text-center"><img src="../../images/up_arrow.png"/><a href="../../openbsd.html">OpenBSD</a></div>
+            <div id="nav-next" class="col-4 text-right"><a href="carp2.html">2. Network layout</a><img src="../../images/right_arrow.png"/></div>
+          </div>
+
+          <h3>1. Introduction</h3>
+
+          <p>Firewalls are among the most critical components in a network infrastructure, since their failure may cause entire groups of machines to go offline. The damage may range from the public (web, mail, DNS, etc.) servers to become unreachable from the outside world up to being unable to surf this web site!</p>
+          <p>Using firewall clusters can dramatically reduce these risks, making the failure of a firewall completely transparent to users. Also, maintenance (patching, upgrading, rebooting...) becomes much easier and faster when relying on a backup machine, thus indirectly increasing systems security and reliability.</p>
+          <p>On the other hand, it's true that redundancy increases hardware costs and can't solve each and every problem, like transparent transfer of certain protocols (e.g. <acronym title="Secure SHell">SSH</acronym> or <acronym title="Internet Relay Chat">IRC</acronym>) between systems or synchronizing data between clustered machines (in matter of fact, we will rely on two different protocols for <a href="carp4.html">failover</a> and <a href="carp5.html">synchronization</a>).</p>
+          <p>The tools we will use to build our failover cluster are:</p>
+
+          <dl class="padded">
+            <dt><a href="http://www.openbsd.org/">OpenBSD</a></dt>
+            <dd>largely considered one of the most secure OSes around, with <q>only two remote holes in the default install, in a heck of a long time!</q>;</dd>
+            <dt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">Packet Filter</a> (PF)</dt>
+            <dd>OpenBSD's system for filtering TCP/IP traffic and doing Network Address Translation;</dd>
+            <dt><a href="https://man.openbsd.org/carp">CARP</a> (Common Address Redundancy Protocol)</dt>
+            <dd>the protocol that achieves system redundancy, by having multiple computers creating a single, virtual network interface between them;</dd>
+            <dt><a href="https://man.openbsd.org/pfsync">pfsync</a></dt>
+            <dd>the protocol that allows PF state tables to be synchronized between multiple firewalls.</dd>
+          </dl>
+
+          <p>A good knowledge of OpenBSD and PF is assumed, since we won't cover topics like <a href="https://man.openbsd.org/pfctl"><tt>pfctl(8)</tt></a> and <a href="https://man.openbsd.org/pf.conf"><tt>pf.conf(5)</tt></a> syntax. Anyway, the <a href="carp7.html">appendix</a> contains some useful links for more on these topics.</p>
+        </div>
+      </div>
+    </div>
+    <script src="js/jquery.slim.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

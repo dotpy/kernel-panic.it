@@ -1,0 +1,125 @@
+/******************************************************************************
+ *                   Stylesheet created by kernel-Panic.it                    *
+ *                                Docs Styles                                 *
+ ******************************************************************************/
+
+/*************************  Override a few defaults  **************************/
+kbd {
+  font-weight: bold;
+}
+
+q {
+  font-style: italic;
+}
+
+/*****************************  Table of contents  ****************************/
+#subtitle {
+  font-style: italic;
+  font-size: 80%;
+  padding: 20px 10px;
+}
+
+#subtitle a {
+  font-style: normal;
+}
+
+#subtitle img {
+  border: 0;
+  vertical-align: middle;
+}
+
+/*********************************  Navigation  *******************************/
+#nav {
+  font-size: 80%;
+  margin-bottom: 10px;
+}
+
+#nav-back {
+  height: 40px;
+}
+
+#nav-back img {
+  padding-right: 5px;
+}
+
+#nav-up {
+}
+
+#nav-next {
+}
+
+#nav-next img {
+  padding-left: 5px;
+}
+
+/*******************************  Code excerpts  ******************************/
+div.code {
+  border: 1px solid #000;
+  background-color: #e3efff;
+  padding: 0px 10px;
+  margin: 20px 0px ;
+}
+
+div.code div {
+  color: #fff;
+  background-color: #28394f;
+  padding: 0px 10px;
+  margin: 10px 0px;
+}
+
+/***********************************  Images  *********************************/
+div.block-img {
+  border: 1px solid #000;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  width: 100%;
+  text-align: center;
+}
+
+img.float-img {
+  border: 1px solid #000;
+  border-right-width: 2px;
+  border-bottom-width: 2px;
+  margin: 5px;
+  margin-left: 20px;
+  float: right;
+}
+
+/***********************************  Tables  *********************************/
+table.compact {
+  border-collapse: collapse;
+  margin: auto;
+  width: 100%;
+}
+
+table.compact th, table.compact td {
+  border: 1px solid #28394f;
+  padding: 0 10px 0 10px;
+  vertical-align: top;
+}
+
+table.compact th {
+  color: #fff;
+  background-color: #28394f;
+}
+
+table.compact td.number {
+  text-align: right;
+}
+
+table.compact td.blank {
+  border-style: none;
+}
+
+/***********************************  Lists  **********************************/
+dl.padded  dd {
+  padding-left: 40px;
+}
+
+dl.padded  dt {
+  font-weight: normal;
+}
+
+dl.padded div.code {
+  margin-bottom: 0px;
+}
