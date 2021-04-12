@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="css/fonts.css">
-    <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/kp.css" />
     <link rel="stylesheet" href="css/index.css" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
@@ -19,76 +18,74 @@
     <title>.: Kernel Panic - Be Unix :.</title>
   </head>
   <body>
-    <div class="container">
-      <div class="row">
-        <div id="header" class="col">Kernel Panic</div>
-      </div>
-      <div class="row">
-        <div id="sidebar" class="col-auto">
+    <div id="container">
+      <div id="header">Kernel Panic</div>
+      <div id="sub-container">
+        <div id="sidebar">
           <ul>
-            <li id="home"><a class="menu" href="index.html"><img src="images/home_icon.png" /><span>Home</span></a></li>
-            <li id="openbsd"><a class="menu" href="openbsd.html"><img src="images/obsd_icon.png" /><span>OpenBSD</span></a></li>
-            <li id="linux"><a class="menu" href="linux.html"><img src="images/linux_icon.png" /><span>Linux</span></a></li>
-            <li id="email"><a class="menu" href="email.html"><img src="images/email_icon.png" /><span>Email</span></a></li>
-            <li id="security"><a class="menu" href="security.html"><img src="images/lock_icon.png" /><span>Security</span></a></li>
-            <li id="programming"><a class="menu" href="programming.html"><img src="images/coffee_icon.png" /><span>Programming</span></a></li>
+            <li><a class="menu" href="index.html"><img src="images/home_icon.png" /><span>Home</span></a></li>
+            <li><a class="menu" href="openbsd.html"><img src="images/obsd_icon.png" /><span>OpenBSD</span></a></li>
+            <li><a class="menu" href="linux.html"><img src="images/linux_icon.png" /><span>Linux</span></a></li>
+            <li><a class="menu" href="email.html"><img src="images/email_icon.png" /><span>Email</span></a></li>
+            <li><a class="menu" href="security.html"><img src="images/lock_icon.png" /><span>Security</span></a></li>
+            <li><a class="menu" href="programming.html"><img src="images/coffee_icon.png" /><span>Programming</span></a></li>
           </ul>
         </div>
-        <div id="main" class="col">
-          <p>Welcome to Kernel Panic!<br />This website is dedicated to open-source software and sharing of information, experience and software projects of any kind, because we believe that sharing of knowledge is the best way not to keep reinventing the wheel.</p>
-          <p>Our favourite topics are OpenBSD and Linux system administration, security, email standards and protocols, programming (mainly Python) and open-source software. All <a href="mailto:info@kernel-panic.it">feedback</a> is greatly appreciated!</p>
+        <div id="main">
+          <div id="content">
+            <p>Welcome to Kernel Panic!<br />This website is dedicated to open-source software and sharing of information, experience and software projects of any kind, because we believe that sharing of knowledge is the best way not to keep reinventing the wheel.</p>
+            <p>Our favourite topics are OpenBSD and Linux system administration, security, email standards and protocols, programming (mainly Python) and open-source software. All <a href="mailto:info@kernel-panic.it">feedback</a> is greatly appreciated!</p>
 
-          <div class="separator"><h2><span>Contacts</span></h2></div>
-          <p>Please feel free to send any feedback, contributions or suggestions to <a class="address" href="mailto:danix@kernel-panic.it">danix@kernel-panic.it</a> or, if you think you found something useful on this website and you know how much caffeine is required to write good code or documentation, feel free to buy me a coffee through <a href="https://paypal.me/DanieleMazzocchio">Paypal</a>!</p>
+            <div class="separator"><h2><span>Contacts</span></h2></div>
+            <p>Please feel free to send any feedback, contributions or suggestions to <a class="address" href="mailto:danix@kernel-panic.it">danix@kernel-panic.it</a> or, if you think you found something useful on this website and you know how much caffeine is required to write good code or documentation, feel free to buy me a coffee through <a href="https://paypal.me/DanieleMazzocchio">Paypal</a>!</p>
 
-          <div class="separator"><h2><span>News</span></h2></div>
-          <dl>
-            <dt>Aug 1, 2018</dt>
-            <dd>The awesome <a href="https://bsdmag.org">BSD Magazine</a> published the updated version of &quot;<a href="openbsd.html#carp">Redundant firewalls with OpenBSD, CARP and pfsync</a>&quot;; and they even interviewed me: I did my best to say something clever...</dd>
+            <div class="separator"><h2><span>News</span></h2></div>
+            <dl>
+              <dt>Aug 1, 2018</dt>
+              <dd>The awesome <a href="https://bsdmag.org">BSD Magazine</a> published the updated version of &quot;<a href="openbsd.html#carp">Redundant firewalls with OpenBSD, CARP and pfsync</a>&quot;; and they even interviewed me: I did my best to say something clever...</dd>
 
-            <dt>Sep 6, 2014</dt>
-            <dd>Added document &quot;<a href="linux.html#rhev">Automatic Virtual Machine deployment using the RHEV API and Python</a>&quot; in the <a href="linux.html">Linux</a> section.</dd>
+              <dt>Sep 6, 2014</dt>
+              <dd>Added document &quot;<a href="linux.html#rhev">Automatic Virtual Machine deployment using the RHEV API and Python</a>&quot; in the <a href="linux.html">Linux</a> section.</dd>
 
-            <dt>Apr 26, 2008</dt>
-            <dd>Added document &quot;<a href="programming.html#py-pf">Py-PF - Managing OpenBSD's Packet Filter with Python</a>&quot; in the <a href="programming.html">Programming</a> section.</dd>
+              <dt>Apr 26, 2008</dt>
+              <dd>Added document &quot;<a href="programming.html#py-pf">Py-PF - Managing OpenBSD's Packet Filter with Python</a>&quot; in the <a href="programming.html">Programming</a> section.</dd>
 
-            <dt>Nov 11, 2007</dt>
-            <dd>Added document &quot;<a href="openbsd.html#vpn">Building VPNs on OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Nov 11, 2007</dt>
+              <dd>Added document &quot;<a href="openbsd.html#vpn">Building VPNs on OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Apr 16, 2007</dt>
-            <dd>Added document &quot;<a href="openbsd.html#pdc">OpenBSD as a Primary Domain Controller</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Apr 16, 2007</dt>
+              <dd>Added document &quot;<a href="openbsd.html#pdc">OpenBSD as a Primary Domain Controller</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Jan 23, 2007</dt>
-            <dd>Added document &quot;<a href="openbsd.html#nagios">Network monitoring with Nagios and OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Jan 23, 2007</dt>
+              <dd>Added document &quot;<a href="openbsd.html#nagios">Network monitoring with Nagios and OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Jul 9, 2006</dt>
-            <dd>Added document &quot;<a href="openbsd.html#dns">OpenBSD as a domain name server</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Jul 9, 2006</dt>
+              <dd>Added document &quot;<a href="openbsd.html#dns">OpenBSD as a domain name server</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Mar 19, 2006</dt>
-            <dd>Added document &quot;<a href="openbsd.html#proxy">The Squid and the Blowfish</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Mar 19, 2006</dt>
+              <dd>Added document &quot;<a href="openbsd.html#proxy">The Squid and the Blowfish</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Oct 16, 2005</dt>
-            <dd>Added document on &quot;<a href="openbsd.html#embedded">Embedded OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Oct 16, 2005</dt>
+              <dd>Added document on &quot;<a href="openbsd.html#embedded">Embedded OpenBSD</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Sep 17, 2005</dt>
-            <dd>Uploaded &quot;<a href="software.html#sudokiller">SudoKiller</a>&quot; in the <a href="programming.html">programming</a> section: for those who have much more fun solving SuDoku this way!</dd>
+              <dt>Sep 17, 2005</dt>
+              <dd>Uploaded &quot;<a href="software.html#sudokiller">SudoKiller</a>&quot; in the <a href="programming.html">programming</a> section: for those who have much more fun solving SuDoku this way!</dd>
 
-            <dt>Jun 11, 2005</dt>
-            <dd>Added document on &quot;<a href="openbsd.html#mail">OpenBSD as a mail server</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>Jun 11, 2005</dt>
+              <dd>Added document on &quot;<a href="openbsd.html#mail">OpenBSD as a mail server</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>May 15, 2005</dt>
-            <dd>Added document on &quot;<a href="openbsd.html#carp">Redundant firewalls with OpenBSD, CARP and pfsync</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
+              <dt>May 15, 2005</dt>
+              <dd>Added document on &quot;<a href="openbsd.html#carp">Redundant firewalls with OpenBSD, CARP and pfsync</a>&quot; in the <a href="openbsd.html">OpenBSD</a> section.</dd>
 
-            <dt>Apr 26, 2005</dt>
-            <dd>Added document on &quot;<a href="security.html#shellcode">Writing shellcode for Linux and *BSD</a>&quot; in the <a href="security.html">security</a> section.</dd>
+              <dt>Apr 26, 2005</dt>
+              <dd>Added document on &quot;<a href="security.html#shellcode">Writing shellcode for Linux and *BSD</a>&quot; in the <a href="security.html">security</a> section.</dd>
 
-            <dt>Apr 14, 2005</dt>
-            <dd>It is born! We're happy to announce the birth of our website! Born on Thursday, the 14th of April 2005, weighing a few kb!</dd>
-          </dl>
+              <dt>Apr 14, 2005</dt>
+              <dd>It is born! We're happy to announce the birth of our website! Born on Thursday, the 14th of April 2005, weighing a few kb!</dd>
+            </dl>
+          </div>
         </div>
       </div>
     </div>
-    <script src="js/jquery.slim.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

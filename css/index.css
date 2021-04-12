@@ -4,7 +4,7 @@
  ******************************************************************************/
 
 p:first-letter {
-  font: bold 180% serif;
+  font: bold 200% serif;
   float: left;
 }
 
@@ -15,12 +15,60 @@ dt {
 }
 
 dd {
-  padding-bottom: 0px;
-  padding-left: 40px;
+  padding-bottom: 20px;
 }
- 
+
 a.address {
   display: block;
   text-align: center;
   padding: 10px;
 }
+
+
+.separator {
+  background: transparent url('../images/sep.png') repeat-x center;
+  margin: 40px 20px 0px 20px;
+}
+
+.separator h2 {
+  text-align: center;
+  font-family: 'Kaushan Script', cursive;
+  font-size: 30px;
+  font-weight: normal;
+}
+
+.separator span {
+  background-color: #fff;
+  padding: 0px 20px;
+}
+
+
+fieldset {
+  padding: 20px 10px 0px 10px;
+  margin: 30px 0px 20px 0px;
+  border-color: #000;
+  border-style: solid;
+  border-width: 1px 1px 2px 2px;
+}
+
+fieldset div {
+  padding-bottom: 20px;
+  font-style: italic;
+}
+
+fieldset dt {
+  font-size: 100%;
+  font-style: normal;
+  font-weight: bold;
+}
+
+fieldset dd {
+  padding-bottom: 10px;
+}
+
+legend {
+  width: auto;
+  font-size: 100%;
+  padding: 0px 10px;
+}
+

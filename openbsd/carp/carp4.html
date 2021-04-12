@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="../../css/fonts.css">
+    <link rel="stylesheet" href="../../css/kp.css" />
+    <link rel="stylesheet" href="../../css/docs.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+    <meta name="keywords" content="kernel,panic,OpenBSD,Linux,open,source,email,programming,development,security,docs" />
+    <meta name="distribution" content="Global" />
+    <meta name="author" content="Daniele Mazzocchio, danix@kernel-panic.it" />
+    <meta name="copyright" content="This document copyright 2005-2021 by Kernel-Panic.it." />
+
+    <title>Redundant firewalls with OpenBSD, CARP and pfsync - PF rules!</title>
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">Kernel Panic</div>
+      <div id="sub-container">
+        <div id="sidebar">
+          <ul>
+            <li><a class="menu" href="../../index.html"><img src="../../images/home_icon.png" /><span>Home</span></a></li>
+            <li><a class="menu" href="../../openbsd.html"><img src="../../images/obsd_icon.png" /><span>OpenBSD</span></a></li>
+            <li><a class="menu" href="../../linux.html"><img src="../../images/linux_icon.png" /><span>Linux</span></a></li>
+            <li><a class="menu" href="../../email.html"><img src="../../images/email_icon.png" /><span>Email</span></a></li>
+            <li><a class="menu" href="../../security.html"><img src="../../images/lock_icon.png" /><span>Security</span></a></li>
+            <li><a class="menu" href="../../programming.html"><img src="../../images/coffee_icon.png" /><span>Programming</span></a></li>
+          </ul>
+        </div>
+        <div id="main">
+          <div id="content">
+            <div class="nav">
+              <div class="nav-back"><a href="carp3.html"><img src="../../images/left_arrow.png"/>3. The pfsync protocol</a></div>
+              <div class="nav-title"><a href="index.html">Redundant firewalls with OpenBSD, CARP and pfsync</a></div>
+              <div class="nav-next"><a href="carp5.html">5. Appendix<img src="../../images/right_arrow.png"/></a></div>
+            </div>
+
+            <h2><a id="carp-4" name="carp-4"></a>4. PF rules!</h2>
+
+            <p>The impact of CARP and pfsync on Packet Filter rules is really minimal. First, you need to let the PFSYNC and CARP protocols pass on their own interfaces:</p>
+
+            <div class="code">
+<pre>
+pass quick on rl2 proto pfsync keep state (no-sync)
+pass on { rl0, rl1 } proto carp keep state (no-sync)
+</pre>
+            </div>
+
+            <p>Then, when writing firewall rules, keep in mind that, from <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt>'s point of view, all traffic passes through the physical interface. Thus, in cases like:</p>
+
+            <div class="code">
+<pre>
+pass in on $ext_if [...]
+</pre>
+            </div>
+
+            <p>you can keep referring to the physical, not the virtual interface.</p>
+            <p>On the other hand, the virtual address is associated to the CARP interface; thus, you need to refer to it if the firewall offers any services on its virtual address:</p>
+
+            <div class="code">
+<pre>
+<i># SSH on the virtual interface</i>
+pass in on $int_if inet proto tcp from $int_if:network to carp0 port ssh
+</pre>
+            </div>
+
+            <p>or on a NATed server, through traffic redirection:</p>
+
+            <div class="code">
+<pre>
+<i># Mail server accessible from the internet</i>
+pass in on $ext_if inet proto tcp from any to carp2 port $mail_ports rdr-to $mail_srv
+</pre>
+            </div>
+
+            <p>In all other cases, CARP is perfectly transparent to <tt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">pf(4)</a></tt>, as for services offered by the firewall on its physical addresses:</p>
+
+            <div class="code">
+<pre>
+<i># SSH on the physical address</i>
+pass in on $int_if inet proto tcp from $int_if:network to $int_if port ssh
+</pre>
+            </div>
+
+            <p>or for normal filtering:</p>
+
+            <div class="code">
+<pre>
+<i># External DNS</i>
+pass in  on $int_if inet proto { tcp, udp } from $int_if:network to $dns_srv \
+     port domain
+pass out on $ext_if inet proto { tcp, udp } from $ext_if to $dns_srv \ 
+     port domain
+</pre>
+            </div>
+
+            <p>As an example, let's see a basic PF ruleset for our firewalls:</p>
+
+            <div class="code">
+              <div>/etc/pf.conf</div>
+<pre>
+<i>################################################################################
+# Macros and lists                                                             #
+################################################################################</i>
+
+ext_if  = rl0                           <i># External interface</i>
+int_if  = rl1                           <i># DMZ interface</i>
+pfs_if  = rl2                           <i># Pfsync interface</i>
+carp_if = carp1                         <i># External CARP interface</i>
+
+mail_srv = &quot;mail.kernel-panic.it&quot;                               <i># Mail server</i>
+web_srv  = &quot;{ www1.kernel-panic.it, www2.kernel-panic.it }&quot;     <i># Web servers</i>
+dns_srv  = &quot;{ dns1.isp.com, dns2.isp.com }&quot;                     <i># DNS servers</i>
+int_fw   = &quot;{ mickey.kernel-panic.it, minnie.kernel-panic.it }&quot; <i># Internal fw</i>
+
+mail_ports = &quot;{ smtp, submission, imap, imaps }&quot;    <i># Mail server ports</i>
+web_ports  = &quot;{ www, https }&quot;                       <i># Web server ports</i>
+
+<i># Allowed incoming ICMP types</i>
+icmp_types = &quot;{ echoreq, timex, paramprob, unreach code needfrag }&quot;
+
+<i># Private networks (RFC 1918)</i>
+priv_nets = &quot;{ 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 }&quot;
+
+<i>################################################################################
+# Options, scrub and NAT                                                       #
+################################################################################</i>
+
+set block-policy drop
+set loginterface $ext_if
+set syncookies always
+set skip on lo
+
+<i># NAT outgoing connections</i>
+match out on $ext_if from !$ext_if to any nat-to $ext_if
+
+<i># Redirect web services (with load balancing)</i>
+match in on $ext_if inet proto tcp from any to $carp_if port $web_ports \
+    rdr-to $web_srv round-robin sticky-address
+
+<i># Redirect mail services</i>
+match in on $ext_if inet proto tcp from any to $carp_if port $mail_ports \
+    rdr-to $mail_srv
+
+<i>################################################################################
+# Filtering rules                                                              #
+################################################################################</i>
+
+block all                          <i># Default deny</i>
+block in quick from urpf-failed    <i># Spoofed address protection</i>
+
+<i># Scrub incoming packets</i>
+match in all scrub (no-df)
+
+pass quick on $pfs_if proto pfsync keep state (no-sync)        <i># Enable pfsync</i>
+pass on { $int_if, $ext_if } proto carp keep state (no-sync)   <i># Enable CARP</i>
+
+block in  quick on $ext_if from $priv_nets to any
+block out quick on $ext_if from any to $priv_nets
+
+<i># Mail server</i>
+pass in  on $ext_if inet proto tcp from any to $mail_srv port $mail_ports
+pass out on $int_if inet proto tcp from any to $mail_srv port $mail_ports
+pass in  on $int_if inet proto tcp from $mail_srv to any port smtp
+pass out on $ext_if inet proto tcp from $ext_if to any port smtp modulate state
+
+<i># Web servers</i>
+pass in  on $ext_if inet proto tcp from any to $web_srv port $web_ports \
+     synproxy state
+pass out on $int_if inet proto tcp from any to $web_srv port $web_ports
+
+<i># ICMP</i>
+pass in  inet proto icmp all icmp-type $icmp_types
+pass out inet proto icmp all
+
+<i># DNS</i>
+pass in  on $int_if inet proto { tcp, udp } from $int_if:network to $dns_srv \
+     port domain
+pass out on $ext_if inet proto { tcp, udp } from $ext_if to $dns_srv \
+     port domain
+
+<i># Internet web servers</i>
+pass in  on $int_if inet proto tcp from $int_fw to any port $web_ports
+pass out on $ext_if inet proto tcp from $ext_if to any port $web_ports \
+     modulate state
+</pre>
+            </div>
+
+            <div class="nav" class="row">
+              <div class="nav-back"><a href="carp3.html"><img src="../../images/left_arrow.png"/>3. The pfsync protocol</a></div>
+              <div class="nav-title"><a href="index.html">Redundant firewalls with OpenBSD, CARP and pfsync</a></div>
+              <div class="nav-next"><a href="carp5.html">5. Appendix<img src="../../images/right_arrow.png"/></a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

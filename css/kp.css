@@ -17,33 +17,40 @@ body {
 
 a {
   color: #000;
-  text-decoration: underline;
 }
 
 img {
   border-width: 0px;
 }
 
-/***************************** Global container *******************************/
-.container {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #28394f;
+/********************************* Containers *********************************/
+#container {
+  width: 100%;
   min-height: 100%;
+  margin: auto;
+  display: table;
+  border: 1px solid #28394f;
+  border-collapse: collapse;
   background-image: url('../images/bottom-left.png'), url('../images/bottom-right.png'), url('../images/left.png');
   background-position: left bottom, right bottom, top left;
   background-repeat: no-repeat, no-repeat, repeat-y;
 }
 
+#sub-container {
+  background-image: url('../images/top-left.png'), url('../images/top-right.png');
+  background-position: top left, top right;
+  background-repeat: no-repeat, no-repeat;
+}
 
 /********************************** Header ************************************/
 #header {
   height: 100px;
   padding-left: 50px;
-  font-family: 'Kaushan Script', cursive;
-  font-size: 65px;
+  display: table-row;
   text-align: center;
   text-shadow: 4px 4px 3px rgba(0,0,0,0.4);
+  font-family: 'Kaushan Script', cursive;
+  font-size: 65px;
   background-image: url('../images/bomb.png'), url('../images/header-right.png'), url('../images/header_bg.png');
   background-repeat: no-repeat, no-repeat, no-repeat;
   background-position: left, top right, center;
@@ -51,9 +58,9 @@ img {
 
 /********************************** Sidebar ***********************************/
 #sidebar {
-  width: 90px;
+  width: 60px;
   padding: 0;
-  background: transparent url('../images/top-left.png') no-repeat top left;
+  display: table-cell;
 }
 
 #sidebar ul {
@@ -87,52 +94,58 @@ a.menu span {
 /************************************ Main ************************************/
 #main {
   border-top: 1px solid #28394f;
-  padding-top: 20px;
-  padding-left: 0px;
-  background: transparent url('../images/top-right.png') no-repeat top right;
+  display: table-cell;
+  vertical-align: top;
+  width: 100%;
 }
 
-.separator {
-  background: transparent url('../images/sep.png') repeat-x center;
-  margin: 0px 20px;
+#content {
+  margin: 20px;
+  line-height: 150%;
 }
 
-.separator h2 {
-  text-align: center;
-  font-family: 'Kaushan Script', cursive;
-}
-
-.separator span {
-  background-color: #fff;
-  padding: 0px 20px;
-}
-
-/**************************** Media-dependent styles **************************/
+/************************************ Media ***********************************/
 @media (min-width: 576px) {
+  #container {
+      width: 540px;
+  }
+  #header {
+    background-position: 10px, top right, center;
+  }
+}
+
+@media (min-width: 576px) {
+  #container {
+      width: 540px;
+  }
   #header {
     background-position: 10px, top right, center;
   }
 }
 
 @media (min-width: 768px) {
-  /* Header */
+  #container {
+    width: 720px;
+  }
   #header {
     background-position: 30px, top right, center;
   }
-
   /* Sidebar */
   #sidebar {
     width: 180px;
+    max-width: 180px;
   }
 
   a.menu {
     width: 180px;
     background: transparent url('../images/tile.png') left center no-repeat;
+    padding-bottom: 1px;
   }
 
   a.menu:hover {
     background: transparent url('../images/tile_over.png') left center no-repeat;
     color: #000;
+    padding-bottom: 0px;
     padding-top: 1px;
   }
 
@@ -141,20 +154,21 @@ a.menu span {
     padding-top: 2px;
     display: block;
   }
-
-  /* Main */
-  #main {
-    padding-left: 20px;
-  }
 }
 
 @media (min-width: 992px) {
+  #container {
+    width: 960px;
+  }
   #header {
     background-position: 132px, top right, center;
   }
 }
 
 @media (min-width: 1200px) {
+  #container {
+    width: 1140px;
+  }
   #header {
     background-position: 220px, top right, center;
   }

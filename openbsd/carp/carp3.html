@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="../../css/fonts.css">
+    <link rel="stylesheet" href="../../css/kp.css" />
+    <link rel="stylesheet" href="../../css/docs.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+    <meta name="keywords" content="kernel,panic,OpenBSD,Linux,open,source,email,programming,development,security,docs" />
+    <meta name="distribution" content="Global" />
+    <meta name="author" content="Daniele Mazzocchio, danix@kernel-panic.it" />
+    <meta name="copyright" content="This document copyright 2005-2021 by Kernel-Panic.it." />
+
+    <title>Redundant firewalls with OpenBSD, CARP and pfsync - The pfsync protocol</title>
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">Kernel Panic</div>
+      <div id="sub-container">
+        <div id="sidebar">
+          <ul>
+            <li><a class="menu" href="../../index.html"><img src="../../images/home_icon.png" /><span>Home</span></a></li>
+            <li><a class="menu" href="../../openbsd.html"><img src="../../images/obsd_icon.png" /><span>OpenBSD</span></a></li>
+            <li><a class="menu" href="../../linux.html"><img src="../../images/linux_icon.png" /><span>Linux</span></a></li>
+            <li><a class="menu" href="../../email.html"><img src="../../images/email_icon.png" /><span>Email</span></a></li>
+            <li><a class="menu" href="../../security.html"><img src="../../images/lock_icon.png" /><span>Security</span></a></li>
+            <li><a class="menu" href="../../programming.html"><img src="../../images/coffee_icon.png" /><span>Programming</span></a></li>
+          </ul>
+        </div>
+        <div id="main">
+          <div id="content">
+            <div class="nav">
+              <div class="nav-back"><a href="carp2.html"><img src="../../images/left_arrow.png"/>2. The CARP protocol</a></div>
+              <div class="nav-title"><a href="index.html">Redundant firewalls with OpenBSD, CARP and pfsync</a></div>
+              <div class="nav-next"><a href="carp4.html">4. PF rules!<img src="../../images/right_arrow.png"/></a></div>
+            </div>
+
+            <h2><a id="carp-3" name="carp-3"></a>3. The pfsync protocol</h2>
+
+            <p>Pfsync is the protocol used by Packet Filter to synchronize state tables across firewalls in the same redundancy group; this allows all firewalls to be aware of the current states and, in the event of a failover, keep network traffic flowing uninterrupted. By default, state change messages are sent out on the synchronization interface using IP multicast packets. The protocol is IP protocol 240 and the multicast group used is 224.0.0.240.</p>
+            <p><tt><a href="https://man.openbsd.org/pfsync.4">pfsync(4)</a></tt> is also the name of the pseudo-device on which PF state table changes are sent (except states created by rules marked with the <tt>no-sync</tt> keyword or by <tt><a href="https://man.openbsd.org/pfsync.4">pfsync(4)</a></tt> packets). <tt><a href="https://man.openbsd.org/pfsync.4">pfsync(4)</a></tt> can be configured to use a physical interface, in order to merge and keep in sync the state tables among multiple firewalls.</p>
+            <p>The physical synchronization interface can be set through <tt><a href="https://man.openbsd.org/ifconfig.8">ifconfig(8)</a></tt>, using the <tt>syncdev</tt> parameter; for example, on our firewalls, we can write:</p>
+
+            <div class="code">
+<pre>
+# <kbd>ifconfig pfsync0 syncdev rl2</kbd>
+</pre>
+            </div>
+
+            <p>Crossover cables are recommended because the pfsync protocol doesn't provide any cryptography or authentication mechanism; if you don't use a secure network, like a crossover cable, an attacker may use spoofed pfsync packets to alter the firewalls state tables and bypass filter rules.</p>
+            <p>Alternatively, you can use the <tt>syncpeer</tt> keyword to specify the address of the firewall to synchronize with. The system will use this address, instead of multicast, as the destination of <tt><a href="https://man.openbsd.org/pfsync.4">pfsync(4)</a></tt> messages, allowing the use of <a href="../vpn/index.html">IPsec</a> to protect the communication. In this case, <tt>syncdev</tt> must be set to the <tt><a href="https://man.openbsd.org/enc.4">enc(4)</a></tt> pseudo-device, which encapsulates/decapsulates <a href="https://man.openbsd.org/ipsec.4">ipsec(4)</a> traffic. E.g.:</p>
+
+            <div class="code">
+<pre>
+# <kbd>ifconfig pfsync0 syncpeer 192.168.1.101 syncdev enc0</kbd>
+</pre>                             
+            </div>
+
+            <p>To make these settings permanent after reboot, we need to edit the <tt>/etc/hostname.pfsync0</tt> file on each firewall:</p>
+
+            <div class="code">
+  <div>/etc/hostname.pfsync0</div>
+<pre>
+up syncdev rl2
+</pre>
+            </div>
+
+            <div class="nav" class="row">
+              <div class="nav-back"><a href="carp2.html"><img src="../../images/left_arrow.png"/>2. The CARP protocol</a></div>
+              <div class="nav-title"><a href="index.html">Redundant firewalls with OpenBSD, CARP and pfsync</a></div>
+              <div class="nav-next"><a href="carp4.html">4. PF rules!<img src="../../images/right_arrow.png"/></a></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

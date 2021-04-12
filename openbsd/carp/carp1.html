@@ -5,65 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <link rel="stylesheet" href="../../css/fonts.css">
-    <link rel="stylesheet" href="../../css/bootstrap.min.css">
     <link rel="stylesheet" href="../../css/kp.css" />
     <link rel="stylesheet" href="../../css/docs.css" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 
-    <meta name="description" content="This website is dedicated to open-source and sharing information, knowledge and software projects of any kind." />
     <meta name="keywords" content="kernel,panic,OpenBSD,Linux,open,source,email,programming,development,security,docs" />
     <meta name="distribution" content="Global" />
     <meta name="author" content="Daniele Mazzocchio, danix@kernel-panic.it" />
     <meta name="copyright" content="This document copyright 2005-2021 by Kernel-Panic.it." />
 
-    <title>Redundant firewalls with OpenBSD, CARP and pfsync - Table of contents</title>
+    <title>Redundant firewalls with OpenBSD, CARP and pfsync - Base configuration</title>
   </head>
   <body>
-    <div class="container">
-      <div class="row">
-        <div id="header" class="col">Kernel Panic</div>
-      </div>
-      <div class="row">
-        <div id="sidebar" class="col-auto">
+    <div id="container">
+      <div id="header">Kernel Panic</div>
+      <div id="sub-container">
+        <div id="sidebar">
           <ul>
-            <li id="home"><a class="menu" href="../../index.html"><img src="../../images/home_icon.png" /><span>Home</span></a></li>
-            <li id="openbsd"><a class="menu" href="../../openbsd.html"><img src="../../images/obsd_icon.png" /><span>OpenBSD</span></a></li>
-            <li id="linux"><a class="menu" href="../../linux.html"><img src="../../images/linux_icon.png" /><span>Linux</span></a></li>
-            <li id="email"><a class="menu" href="../../email.html"><img src="../../images/email_icon.png" /><span>Email</span></a></li>
-            <li id="security"><a class="menu" href="../../security.html"><img src="../../images/lock_icon.png" /><span>Security</span></a></li>
-            <li id="programming"><a class="menu" href="../../programming.html"><img src="../../images/coffee_icon.png" /><span>Programming</span></a></li>
+            <li><a class="menu" href="../../index.html"><img src="../../images/home_icon.png" /><span>Home</span></a></li>
+            <li><a class="menu" href="../../openbsd.html"><img src="../../images/obsd_icon.png" /><span>OpenBSD</span></a></li>
+            <li><a class="menu" href="../../linux.html"><img src="../../images/linux_icon.png" /><span>Linux</span></a></li>
+            <li><a class="menu" href="../../email.html"><img src="../../images/email_icon.png" /><span>Email</span></a></li>
+            <li><a class="menu" href="../../security.html"><img src="../../images/lock_icon.png" /><span>Security</span></a></li>
+            <li><a class="menu" href="../../programming.html"><img src="../../images/coffee_icon.png" /><span>Programming</span></a></li>
           </ul>
         </div>
-        <div id="main" class="col">
-          <div id="nav" class="row">
-            <div id="nav-back" class="col-4 text-left"><img src="../../images/left_arrow.png"/><a href="index.html">Table of contents</a></div>
-            <div id="nav-up" class="col-4 text-center"><img src="../../images/up_arrow.png"/><a href="../../openbsd.html">OpenBSD</a></div>
-            <div id="nav-next" class="col-4 text-right"><a href="carp2.html">2. Network layout</a><img src="../../images/right_arrow.png"/></div>
+        <div id="main">
+          <div id="content">
+            <div class="nav">
+              <div class="nav-back"><a href="index.html"><img src="../../images/left_arrow.png"/>Table of contents</a></div>
+              <div class="nav-title"><a href="index.html">Redundant firewalls with OpenBSD, CARP and pfsync</a></div>
+              <div class="nav-next"><a href="carp2.html">2. The CARP protocol<img src="../../images/right_arrow.png"/></a></div>
+            </div>
+
+            <h2>1. Base configuration</h2>
+
+            <p>Let's take a brief look at the base system configuration, which applies to all of our firewalls.</p>
+            <p>We won't go through the installation of the operating system, which is very well documented on the <a href="http://www.openbsd.org/faq/faq4.html">OpenBSD web site</a>. It is recommended that you install only the bare minimum file sets, to prevent firewall security and reliability from being compromised by unnecessary software. Therefore, during installation, you only need to select file sets marked as <q><b>Required</b></q> by the <a href="http://www.openbsd.org/faq/faq4.html#FilesNeeded">documentation</a>, i.e.:</p>
+
+            <ul>
+              <li><tt>bsd</tt>, the kernel;</li>
+              <li><tt>base<var>XX</var>.tgz</tt>, the base system;</li>
+            </ul>
+
+            <p>There should be no need to install the compiler (<tt>comp<var>XX</var>.tgz</tt>), also to avoid providing such a useful tool to possible intruders (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
+            <p>After the first reboot, we can start doing some basic configuration; by default, OpenBSD doesn't start unnecessary daemons, though I guess we can stop <tt><a href="https://man.openbsd.org/sndiod">sndiod(8)</a></tt> on a firewall. It's also a good practice to edit the <tt>/etc/motd</tt> file to give as few information as possible about the system and to warn users, whether legitimate or not, that all access is being logged and that any unauthorized access will be prosecuted (see [<a href="http://oreilly.com/catalog/9780596003234">PUIS</a>]).</p>
+            <p>You should already have configured the network during installation; anyway, if you need to make some changes, these are the main files to edit:</p>
+
+            <dl class="padded">
+              <dt><tt><a href="https://man.openbsd.org/hostname.if">/etc/hostname.<var>if</var>(5)</a></tt></dt>
+              <dd>containing information regarding the configuration of each network interface (address, netmask, etc.);</dd>
+              <dt><tt><a href="https://man.openbsd.org/mygate">/etc/mygate(5)</a></tt></dt>
+              <dd>containing the address of the gateway host;</dd>
+              <dt><tt><a href="https://man.openbsd.org/myname">/etc/myname(5)</a></tt></dt>
+              <dd>containing the symbolic hostname (<acronym title="Fully Qualified Domain Name">FQDN</acronym>) of the machine;</dd>
+              <dt><tt><a href="https://man.openbsd.org/resolv.conf">/etc/resolv.conf(5)</a></tt></dt>
+              <dd>containing the resolver configuration settings (name servers, local domain name, etc.).</dd>
+            </dl>
+
+            <p>Considering the large amount of DNS-based attacks, it is also preferable, especially on firewalls, not to rely on DNS to resolve names and addresses of the most critical systems, but rather inserting them into the <tt><a href="https://man.openbsd.org/hosts">/etc/hosts(5)</a></tt> file; for this file to have a higher priority than DNS, just make sure that <tt><a href="https://man.openbsd.org/resolv.conf">/etc/resolv.conf(5)</a></tt> contains the line:</p>
+
+            <div class="code">
+              <div>/etc/resolv.conf</div>
+              <pre>lookup file bind</pre>
+            </div>
+
+            <p>Packet Filter is enabled by default and loads its rules from the <tt><a href="https://man.openbsd.org/pf.conf">/etc/pf.conf(5)</a></tt> file; you may also want to change the <tt><a href="https://man.openbsd.org/pflogd">pflogd(8)</a></tt> flags in the variable <tt>pflogd_flags</tt> (in <tt><a href="https://man.openbsd.org/rc.conf">/etc/rc.conf.local(5)</a></tt>). Last, don't forget to enable IP and IPv6 forwarding by issuing the command:</p>
+
+            <div class="code">
+            <pre>
+# <kbd>sysctl net.inet.ip.forwarding=1</kbd>
+net.inet.ip.forwarding: 0 -&gt; 1
+# <kbd>sysctl net.inet6.ip6.forwarding=1</kbd>
+net.inet6.ip6.forwarding: 0 -&gt; 1
+</pre>
+            </div>
+
+            <p>and to add the following lines to <tt><a href="https://man.openbsd.org/sysctl.conf">/etc/sysctl.conf(5)</a></tt> to re-enable forwarding after reboot:</p>
+
+            <div class="code">
+              <div>/etc/sysctl.conf</div>
+            <pre>
+net.inet.ip.forwarding=1
+net.inet6.ip6.forwarding=1</pre>
+            </div>
+
+            <div class="nav">
+              <div class="nav-back"><a href="index.html"><img src="../../images/left_arrow.png"/>Table of contents</a></div>
+              <div class="nav-title"><a href="index.html">Redundant firewalls with OpenBSD, CARP and pfsync</a></div>
+              <div class="nav-next"><a href="carp2.html">2. The CARP protocol<img src="../../images/right_arrow.png"/></a></div>
+            </div>
           </div>
-
-          <h3>1. Introduction</h3>
-
-          <p>Firewalls are among the most critical components in a network infrastructure, since their failure may cause entire groups of machines to go offline. The damage may range from the public (web, mail, DNS, etc.) servers to become unreachable from the outside world up to being unable to surf this web site!</p>
-          <p>Using firewall clusters can dramatically reduce these risks, making the failure of a firewall completely transparent to users. Also, maintenance (patching, upgrading, rebooting...) becomes much easier and faster when relying on a backup machine, thus indirectly increasing systems security and reliability.</p>
-          <p>On the other hand, it's true that redundancy increases hardware costs and can't solve each and every problem, like transparent transfer of certain protocols (e.g. <acronym title="Secure SHell">SSH</acronym> or <acronym title="Internet Relay Chat">IRC</acronym>) between systems or synchronizing data between clustered machines (in matter of fact, we will rely on two different protocols for <a href="carp4.html">failover</a> and <a href="carp5.html">synchronization</a>).</p>
-          <p>The tools we will use to build our failover cluster are:</p>
-
-          <dl class="padded">
-            <dt><a href="http://www.openbsd.org/">OpenBSD</a></dt>
-            <dd>largely considered one of the most secure OSes around, with <q>only two remote holes in the default install, in a heck of a long time!</q>;</dd>
-            <dt><a href="http://www.openbsd.org/cgi-bin/man.cgi?query=pf&amp;sektion=4">Packet Filter</a> (PF)</dt>
-            <dd>OpenBSD's system for filtering TCP/IP traffic and doing Network Address Translation;</dd>
-            <dt><a href="https://man.openbsd.org/carp">CARP</a> (Common Address Redundancy Protocol)</dt>
-            <dd>the protocol that achieves system redundancy, by having multiple computers creating a single, virtual network interface between them;</dd>
-            <dt><a href="https://man.openbsd.org/pfsync">pfsync</a></dt>
-            <dd>the protocol that allows PF state tables to be synchronized between multiple firewalls.</dd>
-          </dl>
-
-          <p>A good knowledge of OpenBSD and PF is assumed, since we won't cover topics like <a href="https://man.openbsd.org/pfctl"><tt>pfctl(8)</tt></a> and <a href="https://man.openbsd.org/pf.conf"><tt>pf.conf(5)</tt></a> syntax. Anyway, the <a href="carp7.html">appendix</a> contains some useful links for more on these topics.</p>
         </div>
       </div>
     </div>
-    <script src="js/jquery.slim.min.js"></script>
-    <script src="js/bootstrap.bundle.min.js"></script>
   </body>
 </html>

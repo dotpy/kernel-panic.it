@@ -6,6 +6,8 @@
 /*************************  Override a few defaults  **************************/
 kbd {
   font-weight: bold;
+  color: black;
+  background-color: #e3efff;
 }
 
 q {
@@ -17,6 +19,7 @@ q {
   font-style: italic;
   font-size: 80%;
   padding: 20px 10px;
+  line-height: 120%;
 }
 
 #subtitle a {
@@ -28,27 +31,50 @@ q {
   vertical-align: middle;
 }
 
+#toc {
+  float: right;
+  padding: 0px 10px 10px 10px;
+  margin: 0px 10px 10px 10px;
+  border: 1px solid #28394f;
+  background-color: #e3efff;
+  box-shadow: 5px 5px 5px #ccc;
+}
+
 /*********************************  Navigation  *******************************/
-#nav {
-  font-size: 80%;
-  margin-bottom: 10px;
-}
-
-#nav-back {
+.nav {
   height: 40px;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 90%;
+  display: table;
 }
 
-#nav-back img {
+.nav-back {
+  text-align: left;
+  vertical-align: middle;
+  display: table-cell;
+}
+
+.nav-title {
+  text-align: center;
+  font-style: italic;
+  vertical-align: middle;
+  display: table-cell;
+}
+
+.nav-next {
+  text-align: right;
+  vertical-align: middle;
+  display: table-cell;
+}
+
+.nav-back img {
+  vertical-align: middle;
   padding-right: 5px;
 }
 
-#nav-up {
-}
-
-#nav-next {
-}
-
-#nav-next img {
+.nav-next img {
+  vertical-align: middle;
   padding-left: 5px;
 }
 
@@ -57,7 +83,9 @@ div.code {
   border: 1px solid #000;
   background-color: #e3efff;
   padding: 0px 10px;
-  margin: 20px 0px ;
+  margin: 20px 0px;
+  overflow-x: auto;
+  line-height: 100%;
 }
 
 div.code div {
@@ -66,6 +94,13 @@ div.code div {
   padding: 0px 10px;
   margin: 10px 0px;
 }
+
+/*
+pre {
+  white-space: pre-wrap;
+  overflow: auto;
+}
+*/
 
 /***********************************  Images  *********************************/
 div.block-img {
@@ -113,11 +148,12 @@ table.compact td.blank {
 
 /***********************************  Lists  **********************************/
 dl.padded  dd {
-  padding-left: 40px;
+  padding-bottom: 10px;
 }
 
 dl.padded  dt {
   font-weight: normal;
+
 }
 
 dl.padded div.code {
